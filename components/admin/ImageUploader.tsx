@@ -28,6 +28,13 @@ export default function ImageUploader({
     setIsClient(true)
   }, [])
 
+  const generateFileName = (originalName: string): string => {
+    const fileExt = originalName.split('.').pop()
+    const timestamp = Date.now()
+    const randomStr = Math.random().toString(36).substring(2)
+    return `${timestamp}-${randomStr}.${fileExt}`
+  }
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -55,8 +62,7 @@ export default function ImageUploader({
         return
       }
       
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const fileName = generateFileName(file.name)
       const filePath = folder ? `${folder}/${fileName}` : fileName
 
       // Verificar se o supabase está disponível

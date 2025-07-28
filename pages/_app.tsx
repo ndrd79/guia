@@ -11,7 +11,10 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [])
 
   return (
-    <div className={isHydrated ? '' : 'no-animations'}>
+    <div 
+      className={isHydrated ? '' : 'no-animations'}
+      suppressHydrationWarning={true}
+    >
       <Component {...pageProps} />
     </div>
   )
