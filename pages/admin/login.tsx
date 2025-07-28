@@ -34,6 +34,8 @@ export default function AdminLogin() {
   useEffect(() => {
     // Verificar se já está logado
     const checkAuth = async () => {
+      if (!supabase) return
+      
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         router.push('/admin')
@@ -47,6 +49,11 @@ export default function AdminLogin() {
     setError('')
 
     try {
+      if (!supabase) {
+        setError('Sistema de autenticação não está configurado')
+        return
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,

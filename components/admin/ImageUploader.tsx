@@ -49,6 +49,11 @@ export default function ImageUploader({
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = folder ? `${folder}/${fileName}` : fileName
 
+      // Verificar se o supabase está disponível
+      if (!supabase) {
+        throw new Error('Supabase não está configurado')
+      }
+
       // Upload para o Supabase Storage
       const { data, error: uploadError } = await supabase.storage
         .from(bucket)
@@ -79,10 +84,13 @@ export default function ImageUploader({
         const pathParts = url.pathname.split('/')
         const filePath = pathParts.slice(-2).join('/') // bucket/filename
         
-        // Remover do storage
-        await supabase.storage
-          .from(bucket)
-          .remove([filePath.split('/').slice(1).join('/')])
+        // Verificar se o supabase está disponível
+        if (supabase) {
+          // Remover do storage
+          await supabase.storage
+            .from(bucket)
+            .remove([filePath.split('/').slice(1).join('/')])
+        }
       } catch (err) {
         console.error('Erro ao remover imagem:', err)
       }
