@@ -8,6 +8,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, supabase, Noticia } from '../../lib/supabase'
+import { formatDate, formatDateInput } from '../../lib/formatters'
 
 const noticiaSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -51,7 +52,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
   } = useForm<NoticiaForm>({
     resolver: zodResolver(noticiaSchema),
     defaultValues: {
-      data: new Date().toISOString().split('T')[0],
+      data: formatDateInput(new Date()),
     },
   })
 
@@ -154,7 +155,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     reset({
       titulo: '',
       categoria: '',
-      data: new Date().toISOString().split('T')[0],
+      data: formatDateInput(new Date()),
       imagem: '',
       descricao: '',
       conteudo: '',
@@ -344,7 +345,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(noticia.data).toLocaleDateString('pt-BR')}
+                      {formatDate(noticia.data)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">

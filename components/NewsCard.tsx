@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatDate } from '../lib/formatters';
 
 interface NewsCardProps {
   id: string;
@@ -25,14 +26,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   featured = false,
   className = ''
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
+
 
   const getCategoryColor = (cat: string) => {
     const colors: { [key: string]: string } = {

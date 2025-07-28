@@ -8,6 +8,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, supabase, Evento } from '../../lib/supabase'
+import { formatDate } from '../../lib/formatters'
 
 const eventoSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -162,13 +163,7 @@ export default function EventosPage({ initialEventos }: EventosPageProps) {
   }
 
   const formatDateTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    return formatDate(dateTime, { includeTime: true })
   }
 
   const isEventPast = (dateTime: string) => {

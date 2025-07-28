@@ -5,6 +5,7 @@ import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerAd from '../../components/BannerAd'
+import { formatNumber } from '../../lib/formatters'
 
 interface NewsArticle {
   id: number
@@ -211,7 +212,7 @@ export default function Noticias() {
                         Leia a matéria completa <i className="fas fa-arrow-right ml-2"></i>
                       </Link>
                       <div className="flex items-center text-gray-500">
-                        <i className="far fa-eye mr-1"></i> {featuredNews.views.toLocaleString()} visualizações
+                        <i className="far fa-eye mr-1"></i> {formatNumber(featuredNews.views)} visualizações
                         <i className="far fa-comment ml-4 mr-1"></i> {featuredNews.comments} comentários
                       </div>
                     </div>

@@ -8,6 +8,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
+import { formatDate } from '../../lib/formatters'
 
 const bannerSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
@@ -340,7 +341,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                             {banner.nome}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Criado em {new Date(banner.created_at).toLocaleDateString('pt-BR')}
+                            Criado em {formatDate(banner.created_at)}
                           </div>
                         </div>
                       </div>

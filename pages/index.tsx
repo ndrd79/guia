@@ -7,6 +7,7 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import NewsCard from '../components/NewsCard';
 import BannerAd from '../components/BannerAd';
+import { formatDate } from '../lib/formatters';
 
 const HomePage: React.FC = () => {
   // Dados mockados para demonstração
@@ -372,7 +373,7 @@ const HomePage: React.FC = () => {
                     <p className="text-gray-600 text-sm mb-3">{event.description}</p>
                     <div className="flex justify-between items-center text-sm">
                       <div>
-                        <div className="text-gray-500"><i className="far fa-calendar-alt mr-1"></i> {new Date(event.date).toLocaleDateString('pt-BR')}</div>
+                        <div className="text-gray-500"><i className="far fa-calendar-alt mr-1"></i> {formatDate(event.date)}</div>
                         <div className="text-gray-500"><i className="far fa-clock mr-1"></i> {event.time}</div>
                       </div>
                       <Link href={`/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">

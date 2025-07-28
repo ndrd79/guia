@@ -5,6 +5,7 @@ import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerAd from '../../components/BannerAd'
+import { formatCurrency } from '../../lib/formatters'
 
 interface Classified {
   id: number
@@ -127,10 +128,7 @@ export default function Classificados() {
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(price)
+    return formatCurrency(price)
   }
 
   return (

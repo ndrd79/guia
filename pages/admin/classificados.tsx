@@ -8,6 +8,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, supabase, Classificado } from '../../lib/supabase'
+import { formatCurrency } from '../../lib/formatters'
 
 const classificadoSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -163,10 +164,7 @@ export default function ClassificadosPage({ initialClassificados }: Classificado
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(price)
+    return formatCurrency(price)
   }
 
   return (
