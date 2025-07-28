@@ -58,6 +58,8 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
   const watchedImagem = watch('imagem')
 
   const loadNoticias = async () => {
+    if (!supabase) return
+    
     const { data } = await supabase
       .from('noticias')
       .select('*')
@@ -69,6 +71,11 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
   }
 
   const onSubmit = async (data: NoticiaForm) => {
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
+    
     setLoading(true)
     
     try {
@@ -121,6 +128,10 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta notícia?')) return
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
     
     try {
       const { error } = await supabase

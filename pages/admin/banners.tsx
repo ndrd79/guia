@@ -57,6 +57,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedImagem = watch('imagem')
 
   const loadBanners = async () => {
+    if (!supabase) return
+    
     const { data } = await supabase
       .from('banners')
       .select('*')
@@ -68,6 +70,11 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   }
 
   const onSubmit = async (data: BannerForm) => {
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
+    
     setLoading(true)
     
     try {
@@ -119,6 +126,10 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este banner?')) return
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
     
     try {
       const { error } = await supabase
@@ -136,6 +147,11 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   }
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
+    
     try {
       const { error } = await supabase
         .from('banners')

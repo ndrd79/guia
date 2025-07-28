@@ -58,6 +58,8 @@ export default function EventosPage({ initialEventos }: EventosPageProps) {
   const watchedImagem = watch('imagem')
 
   const loadEventos = async () => {
+    if (!supabase) return
+    
     const { data } = await supabase
       .from('eventos')
       .select('*')
@@ -69,6 +71,11 @@ export default function EventosPage({ initialEventos }: EventosPageProps) {
   }
 
   const onSubmit = async (data: EventoForm) => {
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
+    
     setLoading(true)
     
     try {
@@ -121,6 +128,10 @@ export default function EventosPage({ initialEventos }: EventosPageProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este evento?')) return
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
     
     try {
       const { error } = await supabase

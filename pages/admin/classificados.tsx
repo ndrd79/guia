@@ -59,6 +59,8 @@ export default function ClassificadosPage({ initialClassificados }: Classificado
   const watchedImagem = watch('imagem')
 
   const loadClassificados = async () => {
+    if (!supabase) return
+    
     const { data } = await supabase
       .from('classificados')
       .select('*')
@@ -70,6 +72,11 @@ export default function ClassificadosPage({ initialClassificados }: Classificado
   }
 
   const onSubmit = async (data: ClassificadoForm) => {
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
+    
     setLoading(true)
     
     try {
@@ -122,6 +129,10 @@ export default function ClassificadosPage({ initialClassificados }: Classificado
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este classificado?')) return
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
     
     try {
       const { error } = await supabase
