@@ -322,6 +322,16 @@
 }
 
 @layer utilities {
+  /* Desabilita animações durante a hidratação para evitar erros de hidratação */
+  .no-animations *,
+  .no-animations *::before,
+  .no-animations *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+
   @keyframes pulse {
     0% {
       box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
@@ -21,7 +21,12 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [isClient, setIsClient] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -44,7 +49,12 @@ export default function ImageUploader({
     setUploading(true)
 
     try {
-      // Gerar nome único para o arquivo
+      // Gerar nome único para o arquivo apenas no cliente
+      if (!isClient) {
+        setError('Aguarde a inicialização do componente')
+        return
+      }
+      
       const fileExt = file.name.split('.').pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = folder ? `${folder}/${fileName}` : fileName
