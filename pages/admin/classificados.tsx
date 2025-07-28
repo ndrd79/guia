@@ -386,29 +386,39 @@ export default function ClassificadosPage({ initialClassificados }: Classificado
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const supabase = createServerSupabaseClient()
-  
-  // Verificar autenticação
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Verificar autenticação
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
+    // Buscar classificados
+    const { data: classificados } = await supabase
+      .from('classificados')
+      .select('*')
+      .order('created_at', { ascending: false })
+
     return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
+      props: {
+        initialClassificados: classificados || [],
       },
     }
-  }
-
-  // Buscar classificados
-  const { data: classificados } = await supabase
-    .from('classificados')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  return {
-    props: {
-      initialClassificados: classificados || [],
-    },
+  } catch (error) {
+    // Durante o build, as variáveis de ambiente podem não estar disponíveis
+    console.warn('Supabase not configured during build time:', error)
+    return {
+      props: {
+        initialClassificados: [],
+      },
+    }
   }
 }

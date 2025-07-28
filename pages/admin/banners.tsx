@@ -399,29 +399,39 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const supabase = createServerSupabaseClient()
-  
-  // Verificar autenticação
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Verificar autenticação
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
+    // Buscar banners
+    const { data: banners } = await supabase
+      .from('banners')
+      .select('*')
+      .order('created_at', { ascending: false })
+
     return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
+      props: {
+        initialBanners: banners || [],
       },
     }
-  }
-
-  // Buscar banners
-  const { data: banners } = await supabase
-    .from('banners')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  return {
-    props: {
-      initialBanners: banners || [],
-    },
+  } catch (error) {
+    // Durante o build, as variáveis de ambiente podem não estar disponíveis
+    console.warn('Supabase not configured during build time:', error)
+    return {
+      props: {
+        initialBanners: [],
+      },
+    }
   }
 }

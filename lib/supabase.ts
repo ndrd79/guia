@@ -2,20 +2,28 @@ import { createClient } from '@supabase/supabase-js'
 import { createBrowserClient, createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// Cliente para uso no browser
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Cliente para uso no browser - só cria se as variáveis estiverem disponíveis
+export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null
 
 // Cliente para uso no servidor (SSR) - apenas para getServerSideProps
 export const createServerSupabaseClient = () => {
+  // Verificar se as variáveis estão disponíveis
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase environment variables are not configured')
+  }
   // Para pages router, usamos o cliente simples
   return createClient(supabaseUrl, supabaseAnonKey)
 }
 
 // Cliente para uso no browser (componentes)
 export const createBrowserSupabaseClient = () => {
+  // Verificar se as variáveis estão disponíveis
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase environment variables are not configured')
+  }
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
 

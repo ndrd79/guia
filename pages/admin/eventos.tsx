@@ -401,29 +401,39 @@ export default function EventosPage({ initialEventos }: EventosPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const supabase = createServerSupabaseClient()
-  
-  // Verificar autenticação
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Verificar autenticação
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
+    // Buscar eventos
+    const { data: eventos } = await supabase
+      .from('eventos')
+      .select('*')
+      .order('data_hora', { ascending: true })
+
     return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
+      props: {
+        initialEventos: eventos || [],
       },
     }
-  }
-
-  // Buscar eventos
-  const { data: eventos } = await supabase
-    .from('eventos')
-    .select('*')
-    .order('data_hora', { ascending: true })
-
-  return {
-    props: {
-      initialEventos: eventos || [],
-    },
+  } catch (error) {
+    // Durante o build, as variáveis de ambiente podem não estar disponíveis
+    console.warn('Supabase not configured during build time:', error)
+    return {
+      props: {
+        initialEventos: [],
+      },
+    }
   }
 }

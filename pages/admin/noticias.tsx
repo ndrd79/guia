@@ -363,29 +363,39 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const supabase = createServerSupabaseClient()
-  
-  // Verificar autenticação
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Verificar autenticação
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
+    // Buscar notícias
+    const { data: noticias } = await supabase
+      .from('noticias')
+      .select('*')
+      .order('created_at', { ascending: false })
+
     return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
+      props: {
+        initialNoticias: noticias || [],
       },
     }
-  }
-
-  // Buscar notícias
-  const { data: noticias } = await supabase
-    .from('noticias')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  return {
-    props: {
-      initialNoticias: noticias || [],
-    },
+  } catch (error) {
+    // Durante o build, as variáveis de ambiente podem não estar disponíveis
+    console.warn('Supabase not configured during build time:', error)
+    return {
+      props: {
+        initialNoticias: [],
+      },
+    }
   }
 }

@@ -113,3 +113,4 @@ prisma/migrations/
 
 # Original HTML files (keeping for reference)
 PortalNovo/
+.vercel

@@ -169,38 +169,53 @@ export default function AdminDashboard({ stats }: DashboardProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const supabase = createServerSupabaseClient()
-  
-  // Verificar autenticação
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Verificar autenticação
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
+    // Buscar estatísticas
+    const [noticiasResult, classificadosResult, eventosResult, bannersResult] = await Promise.all([
+      supabase.from('noticias').select('id', { count: 'exact', head: true }),
+      supabase.from('classificados').select('id', { count: 'exact', head: true }),
+      supabase.from('eventos').select('id', { count: 'exact', head: true }),
+      supabase.from('banners').select('id', { count: 'exact', head: true }),
+    ])
+
+    const stats = {
+      noticias: noticiasResult.count || 0,
+      classificados: classificadosResult.count || 0,
+      eventos: eventosResult.count || 0,
+      banners: bannersResult.count || 0,
+    }
+
     return {
-      redirect: {
-        destination: '/admin/login',
-        permanent: false,
+      props: {
+        stats,
       },
     }
-  }
-
-  // Buscar estatísticas
-  const [noticiasResult, classificadosResult, eventosResult, bannersResult] = await Promise.all([
-    supabase.from('noticias').select('id', { count: 'exact', head: true }),
-    supabase.from('classificados').select('id', { count: 'exact', head: true }),
-    supabase.from('eventos').select('id', { count: 'exact', head: true }),
-    supabase.from('banners').select('id', { count: 'exact', head: true }),
-  ])
-
-  const stats = {
-    noticias: noticiasResult.count || 0,
-    classificados: classificadosResult.count || 0,
-    eventos: eventosResult.count || 0,
-    banners: bannersResult.count || 0,
-  }
-
-  return {
-    props: {
-      stats,
-    },
+  } catch (error) {
+    // Durante o build, as variáveis de ambiente podem não estar disponíveis
+    console.warn('Supabase not configured during build time:', error)
+    return {
+      props: {
+        stats: {
+          noticias: 0,
+          classificados: 0,
+          eventos: 0,
+          banners: 0,
+        },
+      },
+    }
   }
 }
