@@ -11,7 +11,6 @@ import {
   Menu, 
   X 
 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -30,10 +29,9 @@ export default function AdminLayout({ children, title = 'Painel Administrativo' 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
 
-  const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut()
-    }
+  const handleLogout = () => {
+    // Remove o cookie de autenticação
+    document.cookie = 'admin-logged-in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     router.push('/admin/login')
   }
 

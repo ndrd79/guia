@@ -1,87 +1,32 @@
 import { createClient } from '@supabase/supabase-js'
-import { createBrowserClient, createServerClient } from '@supabase/ssr'
-import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { GetServerSidePropsContext } from 'next'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Cliente para uso no browser - só cria se as variáveis estiverem disponíveis
-export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null
+// Cliente principal do Supabase
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Cliente para uso no servidor (SSR) - apenas para getServerSideProps
-export const createServerSupabaseClient = () => {
-  // Verificar se as variáveis estão disponíveis
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase environment variables are not configured')
-  }
-  // Para pages router, usamos o cliente simples
-  return createClient(supabaseUrl, supabaseAnonKey)
-}
-
-// Cliente para uso no browser (componentes)
-export const createBrowserSupabaseClient = () => {
-  // Verificar se as variáveis estão disponíveis
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase environment variables are not configured')
-  }
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
-}
-
-// Cliente para middleware
-export const createMiddlewareSupabaseClient = (request: NextRequest) => {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
+// Cliente para uso no servidor (SSR)
+export function createServerSupabaseClient(ctx: GetServerSidePropsContext) {
+  return createServerClient(
     supabaseUrl,
     supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
-          return request.cookies.get(name)?.value
+          return ctx.req.cookies[name]
         },
         set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
+          ctx.res.setHeader('Set-Cookie', `${name}=${value}; ${Object.entries(options).map(([k, v]) => `${k}=${v}`).join('; ')}`)
         },
         remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          ctx.res.setHeader('Set-Cookie', `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(options).map(([k, v]) => `${k}=${v}`).join('; ')}`)
         },
       },
     }
   )
-
-  return { supabase, response }
 }
 
 // Tipos para as tabelas do banco
