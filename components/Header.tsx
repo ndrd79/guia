@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import SearchBar from './SearchBar';
-import BannerAd from './BannerAd';
+import BannerContainer from './BannerContainer';
 
 const Header: React.FC = () => {
   return (
@@ -38,8 +38,8 @@ const Header: React.FC = () => {
             </div>
             
             {/* Advertising Space (Top) */}
-            <BannerAd 
-              position="header-top" 
+            <BannerContainer 
+              position="Header Superior" 
               className="w-full md:w-1/3 h-24 rounded-lg mb-4 md:mb-0" 
             />
             

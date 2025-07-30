@@ -15,6 +15,8 @@ const bannerSchema = z.object({
   posicao: z.string().min(1, 'Posição é obrigatória'),
   imagem: z.string().min(1, 'Imagem é obrigatória'),
   link: z.string().url('Link deve ser uma URL válida').optional().or(z.literal('')),
+  largura: z.number().min(50, 'Largura mínima é 50px').max(2000, 'Largura máxima é 2000px'),
+  altura: z.number().min(50, 'Altura mínima é 50px').max(1000, 'Altura máxima é 1000px'),
   ativo: z.boolean(),
 })
 
@@ -27,12 +29,19 @@ interface BannersPageProps {
 const posicoesBanner = [
   'Header Superior',
   'Header Inferior',
+  'Banner Principal',
+  'Empresas Destaque - Topo',
+  'Empresas Destaque - Rodapé 1',
+  'Empresas Destaque - Rodapé 2',
+  'Eventos - Rodapé',
+  'Serviços - Rodapé 1',
+  'Serviços - Rodapé 2',
+  'Serviços - Rodapé 3',
   'Sidebar Direita',
   'Sidebar Esquerda',
   'Entre Conteúdo',
   'Footer',
-  'Popup',
-  'Banner Principal'
+  'Popup'
 ]
 
 export default function BannersPage({ initialBanners }: BannersPageProps) {
@@ -51,6 +60,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   } = useForm<BannerForm>({
     resolver: zodResolver(bannerSchema),
     defaultValues: {
+      largura: 400,
+      altura: 200,
       ativo: true,
     },
   })
@@ -120,6 +131,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       posicao: banner.posicao,
       imagem: banner.imagem,
       link: banner.link || '',
+      largura: banner.largura || 400,
+      altura: banner.altura || 200,
       ativo: banner.ativo,
     })
     setShowForm(true)
@@ -179,6 +192,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       posicao: '',
       imagem: '',
       link: '',
+      largura: 400,
+      altura: 200,
       ativo: true,
     })
   }
@@ -235,6 +250,40 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   </select>
                   {errors.posicao && (
                     <p className="mt-1 text-sm text-red-600">{errors.posicao.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Largura (px) *
+                  </label>
+                  <input
+                    {...register('largura', { valueAsNumber: true })}
+                    type="number"
+                    min="50"
+                    max="2000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="400"
+                  />
+                  {errors.largura && (
+                    <p className="mt-1 text-sm text-red-600">{errors.largura.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Altura (px) *
+                  </label>
+                  <input
+                    {...register('altura', { valueAsNumber: true })}
+                    type="number"
+                    min="50"
+                    max="1000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="200"
+                  />
+                  {errors.altura && (
+                    <p className="mt-1 text-sm text-red-600">{errors.altura.message}</p>
                   )}
                 </div>
 
@@ -316,6 +365,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     Posição
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Dimensões
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Link
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -350,6 +402,11 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
                         {banner.posicao}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {banner.largura || 400} × {banner.altura || 200} px
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {banner.link ? (
@@ -415,9 +472,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerSupabaseClient(ctx)
     
     // Verificar autenticação
     const { data: { session } } = await supabase.auth.getSession()

@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import NewsCard from '../components/NewsCard';
-import BannerAd from '../components/BannerAd';
+import BannerContainer from '../components/BannerContainer';
 import { formatDate } from '../lib/formatters';
 
 const HomePage: React.FC = () => {
@@ -269,8 +269,8 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
               
-              <BannerAd 
-                position="hero" 
+              <BannerContainer 
+                position="Banner Principal" 
                 className="md:w-1/2 h-64 rounded-xl" 
               />
             </div>
@@ -305,7 +305,7 @@ const HomePage: React.FC = () => {
               </Link>
             </div>
             
-            <BannerAd position="featured-businesses-top" className="w-full h-32 rounded-lg mb-8" />
+            <BannerContainer position="Empresas Destaque - Topo" className="w-full h-32 rounded-lg mb-8" />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredBusinesses.map((business) => (
@@ -342,8 +342,8 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-              <BannerAd position="featured-businesses-bottom-1" className="h-32 rounded-lg" />
-              <BannerAd position="featured-businesses-bottom-2" className="h-32 rounded-lg" />
+              <BannerContainer position="Empresas Destaque - Rodapé 1" className="h-32 rounded-lg" />
+              <BannerContainer position="Empresas Destaque - Rodapé 2" className="h-32 rounded-lg" />
             </div>
           </div>
         </section>
@@ -385,7 +385,7 @@ const HomePage: React.FC = () => {
               ))}
             </div>
             
-            <BannerAd position="events-bottom" className="w-full h-40 rounded-lg mt-8" />
+            <BannerContainer position="Eventos - Rodapé" className="w-full h-40 rounded-lg mt-8" />
           </div>
         </section>
 
@@ -449,9 +449,9 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <BannerAd position="services-bottom-1" className="h-40 rounded-lg" />
-              <BannerAd position="services-bottom-2" className="h-40 rounded-lg" />
-              <BannerAd position="services-bottom-3" className="h-40 rounded-lg" />
+              <BannerContainer position="Serviços - Rodapé 1" className="h-40 rounded-lg" />
+              <BannerContainer position="Serviços - Rodapé 2" className="h-40 rounded-lg" />
+              <BannerContainer position="Serviços - Rodapé 3" className="h-40 rounded-lg" />
             </div>
           </div>
         </section>

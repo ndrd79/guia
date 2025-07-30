@@ -72,6 +72,8 @@ export interface Banner {
   posicao: string
   imagem: string
   link?: string
+  largura?: number
+  altura?: number
   ativo: boolean
   created_at: string
   updated_at: string

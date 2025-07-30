@@ -40,16 +40,18 @@ CREATE TABLE IF NOT EXISTS eventos (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tabela de Banners
+-- Tabela de banners publicitários
 CREATE TABLE IF NOT EXISTS banners (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  nome VARCHAR(255) NOT NULL,
-  posicao VARCHAR(100) NOT NULL,
-  imagem TEXT NOT NULL,
-  link TEXT,
-  ativo BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    posicao VARCHAR(100) NOT NULL,
+    imagem TEXT NOT NULL,
+    link TEXT,
+    largura INTEGER DEFAULT 400,
+    altura INTEGER DEFAULT 200,
+    ativo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Políticas de segurança (RLS - Row Level Security)

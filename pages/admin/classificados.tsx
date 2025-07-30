@@ -394,9 +394,9 @@ export default function ClassificadosPage({ initialClassificados }: Classificado
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerSupabaseClient(ctx)
     
     // Verificar autenticação
     const { data: { session } } = await supabase.auth.getSession()
