@@ -9,7 +9,8 @@ import {
   Image, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  ExternalLink 
 } from 'lucide-react'
 
 interface AdminLayoutProps {
@@ -88,6 +89,13 @@ export default function AdminLayout({ children, title = 'Painel Administrativo' 
           
           <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="px-3">
+              <Link
+                href="/"
+                className="flex items-center w-full px-3 py-2 mb-2 text-sm font-medium text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                <ExternalLink className="mr-3 h-5 w-5" />
+                Voltar ao Site
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 transition-colors"

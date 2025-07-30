@@ -1,3 +1,7 @@
+=== CÓDIGO COMPLETO DO PAINEL DE BANNERS ===
+
+Arquivo: pages/admin/banners.tsx
+
 import { useState, useEffect } from 'react'
 import { GetServerSideProps } from 'next'
 import { useForm } from 'react-hook-form'
@@ -179,12 +183,6 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedImagem = watch('imagem')
   const watchedPosicao = watch('posicao')
 
-  // Carregar banners quando o componente for montado
-  useEffect(() => {
-    console.log('🔄 Carregando banners...')
-    loadBanners()
-  }, [])
-
   // Função para preencher automaticamente as dimensões baseado na posição
   const handlePosicaoChange = (posicaoNome: string) => {
     const posicao = posicoesBanner.find(p => p.nome === posicaoNome)
@@ -195,34 +193,20 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   }
 
   const loadBanners = async () => {
-    console.log('📊 Iniciando carregamento dos banners...')
-    if (!supabase) {
-      console.error('❌ Supabase não configurado')
-      return
-    }
+    if (!supabase) return
     
-    try {
-      const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) {
-        console.error('❌ Erro ao carregar banners:', error)
-        return
-      }
-      
-      console.log('✅ Banners carregados:', data?.length || 0)
-      setBanners(data || [])
-    } catch (error) {
-      console.error('❌ Erro na função loadBanners:', error)
+    const { data } = await supabase
+      .from('banners')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (data) {
+      setBanners(data)
     }
   }
 
   const onSubmit = async (data: BannerForm) => {
-    console.log('💾 Salvando banner:', data)
     if (!supabase) {
-      console.error('❌ Supabase não configurado')
       alert('Sistema não está configurado')
       return
     }
@@ -231,7 +215,6 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     
     try {
       if (editingBanner) {
-        console.log('✏️ Atualizando banner existente:', editingBanner.id)
         // Atualizar banner existente
         const { error } = await supabase
           .from('banners')
@@ -241,13 +224,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
           })
           .eq('id', editingBanner.id)
         
-        if (error) {
-          console.error('❌ Erro ao atualizar banner:', error)
-          throw error
-        }
-        console.log('✅ Banner atualizado com sucesso')
+        if (error) throw error
       } else {
-        console.log('➕ Criando novo banner')
         // Criar novo banner
         const { error } = await supabase
           .from('banners')
@@ -257,20 +235,14 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
             updated_at: new Date().toISOString(),
           }])
         
-        if (error) {
-          console.error('❌ Erro ao criar banner:', error)
-          throw error
-        }
-        console.log('✅ Banner criado com sucesso')
+        if (error) throw error
       }
       
-      console.log('🔄 Recarregando lista de banners...')
       await loadBanners()
       handleCloseForm()
-      console.log('✅ Operação concluída com sucesso')
     } catch (error) {
-      console.error('❌ Erro ao salvar banner:', error)
-      alert('Erro ao salvar banner: ' + (error as Error).message)
+      console.error('Erro ao salvar banner:', error)
+      alert('Erro ao salvar banner')
     } finally {
       setLoading(false)
     }
@@ -292,9 +264,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este banner?')) return
-    console.log('🗑️ Excluindo banner:', id)
     if (!supabase) {
-      console.error('❌ Supabase não configurado')
       alert('Sistema não está configurado')
       return
     }
@@ -305,24 +275,17 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         .delete()
         .eq('id', id)
       
-      if (error) {
-        console.error('❌ Erro ao excluir banner:', error)
-        throw error
-      }
+      if (error) throw error
       
-      console.log('✅ Banner excluído com sucesso')
-      console.log('🔄 Recarregando lista de banners...')
       await loadBanners()
     } catch (error) {
-      console.error('❌ Erro ao excluir banner:', error)
-      alert('Erro ao excluir banner: ' + (error as Error).message)
+      console.error('Erro ao excluir banner:', error)
+      alert('Erro ao excluir banner')
     }
   }
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    console.log('🔄 Alterando status do banner:', id, 'de', currentStatus, 'para', !currentStatus)
     if (!supabase) {
-      console.error('❌ Supabase não configurado')
       alert('Sistema não está configurado')
       return
     }
@@ -336,17 +299,12 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         })
         .eq('id', id)
       
-      if (error) {
-        console.error('❌ Erro ao alterar status:', error)
-        throw error
-      }
+      if (error) throw error
       
-      console.log('✅ Status alterado com sucesso')
-      console.log('🔄 Recarregando lista de banners...')
       await loadBanners()
     } catch (error) {
-      console.error('❌ Erro ao alterar status do banner:', error)
-      alert('Erro ao alterar status do banner: ' + (error as Error).message)
+      console.error('Erro ao alterar status do banner:', error)
+      alert('Erro ao alterar status do banner')
     }
   }
 
@@ -672,6 +630,18 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
     const supabase = createServerSupabaseClient(ctx)
     
+    // Verificar autenticação
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
     // Buscar banners
     const { data: banners } = await supabase
       .from('banners')
@@ -693,3 +663,49 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     }
   }
 }
+
+=== FUNCIONALIDADES DO PAINEL ===
+
+1. POSIÇÕES DE BANNER CONFIGURADAS (15 posições):
+   - Header Superior (728x90px)
+   - Header Inferior (970x90px)
+   - Banner Principal (400x300px)
+   - Empresas Destaque - Topo (970x250px)
+   - Empresas Destaque - Rodapé 1, 2, 3 (300x250px)
+   - Eventos - Rodapé (728x90px)
+   - Sidebar Direita/Esquerda (300x600px)
+   - Entre Conteúdo (336x280px)
+   - Footer (728x90px)
+   - Popup (300x250px)
+   - Mobile Banner (320x50px)
+   - Notícias - Topo (728x90px)
+
+2. FUNCIONALIDADES:
+   ✅ Cadastro de novos banners
+   ✅ Edição de banners existentes
+   ✅ Upload de imagens
+   ✅ Seleção automática de dimensões por posição
+   ✅ Ativação/desativação de banners
+   ✅ Exclusão de banners
+   ✅ Validação de formulários
+   ✅ Interface responsiva
+   ✅ Autenticação obrigatória
+
+3. TECNOLOGIAS UTILIZADAS:
+   - Next.js (React)
+   - TypeScript
+   - React Hook Form
+   - Zod (validação)
+   - Tailwind CSS
+   - Lucide React (ícones)
+   - Supabase (banco de dados)
+
+4. COMO USAR:
+   - Acesse: http://localhost:3001/admin/banners
+   - Clique em "Novo Banner"
+   - Selecione a posição (dimensões preenchidas automaticamente)
+   - Faça upload da imagem
+   - Configure nome e link
+   - Salve e ative o banner
+
+=== FIM DO CÓDIGO ===

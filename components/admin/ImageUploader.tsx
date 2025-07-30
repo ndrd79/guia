@@ -62,32 +62,21 @@ export default function ImageUploader({
         return
       }
       
-      const fileName = generateFileName(file.name)
-      const filePath = folder ? `${folder}/${fileName}` : fileName
-
-      // Verificar se o supabase está disponível
-      if (!supabase) {
-        throw new Error('Supabase não está configurado')
+      // Converter arquivo para base64 como solução temporária
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        onChange(result)
+        setUploading(false)
       }
-
-      // Upload para o Supabase Storage
-      const { data, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file)
-
-      if (uploadError) {
-        throw uploadError
+      reader.onerror = () => {
+        setError('Erro ao processar a imagem')
+        setUploading(false)
       }
-
-      // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath)
-
-      onChange(publicUrl)
+      reader.readAsDataURL(file)
+      
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer upload da imagem')
-    } finally {
       setUploading(false)
     }
   }

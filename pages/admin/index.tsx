@@ -44,6 +44,22 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
           <p className="text-gray-600">Portal Maria Helena - Dashboard</p>
         </div>
 
+        {/* Links para as seções */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <a href="/admin/noticias" className="block bg-blue-100 text-blue-800 text-center py-4 rounded shadow hover:bg-blue-200 transition-colors">
+            📰 Gerenciar Notícias
+          </a>
+          <a href="/admin/classificados" className="block bg-green-100 text-green-800 text-center py-4 rounded shadow hover:bg-green-200 transition-colors">
+            📋 Gerenciar Classificados
+          </a>
+          <a href="/admin/eventos" className="block bg-purple-100 text-purple-800 text-center py-4 rounded shadow hover:bg-purple-200 transition-colors">
+            🎉 Gerenciar Eventos
+          </a>
+          <a href="/admin/banners" className="block bg-yellow-100 text-yellow-800 text-center py-4 rounded shadow hover:bg-yellow-200 transition-colors">
+            🎯 Gerenciar Banners
+          </a>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard

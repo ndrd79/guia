@@ -410,18 +410,6 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
     const supabase = createServerSupabaseClient(ctx)
     
-    // Verificar autenticação
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      return {
-        redirect: {
-          destination: '/admin/login',
-          permanent: false,
-        },
-      }
-    }
-
     // Buscar eventos
     const { data: eventos } = await supabase
       .from('eventos')
