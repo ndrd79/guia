@@ -393,7 +393,6 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     type="text"
                     placeholder="Ex: Banner Loja ABC - Header"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    placeholder="Nome do banner"
                   />
                   {errors.nome && (
                     <p className="mt-1 text-sm text-red-600">{errors.nome.message}</p>

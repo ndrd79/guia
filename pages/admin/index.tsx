@@ -1,5 +1,6 @@
 import React from 'react'
 import { GetServerSideProps } from 'next'
+import AdminLayout from '../../components/admin/AdminLayout'
 
 interface DashboardStats {
   noticias: number
@@ -36,7 +37,7 @@ const StatCard = ({ title, value }: {
 
 export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <AdminLayout title="Dashboard">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -179,7 +180,7 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
           )}
         </div>
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 
