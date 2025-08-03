@@ -126,7 +126,7 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
   
   // Converter notícias do Supabase para o formato esperado
   const newsArticles: NewsArticle[] = noticias.map(noticia => ({
-    id: noticia.id,
+    id: parseInt(noticia.id || '0'),
     title: noticia.titulo,
     description: noticia.descricao || '',
     content: noticia.conteudo,
