@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -7,8 +8,9 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
-import { createServerSupabaseClient, supabase, Noticia } from '../../lib/supabase'
+import { createServerSupabaseClient, supabase, Noticia, Banner } from '../../lib/supabase'
 import { formatDate, formatDateInput } from '../../lib/formatters'
+import { useBanners } from '../../hooks/useBanners'
 
 const noticiaSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -17,6 +19,8 @@ const noticiaSchema = z.object({
   imagem: z.string().optional(),
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   conteudo: z.string().min(1, 'Conteúdo é obrigatório'),
+  banner_id: z.string().optional().transform(val => val === '' ? undefined : val),
+  destaque: z.boolean().optional(),
 })
 
 type NoticiaForm = z.infer<typeof noticiaSchema>
@@ -41,6 +45,34 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingNoticia, setEditingNoticia] = useState<Noticia | null>(null)
   const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const { banners } = useBanners()
+  const router = useRouter()
+
+  // Verificar autenticação
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/admin/login')
+        return
+      }
+      setUser(session.user)
+    }
+    
+    checkAuth()
+    
+    // Escutar mudanças na autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        router.push('/admin/login')
+      } else {
+        setUser(session.user)
+      }
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [router])
 
   const {
     register,
@@ -80,12 +112,19 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     setLoading(true)
     
     try {
+      // Preparar dados, removendo campos vazios que devem ser null
+      const preparedData = {
+        ...data,
+        banner_id: data.banner_id || null,
+        imagem: data.imagem || null,
+      }
+      
       if (editingNoticia) {
         // Atualizar notícia existente
         const { error } = await supabase
           .from('noticias')
           .update({
-            ...data,
+            ...preparedData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingNoticia.id)
@@ -96,7 +135,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
         const { error } = await supabase
           .from('noticias')
           .insert([{
-            ...data,
+            ...preparedData,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }])
@@ -123,6 +162,8 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
       imagem: noticia.imagem || '',
       descricao: noticia.descricao,
       conteudo: noticia.conteudo,
+      banner_id: noticia.banner_id || '',
+      destaque: noticia.destaque || false,
     })
     setShowForm(true)
   }
@@ -159,7 +200,21 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
       imagem: '',
       descricao: '',
       conteudo: '',
+      banner_id: '',
+      destaque: false,
     })
+  }
+
+  // Mostrar loading enquanto verifica autenticação
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verificando autenticação...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -246,6 +301,42 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Banner no meio da notícia (opcional)
+                </label>
+                <select
+                  {...register('banner_id')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Nenhum banner</option>
+                  {banners.map((banner) => (
+                    <option key={banner.id} value={banner.id}>
+                      {banner.nome} - {banner.posicao}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-gray-500">
+                  O banner será exibido no meio do conteúdo da notícia
+                </p>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    {...register('destaque')}
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Marcar como notícia em destaque
+                  </span>
+                </label>
+                <p className="mt-1 text-sm text-gray-500">
+                  Notícias em destaque aparecem na página inicial
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descrição *
                 </label>
                 <textarea
@@ -313,6 +404,9 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
                     Data
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Destaque
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
@@ -346,6 +440,17 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(noticia.data)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {noticia.destaque ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          Destaque
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                          Normal
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">

@@ -1,11 +1,15 @@
+import React, { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { useState } from 'react'
+import Image from 'next/image'
+import { GetServerSideProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
-import BannerAd from '../../components/BannerAd'
-import { formatNumber } from '../../lib/formatters'
+import NewsCard from '../../components/NewsCard'
+import BannerContainer from '../../components/BannerContainer'
+import { formatDate } from '../../lib/formatters'
+import { createServerSupabaseClient, Noticia } from '../../lib/supabase'
 
 interface NewsArticle {
   id: number
@@ -113,17 +117,36 @@ const categoryStats = [
   { name: "Cultura", count: 9 }
 ]
 
-export default function Noticias() {
+interface NoticiasPageProps {
+  noticias: Noticia[]
+}
+
+export default function Noticias({ noticias }: NoticiasPageProps) {
   const [selectedCategory, setSelectedCategory] = useState('Todas')
-  const [filteredNews, setFilteredNews] = useState(mockNews)
+  
+  // Converter notícias do Supabase para o formato esperado
+  const newsArticles: NewsArticle[] = noticias.map(noticia => ({
+    id: noticia.id,
+    title: noticia.titulo,
+    description: noticia.descricao || '',
+    content: noticia.conteudo,
+    category: noticia.categoria?.toUpperCase() || 'GERAL',
+    image: noticia.imagem || 'https://images.unsplash.com/photo-1588681664899-f142ff2dc9b1?w=800',
+    publishedAt: formatDate(noticia.data),
+    views: 0,
+    comments: 0,
+    isFeatured: noticia.destaque || false
+  }))
+  
+  const [filteredNews, setFilteredNews] = useState(newsArticles)
   const [email, setEmail] = useState('')
 
   const handleCategoryFilter = (category: string) => {
     setSelectedCategory(category)
     if (category === 'Todas') {
-      setFilteredNews(mockNews)
+      setFilteredNews(newsArticles)
     } else {
-      setFilteredNews(mockNews.filter(news => news.category.toLowerCase() === category.toLowerCase()))
+      setFilteredNews(newsArticles.filter(news => news.category.toLowerCase() === category.toLowerCase()))
     }
   }
 
@@ -140,7 +163,7 @@ export default function Noticias() {
     return colors[category] || 'bg-gray-500'
   }
 
-  const featuredNews = filteredNews.find(news => news.isFeatured)
+  const featuredNews = filteredNews.filter(news => news.isFeatured).slice(0, 1)[0]
   const regularNews = filteredNews.filter(news => !news.isFeatured)
 
   return (
@@ -212,7 +235,7 @@ export default function Noticias() {
                         Leia a matéria completa <i className="fas fa-arrow-right ml-2"></i>
                       </Link>
                       <div className="flex items-center text-gray-500">
-                        <i className="far fa-eye mr-1"></i> {formatNumber(featuredNews.views)} visualizações
+                        <i className="far fa-eye mr-1"></i> {featuredNews.views} visualizações
                         <i className="far fa-comment ml-4 mr-1"></i> {featuredNews.comments} comentários
                       </div>
                     </div>
@@ -276,10 +299,9 @@ export default function Noticias() {
             {/* Sidebar */}
             <div className="lg:w-1/3">
               {/* Advertising Space */}
-              <BannerAd 
+              <BannerContainer 
                 position="sidebar"
                 className="h-64 rounded-lg mb-8"
-                title="ESPAÇO PUBLICITÁRIO"
               />
 
               {/* Popular News */}
@@ -288,17 +310,21 @@ export default function Noticias() {
                   <i className="fas fa-fire text-orange-500 mr-2"></i> Notícias Populares
                 </h3>
                 <ul className="space-y-4">
-                  {popularNews.map((news, index) => (
+                  {newsArticles.slice(0, 5).map((news, index) => (
                     <li key={index}>
-                      <Link href="#" className="flex items-start space-x-3 group">
+                      <Link href={`/noticias/${news.id}`} className="flex items-start space-x-3 group">
                         <div className="flex-shrink-0">
-                          <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center">
-                            <i className="fas fa-newspaper text-gray-400"></i>
+                          <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center overflow-hidden">
+                            {news.image ? (
+                              <img src={news.image} alt={news.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <i className="fas fa-newspaper text-gray-400"></i>
+                            )}
                           </div>
                         </div>
                         <div>
                           <h4 className="font-bold group-hover:text-indigo-600">{news.title}</h4>
-                          <div className="text-sm text-gray-500">{news.date}</div>
+                          <div className="text-sm text-gray-500">{news.publishedAt}</div>
                         </div>
                       </Link>
                     </li>
@@ -312,17 +338,22 @@ export default function Noticias() {
                   <i className="fas fa-folder-open text-indigo-600 mr-2"></i> Categorias
                 </h3>
                 <ul className="space-y-2">
-                  {categoryStats.map(category => (
-                    <li key={category.name}>
-                      <button 
-                        className="w-full flex justify-between items-center py-2 border-b border-gray-100 hover:text-indigo-600 text-left"
-                        onClick={() => handleCategoryFilter(category.name)}
-                      >
-                        <span>{category.name}</span>
-                        <span className="bg-gray-200 text-gray-800 px-2 rounded-full text-xs">{category.count}</span>
-                      </button>
-                    </li>
-                  ))}
+                  {categories.map(category => {
+                    const count = category === 'Todas' 
+                      ? newsArticles.length 
+                      : newsArticles.filter(news => news.category.toLowerCase() === category.toLowerCase()).length;
+                    return (
+                      <li key={category}>
+                        <button 
+                          className="w-full flex justify-between items-center py-2 border-b border-gray-100 hover:text-indigo-600 text-left"
+                          onClick={() => handleCategoryFilter(category)}
+                        >
+                          <span>{category}</span>
+                          <span className="bg-gray-200 text-gray-800 px-2 rounded-full text-xs">{count}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 
@@ -352,3 +383,36 @@ export default function Noticias() {
     </>
   )
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const supabase = createServerSupabaseClient();
+  
+  try {
+    const { data: noticias, error } = await supabase
+      .from('noticias')
+      .select('*')
+      .order('data', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar notícias:', error);
+      return {
+        props: {
+          noticias: []
+        }
+      };
+    }
+
+    return {
+      props: {
+        noticias: noticias || []
+      }
+    };
+  } catch (error) {
+    console.error('Erro ao conectar com Supabase:', error);
+    return {
+      props: {
+        noticias: []
+      }
+    };
+  }
+};

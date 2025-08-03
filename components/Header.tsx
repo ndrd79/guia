@@ -1,9 +1,48 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import SearchBar from './SearchBar';
 import BannerContainer from './BannerContainer';
+import { supabase } from '../lib/supabase';
 
 const Header: React.FC = () => {
+  const [noticias, setNoticias] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchNoticias = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('noticias')
+          .select('titulo')
+          .order('data', { ascending: false })
+          .limit(10);
+        
+        if (error) {
+          console.error('Erro ao buscar notícias:', error);
+          // Fallback para notícias estáticas em caso de erro
+          setNoticias([
+            'Prefeitura anuncia novo programa de incentivo fiscal para pequenas empresas',
+            'Escolas municipais terão aulas de robótica a partir do próximo semestre',
+            'Obras de revitalização da praça central começam na próxima semana',
+            'Câmara aprova projeto que regulamenta delivery de alimentos na cidade'
+          ]);
+        } else {
+          setNoticias(data?.map(noticia => noticia.titulo) || []);
+        }
+      } catch (error) {
+        console.error('Erro ao conectar com o banco:', error);
+        // Fallback para notícias estáticas
+        setNoticias([
+          'Prefeitura anuncia novo programa de incentivo fiscal para pequenas empresas',
+          'Escolas municipais terão aulas de robótica a partir do próximo semestre',
+          'Obras de revitalização da praça central começam na próxima semana',
+          'Câmara aprova projeto que regulamenta delivery de alimentos na cidade'
+        ]);
+      }
+    };
+
+    fetchNoticias();
+  }, []);
+
   return (
     <>
       {/* Top Bar with Login/Admin */}
@@ -56,10 +95,9 @@ const Header: React.FC = () => {
           <div className="font-bold mr-4 hidden sm:block">ÚLTIMAS NOTÍCIAS:</div>
           <div className="news-ticker flex-1">
             <span>
-              <span className="mr-8">Prefeitura anuncia novo programa de incentivo fiscal para pequenas empresas</span>
-              <span className="mr-8">Escolas municipais terão aulas de robótica a partir do próximo semestre</span>
-              <span className="mr-8">Obras de revitalização da praça central começam na próxima semana</span>
-              <span className="mr-8">Câmara aprova projeto que regulamenta delivery de alimentos na cidade</span>
+              {noticias.map((noticia, index) => (
+                <span key={index} className="mr-8">{noticia}</span>
+              ))}
             </span>
           </div>
         </div>

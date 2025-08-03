@@ -29,6 +29,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
 
   const getCategoryColor = (cat: string) => {
+    if (!cat) return 'bg-indigo-600';
+    
     const colors: { [key: string]: string } = {
       'educacao': 'bg-blue-600',
       'economia': 'bg-green-600',
@@ -43,7 +45,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   if (featured) {
     return (
-      <div className={`md:col-span-2 bg-gray-50 rounded-xl overflow-hidden shadow-md relative ${className}`}>
+      <Link href={`/noticias/${id}`} className={`md:col-span-2 bg-gray-50 rounded-xl overflow-hidden shadow-md relative block hover:shadow-lg transition-shadow cursor-pointer ${className}`}>
         <div className="relative h-64 bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center">
           {imageUrl ? (
             <Image
@@ -70,12 +72,12 @@ const NewsCard: React.FC<NewsCardProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </Link>
     );
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow-md overflow-hidden card-hover transition ${className}`}>
+    <Link href={`/noticias/${id}`} className={`bg-white rounded-xl shadow-md overflow-hidden card-hover transition block hover:shadow-lg cursor-pointer ${className}`}>
       <div className="relative h-40 bg-gray-200">
         {imageUrl ? (
           <Image
@@ -90,22 +92,22 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </div>
         )}
         <div className={`absolute top-2 left-2 ${getCategoryColor(category)} text-white text-xs font-bold px-2 py-1 rounded`}>
-          {category.toUpperCase()}
+          {category ? category.toUpperCase() : 'GERAL'}
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-bold text-lg mb-2 line-clamp-2">{title}</h3>
+        <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-indigo-600 transition-colors">{title}</h3>
         <p className="text-gray-600 text-sm mb-3 line-clamp-3">{excerpt}</p>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-500">
             <i className="far fa-calendar-alt mr-1"></i> {formatDate(publishedAt)}
           </span>
-          <Link href={`/noticias/${id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
+          <span className="text-indigo-600 font-medium">
             Ler mais
-          </Link>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

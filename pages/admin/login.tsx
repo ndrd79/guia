@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { supabase } from '../../lib/supabase'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('admin@portal.com')
@@ -14,16 +15,21 @@ export default function AdminLogin() {
     setError('')
 
     try {
-      // Verificar credenciais hardcoded
-      if (email === 'admin@portal.com' && password === '123456') {
-        // Simular login bem-sucedido
-        document.cookie = 'admin-logged=true; path=/'
-        router.push('/admin')
-      } else {
-        setError('Credenciais inválidas')
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError) {
+        throw authError
       }
-    } catch (err) {
-      setError('Erro ao fazer login')
+
+      if (data.user) {
+        router.push('/admin/noticias')
+      }
+    } catch (err: any) {
+      console.error('Erro de login:', err)
+      setError(err.message || 'Erro ao fazer login')
     } finally {
       setLoading(false)
     }

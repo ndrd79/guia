@@ -9,7 +9,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Cliente para uso no servidor (SSR)
-export function createServerSupabaseClient(ctx: GetServerSidePropsContext) {
+export function createServerSupabaseClient(ctx?: GetServerSidePropsContext) {
+  if (!ctx) {
+    // Retorna cliente simples quando não há contexto
+    return createClient(supabaseUrl, supabaseAnonKey)
+  }
+  
   return createServerClient(
     supabaseUrl,
     supabaseAnonKey,
@@ -38,6 +43,8 @@ export interface Noticia {
   imagem?: string
   descricao: string
   conteudo: string
+  banner_id?: string
+  destaque?: boolean
   created_at: string
   updated_at: string
 }

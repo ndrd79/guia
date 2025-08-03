@@ -2,73 +2,41 @@ import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+import { GetServerSideProps } from 'next';
 import Header from '../components/Header';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import NewsCard from '../components/NewsCard';
 import BannerContainer from '../components/BannerContainer';
 import { formatDate } from '../lib/formatters';
+import { createServerSupabaseClient, Noticia } from '../lib/supabase';
 
-const HomePage: React.FC = () => {
-  // Dados mockados para demonstração
-  const featuredNews = {
-    id: '1',
-    title: 'Prefeitura lança programa de revitalização do centro histórico',
-    excerpt: 'Projeto inclui calçamento, iluminação e paisagismo em 12 quadras do centro da cidade.',
-    imageUrl: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-    category: 'geral',
-    publishedAt: '2023-06-15',
-    views: 1200,
+interface HomePageProps {
+  noticias: Noticia[]
+}
+
+const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
+  // Separar notícias em destaque e recentes
+  const featuredNews = noticias.length > 0 ? {
+    id: noticias[0].id,
+    title: noticias[0].titulo,
+    excerpt: noticias[0].descricao,
+    imageUrl: noticias[0].imagem || 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
+    category: noticias[0].categoria.toLowerCase(),
+    publishedAt: formatDate(noticias[0].data),
+    views: 1200, // Placeholder - pode ser implementado no futuro
     featured: true
-  };
+  } : null;
 
-  const recentNews = [
-    {
-      id: '2',
-      title: 'Escolas municipais recebem novos laboratórios de informática',
-      excerpt: 'Investimento de R$ 350 mil beneficia 12 escolas da rede municipal de ensino.',
-      imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80',
-      category: 'educacao',
-      publishedAt: '2023-06-14',
-      featured: false
-    },
-    {
-      id: '3',
-      title: 'Feira do Empreendedor tem recorde de participantes',
-      excerpt: 'Evento reuniu mais de 80 expositores e 3 mil visitantes no último final de semana.',
-      imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80',
-      category: 'economia',
-      publishedAt: '2023-06-13',
-      featured: false
-    },
-    {
-      id: '4',
-      title: 'Seleção municipal de futsal é campeã estadual',
-      excerpt: 'Time de Maria Helena vence competição e se classifica para o nacional.',
-      imageUrl: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-      category: 'esportes',
-      publishedAt: '2023-06-12',
-      featured: false
-    },
-    {
-      id: '5',
-      title: 'Posto de saúde central terá horário ampliado',
-      excerpt: 'A partir de julho, unidade funcionará até as 20h durante a semana.',
-      imageUrl: 'https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-      category: 'saude',
-      publishedAt: '2023-06-11',
-      featured: false
-    },
-    {
-      id: '6',
-      title: 'Festival de Inverno terá shows gratuitos em julho',
-      excerpt: 'Programação inclui música, teatro e oficinas culturais durante todo o mês.',
-      imageUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-      category: 'cultura',
-      publishedAt: '2023-06-10',
-      featured: false
-    }
-  ];
+  const recentNews = noticias.slice(1, 6).map(noticia => ({
+    id: noticia.id,
+    title: noticia.titulo,
+    excerpt: noticia.descricao,
+    imageUrl: noticia.imagem || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80',
+    category: noticia.categoria.toLowerCase(),
+    publishedAt: formatDate(noticia.data),
+    featured: false
+  }));
 
   const categories = [
     { icon: 'fas fa-utensils', name: 'Restaurantes', href: '/guia?categoria=restaurantes' },
@@ -460,6 +428,55 @@ const HomePage: React.FC = () => {
       <Footer />
     </>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  try {
+    const supabase = createServerSupabaseClient(context)
+    
+    // Buscar notícias em destaque (máximo 3) e notícias recentes (máximo 3)
+    const { data: noticiasDestaque, error: errorDestaque } = await supabase
+      .from('noticias')
+      .select('*')
+      .eq('destaque', true)
+      .order('data', { ascending: false })
+      .limit(3)
+    
+    const { data: noticiasRecentes, error: errorRecentes } = await supabase
+      .from('noticias')
+      .select('*')
+      .order('data', { ascending: false })
+      .limit(3)
+    
+    if (errorDestaque || errorRecentes) {
+      console.error('Erro ao buscar notícias:', errorDestaque || errorRecentes)
+      return {
+        props: {
+          noticias: []
+        }
+      }
+    }
+    
+    // Combinar notícias em destaque e recentes, removendo duplicatas
+    const todasNoticias = [...(noticiasDestaque || [])]
+    const noticiasRecentesFiltered = (noticiasRecentes || []).filter(
+      noticia => !todasNoticias.some(n => n.id === noticia.id)
+    )
+    todasNoticias.push(...noticiasRecentesFiltered.slice(0, 6 - todasNoticias.length))
+    
+    return {
+      props: {
+        noticias: todasNoticias
+      }
+    }
+  } catch (error) {
+    console.error('Erro no getServerSideProps:', error)
+    return {
+      props: {
+        noticias: []
+      }
+    }
+  }
 };
 
 export default HomePage;
