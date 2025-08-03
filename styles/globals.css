@@ -4,9 +4,30 @@
 @tailwind utilities;
 
 @layer base {
-  body {
+  html, body {
     font-family: 'Poppins', sans-serif;
     background-color: #f8fafc;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  #__next {
+    min-height: 100vh;
+    width: 100%;
+  }
+  
+  /* Fix para viewport mobile */
+  @supports (-webkit-touch-callout: none) {
+    html, body {
+      min-height: -webkit-fill-available;
+    }
+    
+    #__next {
+      min-height: -webkit-fill-available;
+    }
   }
 }
 
@@ -317,6 +338,55 @@
     
     .news-grid {
       grid-template-columns: 1fr;
+    }
+    
+    /* Correções específicas para mobile */
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    /* Evita scroll horizontal */
+    * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    
+    /* Correção para elementos que podem causar overflow */
+    img, video, iframe {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Correção para cards em mobile */
+    .card-hover {
+      transform: none !important;
+    }
+    
+    .card-hover:hover {
+      transform: none !important;
+    }
+    
+    /* Correção para news ticker em mobile */
+    .news-ticker {
+      font-size: 0.875rem;
+    }
+    
+    /* Correção para gradientes em mobile */
+    .gradient-bg {
+      background-attachment: scroll;
+    }
+  }
+  
+  /* Correções específicas para iOS Safari */
+  @supports (-webkit-touch-callout: none) {
+    .gradient-bg {
+      background-attachment: scroll;
+    }
+    
+    /* Fix para altura da viewport no iOS */
+    body {
+      min-height: -webkit-fill-available;
     }
   }
 }
