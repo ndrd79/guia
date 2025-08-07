@@ -22,7 +22,34 @@ interface Event {
   isFeatured: boolean
 }
 
+// Função para obter a próxima terça-feira
+const getNextTuesday = () => {
+  const today = new Date();
+  const daysUntilTuesday = (2 - today.getDay() + 7) % 7;
+  const nextTuesday = new Date(today);
+  nextTuesday.setDate(today.getDate() + (daysUntilTuesday === 0 ? 7 : daysUntilTuesday));
+  return nextTuesday;
+};
+
+const nextTuesday = getNextTuesday();
+const nextTuesdayFormatted = `${nextTuesday.getDate()} ${nextTuesday.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}`;
+
 const mockEvents: Event[] = [
+  {
+    id: 0,
+    title: "Feira do Produtor",
+    description: "Produtos frescos direto do campo. Frutas, verduras, legumes e produtos artesanais dos produtores locais. Toda terça-feira na Praça Central.",
+    date: nextTuesdayFormatted,
+    time: "06:00 - 12:00",
+    location: "Praça Central - Maria Helena",
+    price: "Gratuito",
+    category: "Feira",
+    icon: "fas fa-seedling",
+    gradient: "from-green-500 to-emerald-400",
+    tag: "Toda Terça",
+    tagColor: "text-green-600",
+    isFeatured: true
+  },
   {
     id: 1,
     title: "Festival de Música",
@@ -128,7 +155,8 @@ const filterOptions = [
   'Este mês',
   'Gratuitos',
   'Culturais',
-  'Esportivos'
+  'Esportivos',
+  'Feiras'
 ]
 
 export default function Eventos() {
@@ -151,6 +179,9 @@ export default function Eventos() {
         break
       case 'Esportivos':
         filtered = mockEvents.filter(event => event.category === 'Esporte')
+        break
+      case 'Feiras':
+        filtered = mockEvents.filter(event => event.category === 'Feira')
         break
       default:
         filtered = mockEvents
@@ -298,16 +329,16 @@ export default function Eventos() {
           {regularEvents.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-6">Todos os Eventos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {regularEvents.map(event => (
                   <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden event-card">
-                    <div className={`relative h-40 bg-gradient-to-r ${event.gradient} flex items-center justify-center`}>
-                      <i className={`${event.icon} text-white text-4xl`}></i>
+                    <div className={`relative h-32 bg-gradient-to-r ${event.gradient} flex items-center justify-center`}>
+                      <i className={`${event.icon} text-white text-3xl`}></i>
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2">{event.title}</h3>
-                      <p className="text-gray-600 text-sm mb-3">{event.description}</p>
-                      <div className="flex justify-between items-center text-sm">
+                    <div className="p-3">
+                      <h3 className="font-bold text-base mb-1">{event.title}</h3>
+                      <p className="text-gray-600 text-xs mb-2">{event.description}</p>
+                      <div className="flex justify-between items-center text-xs">
                         <div>
                           <div className="text-gray-500">
                             <i className="far fa-calendar-alt mr-1"></i> {event.date}

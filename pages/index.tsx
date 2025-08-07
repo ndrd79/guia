@@ -8,6 +8,7 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import NewsCard from '../components/NewsCard';
 import BannerContainer from '../components/BannerContainer';
+import BusinessCarousel from '../components/BusinessCarousel';
 import { formatDate } from '../lib/formatters';
 import { createServerSupabaseClient, Noticia } from '../lib/supabase';
 
@@ -50,44 +51,174 @@ const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
   const featuredBusinesses = [
     {
       id: '1',
-      name: 'Padaria Doce Sabor',
-      description: 'Padaria artesanal com os melhores pães da região.',
-      rating: 4.5,
-      reviews: 42,
+      name: 'Restaurante Sabor da Terra',
+      description: 'Culinária regional com ingredientes frescos e ambiente aconchegante.',
+      rating: 4.8,
+      reviews: 127,
       location: 'Centro',
-      featured: true
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Restaurante'
     },
     {
       id: '2',
-      name: 'AutoMecânica Rapidão',
-      description: 'Serviços automotivos com garantia e qualidade.',
-      rating: 4.0,
-      reviews: 28,
-      location: 'Vila Nova',
-      featured: false
+      name: 'Auto Mecânica Silva',
+      description: 'Serviços automotivos especializados com mais de 20 anos de experiência.',
+      rating: 4.6,
+      reviews: 89,
+      location: 'Zona Industrial',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Automotivo'
     },
     {
       id: '3',
-      name: 'Studio Beleza Total',
-      description: 'Cabelo, maquiagem, estética e muito mais.',
-      rating: 5.0,
-      reviews: 67,
-      location: 'Jardim das Flores',
-      featured: false,
-      isNew: true
+      name: 'Farmácia Central',
+      description: 'Medicamentos, produtos de higiene e atendimento farmacêutico especializado.',
+      rating: 4.7,
+      reviews: 156,
+      location: 'Centro',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Saúde'
     },
     {
       id: '4',
-      name: 'Supermercado Bom Preço',
-      description: 'Tudo que você precisa com os melhores preços.',
+      name: 'Padaria Pão Dourado',
+      description: 'Pães frescos, doces caseiros e café da manhã completo.',
       rating: 4.5,
-      reviews: 35,
+      reviews: 203,
+      location: 'Bairro São José',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Alimentação'
+    },
+    {
+      id: '5',
+      name: 'Salão Beleza & Estilo',
+      description: 'Cortes modernos, tratamentos capilares e serviços de beleza completos.',
+      rating: 4.9,
+      reviews: 94,
       location: 'Centro',
-      featured: false
+      featured: true,
+      isNew: true,
+      image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Beleza'
+    },
+    {
+      id: '6',
+      name: 'Loja Tech Solutions',
+      description: 'Equipamentos de informática, assistência técnica e soluções em TI.',
+      rating: 4.4,
+      reviews: 67,
+      location: 'Centro Comercial',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Tecnologia'
+    },
+    {
+      id: '7',
+      name: 'Academia Fitness Pro',
+      description: 'Equipamentos modernos, personal trainers e aulas em grupo.',
+      rating: 4.6,
+      reviews: 142,
+      location: 'Zona Norte',
+      featured: true,
+      isNew: true,
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Fitness'
+    },
+    {
+      id: '8',
+      name: 'Pet Shop Amigo Fiel',
+      description: 'Produtos para pets, banho e tosa, consultas veterinárias.',
+      rating: 4.7,
+      reviews: 118,
+      location: 'Bairro Jardim',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Pet Shop'
+    },
+    {
+      id: '9',
+      name: 'Floricultura Jardim Secreto',
+      description: 'Flores frescas, arranjos personalizados e plantas ornamentais.',
+      rating: 4.8,
+      reviews: 85,
+      location: 'Centro',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1441123100240-f9f3f77ed41b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Floricultura'
+    },
+    {
+      id: '10',
+      name: 'Pizzaria Bella Napoli',
+      description: 'Pizzas artesanais no forno a lenha com ingredientes importados.',
+      rating: 4.5,
+      reviews: 176,
+      location: 'Zona Sul',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Pizzaria'
+    },
+    {
+      id: '11',
+      name: 'Ótica Visão Clara',
+      description: 'Óculos de grau e sol, exames oftalmológicos e lentes de contato.',
+      rating: 4.6,
+      reviews: 92,
+      location: 'Centro',
+      featured: true,
+      image: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Ótica'
+    },
+    {
+      id: '12',
+      name: 'Livraria Saber & Cultura',
+      description: 'Livros, material escolar, papelaria e café literário.',
+      rating: 4.7,
+      reviews: 134,
+      location: 'Centro Cultural',
+      featured: true,
+      isNew: true,
+      image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Livraria'
     }
   ];
 
+  // Função para obter a próxima terça-feira
+  const getNextTuesday = () => {
+    const today = new Date();
+    const daysUntilTuesday = (2 - today.getDay() + 7) % 7;
+    const nextTuesday = new Date(today);
+    nextTuesday.setDate(today.getDate() + (daysUntilTuesday === 0 ? 7 : daysUntilTuesday));
+    return nextTuesday;
+  };
+
+  const nextTuesday = getNextTuesday();
+  const nextTuesdayFormatted = nextTuesday.toISOString().split('T')[0];
+  const isToday = nextTuesday.toDateString() === new Date().toDateString();
+  const isTomorrow = nextTuesday.toDateString() === new Date(Date.now() + 86400000).toDateString();
+  
+  let feiraStatus = 'TERÇA';
+  if (isToday) feiraStatus = 'HOJE';
+  else if (isTomorrow) feiraStatus = 'AMANHÃ';
+  else feiraStatus = `${nextTuesday.getDate()} ${nextTuesday.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}`;
+
   const upcomingEvents = [
+    {
+      id: 'feira-produtor',
+      title: 'Feira do Produtor',
+      description: 'Produtos frescos direto do campo. Frutas, verduras, legumes e produtos artesanais.',
+      date: nextTuesdayFormatted,
+      time: '06:00 - 12:00',
+      price: 'Gratuito',
+      status: feiraStatus,
+      icon: 'fas fa-seedling',
+      gradient: 'from-green-500 to-emerald-400',
+      isRecurring: true,
+      location: 'Praça Central'
+    },
     {
       id: '1',
       title: 'Festival de Música',
@@ -275,39 +406,7 @@ const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
             
             <BannerContainer position="Empresas Destaque - Topo" className="w-full h-32 rounded-lg mb-8" />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredBusinesses.map((business) => (
-                <div key={business.id} className="bg-white rounded-xl shadow-md overflow-hidden card-hover transition">
-                  <div className="relative h-48 bg-gray-200 flex items-center justify-center">
-                    <i className="fas fa-store text-4xl text-gray-400"></i>
-                    {business.featured && (
-                      <div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">Destaque</div>
-                    )}
-                    {business.isNew && (
-                      <div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded">Novo</div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-lg mb-1">{business.name}</h3>
-                    <div className="flex items-center text-yellow-400 mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <i key={i} className={`fas fa-star${i < Math.floor(business.rating) ? '' : i < business.rating ? '-half-alt' : ' far'}`}></i>
-                      ))}
-                      <span className="text-gray-600 text-sm ml-1">({business.reviews})</span>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-3">{business.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-indigo-600 text-sm font-medium">
-                        <i className="fas fa-map-marker-alt mr-1"></i> {business.location}
-                      </span>
-                      <Link href={`/guia/${business.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-                        Ver detalhes
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <BusinessCarousel businesses={featuredBusinesses.filter(business => business.featured)} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               <BannerContainer position="Empresas Destaque - Rodapé 1" className="h-32 rounded-lg" />
@@ -326,20 +425,30 @@ const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {upcomingEvents.map((event) => (
-                <div key={event.id} className="bg-gray-50 rounded-xl overflow-hidden shadow-md event-card">
-                  <div className={`relative h-48 bg-gradient-to-r ${event.gradient} flex items-center justify-center`}>
+                <div key={event.id} className={`bg-gray-50 rounded-xl overflow-hidden shadow-md event-card ${event.isRecurring ? 'ring-2 ring-green-400' : ''}`}>
+                  <div className={`relative h-32 bg-gradient-to-r ${event.gradient} flex items-center justify-center`}>
                     <div className="absolute top-0 left-0 bg-white text-indigo-600 font-bold px-3 py-1 m-2 rounded">{event.status}</div>
-                    <i className={`${event.icon} text-white text-5xl`}></i>
+                    {event.isRecurring && (
+                      <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-2 py-1 m-2 rounded-full flex items-center">
+                        <i className="fas fa-redo-alt mr-1"></i> Toda Terça
+                      </div>
+                    )}
+                    <i className={`${event.icon} text-white text-3xl`}></i>
                   </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-lg">{event.title}</h3>
+                  <div className="p-3">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-bold text-base">{event.title}</h3>
                       <div className="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded">{event.price}</div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3">{event.description}</p>
-                    <div className="flex justify-between items-center text-sm">
+                    <p className="text-gray-600 text-xs mb-2">{event.description}</p>
+                    {event.location && (
+                      <div className="text-gray-500 text-xs mb-1">
+                        <i className="fas fa-map-marker-alt mr-1"></i> {event.location}
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-xs">
                       <div>
                         <div className="text-gray-500"><i className="far fa-calendar-alt mr-1"></i> {formatDate(event.date)}</div>
                         <div className="text-gray-500"><i className="far fa-clock mr-1"></i> {event.time}</div>
