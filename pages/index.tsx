@@ -183,6 +183,18 @@ const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
       isNew: true,
       image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
       category: 'Livraria'
+    },
+    {
+      id: '13',
+      name: 'MH Cell',
+      description: 'Assistência técnica em celulares, vendas e acessórios. Contato: (44) 98435-5545',
+      rating: 4.8,
+      reviews: 156,
+      location: 'Rua Piedade, 1385',
+      featured: true,
+      isNew: true,
+      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
+      category: 'Tecnologia'
     }
   ];
 
