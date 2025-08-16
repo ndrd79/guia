@@ -104,10 +104,10 @@ const Footer: React.FC = () => {
               <h3 className="text-white font-bold text-lg mb-4">Contato</h3>
               <ul className="space-y-2">
                 <li className="flex items-center">
-                  <i className="fas fa-map-marker-alt mr-2"></i> Rua Principal, 123 - Centro
+                  <i className="fas fa-map-marker-alt mr-2"></i> Rua Piedade, 1385 - Maria Helena PR
                 </li>
                 <li className="flex items-center">
-                  <i className="fas fa-phone-alt mr-2"></i> (44) 1234-5678
+                  <i className="fab fa-whatsapp mr-2"></i> (44) 98435-5545
                 </li>
                 <li className="flex items-center">
                   <i className="fas fa-envelope mr-2"></i> contato@portalmariahelena.com.br
@@ -121,12 +121,12 @@ const Footer: React.FC = () => {
           
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              &copy; 2023 Portal Maria Helena. Todos os direitos reservados.
+              &copy; 2025 Portal Maria Helena. Todos os direitos reservados.
             </div>
             <div className="flex space-x-6">
               <Link href="/termos" className="hover:text-white transition">Termos de Serviço</Link>
               <Link href="/privacidade" className="hover:text-white transition">Política de Privacidade</Link>
-              <Link href="/sitemap" className="hover:text-white transition">Mapa do Site</Link>
+              <Link href="/mapa-site" className="hover:text-white transition">Mapa do Site</Link>
             </div>
           </div>
         </div>
