@@ -51,7 +51,7 @@ const Header: React.FC = () => {
           <span className="hidden md:inline">Portal Oficial de Maria Helena - Conectando pessoas e negócios</span>
         </div>
         <div className="flex space-x-4">
-          <Link href="/auth/login" className="hover:text-indigo-200">
+          <Link href="/area-usuario" className="hover:text-indigo-200">
             <i className="fas fa-user mr-1"></i> Área do Usuário
           </Link>
           <Link href="/admin" className="hover:text-indigo-200">

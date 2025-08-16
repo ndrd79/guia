@@ -103,7 +103,9 @@ const ContatoPage = () => {
           <span className="hidden md:inline">Portal Oficial de Maria Helena - Conectando pessoas e negócios</span>
         </div>
         <div className="flex space-x-4">
-          <a href="#" className="hover:text-indigo-200"><i className="fas fa-user mr-1"></i> Área do Usuário</a>
+          <Link href="/area-usuario" className="hover:text-indigo-200">
+            <i className="fas fa-user mr-1"></i> Área do Usuário
+          </Link>
           <a href="#" className="hover:text-indigo-200"><i className="fas fa-lock mr-1"></i> Painel Admin</a>
         </div>
       </div>
