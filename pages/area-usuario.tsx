@@ -5,16 +5,10 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { supabase } from '../lib/supabase'
 import { UserProfile } from '../lib/types'
-
-interface UserSession {
-  user: {
-    id: string
-    email: string
-  }
-}
+import type { Session } from '@supabase/supabase-js'
 
 export default function AreaUsuario() {
-  const [session, setSession] = useState<UserSession | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -89,7 +83,7 @@ export default function AreaUsuario() {
                   <h1 className="text-2xl font-bold text-gray-800">
                     Olá, {profile?.nome || 'Usuário'}!
                   </h1>
-                  <p className="text-gray-600">{session.user.email}</p>
+                  <p className="text-gray-600">{session.user.email || 'Email não disponível'}</p>
                 </div>
               </div>
               <button
