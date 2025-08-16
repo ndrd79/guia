@@ -34,10 +34,11 @@ const produtorSchema = z.object({
 type FeiraForm = z.infer<typeof feiraSchema>
 type ProdutorForm = z.infer<typeof produtorSchema>
 
-interface FeiraProdutor {
-  feiraInfo: FeiraInfo | null
-  produtores: Produtor[]
-}
+// Remover esta interface duplicada:
+// interface FeiraProdutor {
+//   feiraInfo: FeiraInfo | null
+//   produtores: Produtor[]
+// }
 
 export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) {
   const [activeTab, setActiveTab] = useState<'feira' | 'produtores'>('feira')
