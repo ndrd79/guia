@@ -7,6 +7,7 @@ interface DashboardStats {
   classificados: number
   eventos: number
   banners: number
+  empresas: number
 }
 
 interface TableStatus {
@@ -14,6 +15,7 @@ interface TableStatus {
   classificados: boolean
   eventos: boolean
   banners: boolean
+  empresas: boolean
 }
 
 interface DashboardProps {
@@ -46,7 +48,7 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
         </div>
 
         {/* Links para as seções */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <a href="/admin/noticias" className="block bg-blue-100 text-blue-800 text-center py-4 rounded shadow hover:bg-blue-200 transition-colors">
             📰 Gerenciar Notícias
           </a>
@@ -59,10 +61,13 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
           <a href="/admin/banners" className="block bg-yellow-100 text-yellow-800 text-center py-4 rounded shadow hover:bg-yellow-200 transition-colors">
             🎯 Gerenciar Banners
           </a>
+          <a href="/admin/empresas" className="block bg-orange-100 text-orange-800 text-center py-4 rounded shadow hover:bg-orange-200 transition-colors">
+            🏢 Gerenciar Empresas
+          </a>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <StatCard
             title="Notícias"
             value={stats.noticias}
@@ -79,12 +84,16 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
             title="Banners"
             value={stats.banners}
           />
+          <StatCard
+            title="Empresas"
+            value={stats.empresas}
+          />
         </div>
 
         {/* Simple Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Resumo</h2>
-          <p className="text-gray-600 mb-4">Total de conteúdos: {stats.noticias + stats.classificados + stats.eventos + stats.banners}</p>
+          <p className="text-gray-600 mb-4">Total de conteúdos: {stats.noticias + stats.classificados + stats.eventos + stats.banners + stats.empresas}</p>
           <div className="space-y-2">
             <p className="text-sm text-gray-500">✅ Sistema funcionando corretamente</p>
             <p className="text-sm text-gray-500">📊 Dados carregados com sucesso</p>
@@ -95,7 +104,7 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
         {/* Database Status */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Status do Banco de Dados</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className={`p-4 rounded-lg border-2 ${
               tableStatus.noticias ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
             }`}>
@@ -159,6 +168,22 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
                 {tableStatus.banners ? 'Tabela ativa' : 'Tabela não encontrada'}
               </p>
             </div>
+            
+            <div className={`p-4 rounded-lg border-2 ${
+              tableStatus.empresas ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+            }`}>
+              <div className="flex items-center space-x-2">
+                <span className={`text-lg ${
+                  tableStatus.empresas ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {tableStatus.empresas ? '✅' : '❌'}
+                </span>
+                <span className="font-medium">Empresas</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                {tableStatus.empresas ? 'Tabela ativa' : 'Tabela não encontrada'}
+              </p>
+            </div>
           </div>
           
           {!tableStatus.banners && (
@@ -208,11 +233,12 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   }
 
   // Verificar todas as tabelas
-  const [noticiasResult, classificadosResult, eventosResult, bannersResult] = await Promise.all([
+  const [noticiasResult, classificadosResult, eventosResult, bannersResult, empresasResult] = await Promise.all([
     checkTable('noticias'),
     checkTable('classificados'), 
     checkTable('eventos'),
-    checkTable('banners')
+    checkTable('banners'),
+    checkTable('empresas')
   ])
 
   return {
@@ -222,12 +248,14 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
         classificados: classificadosResult.count,
         eventos: eventosResult.count,
         banners: bannersResult.count,
+        empresas: empresasResult.count,
       },
       tableStatus: {
         noticias: noticiasResult.exists,
         classificados: classificadosResult.exists,
         eventos: eventosResult.exists,
         banners: bannersResult.exists,
+        empresas: empresasResult.exists,
       },
     },
   }

@@ -314,7 +314,7 @@ export default function Eventos() {
                             <div className="text-xs text-gray-500">{event.category}</div>
                           </div>
                         </div>
-                        <Link href={`/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
+                        <Link href={event.id === 0 ? '/eventos/feira-do-produtor' : `/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
                           Detalhes
                         </Link>
                       </div>
@@ -347,8 +347,8 @@ export default function Eventos() {
                             <i className="far fa-clock mr-1"></i> {event.time}
                           </div>
                         </div>
-                        <Link href={`/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
-                          + Info
+                        <Link href={event.id === 0 ? '/eventos/feira-do-produtor' : `/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
+                          Ver mais
                         </Link>
                       </div>
                     </div>

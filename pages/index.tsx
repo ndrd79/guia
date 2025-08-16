@@ -465,7 +465,7 @@ const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
                         <div className="text-gray-500"><i className="far fa-calendar-alt mr-1"></i> {formatDate(event.date)}</div>
                         <div className="text-gray-500"><i className="far fa-clock mr-1"></i> {event.time}</div>
                       </div>
-                      <Link href={`/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
+                      <Link href={event.id === 'feira-produtor' ? '/eventos/feira-do-produtor' : `/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
                         + Info
                       </Link>
                     </div>

@@ -85,3 +85,23 @@ export interface Banner {
   created_at: string
   updated_at: string
 }
+
+export interface Empresa {
+  id: string
+  name: string
+  description?: string
+  category: string
+  rating: number
+  reviews: number
+  location?: string
+  phone?: string
+  email?: string
+  website?: string
+  address?: string
+  image?: string
+  featured: boolean
+  is_new: boolean
+  ativo: boolean
+  created_at: string
+  updated_at: string
+}

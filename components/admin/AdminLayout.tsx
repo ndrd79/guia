@@ -7,6 +7,8 @@ import {
   ShoppingBag, 
   Calendar, 
   Image, 
+  Building2,
+  Palette,
   LogOut, 
   Menu, 
   X,
@@ -23,7 +25,10 @@ const menuItems = [
   { href: '/admin/noticias', icon: Newspaper, label: 'Notícias' },
   { href: '/admin/classificados', icon: ShoppingBag, label: 'Classificados' },
   { href: '/admin/eventos', icon: Calendar, label: 'Eventos' },
+  { href: '/admin/feira-produtor', icon: Calendar, label: 'Feira do Produtor' },
   { href: '/admin/banners', icon: Image, label: 'Banners' },
+  { href: '/admin/empresas', icon: Building2, label: 'Empresas' },
+  { href: '/admin/temas-sazonais', icon: Palette, label: 'Temas Sazonais' },
 ]
 
 export default function AdminLayout({ children, title = 'Painel Administrativo' }: AdminLayoutProps) {
