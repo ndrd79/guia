@@ -459,7 +459,7 @@ export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) 
                     </label>
                     <ImageUploader
                       value={produtorForm.watch('imagem') || ''}
-                      onChange={(url) => produtorForm.setValue('imagem', url)}
+                      onChange={(url) => produtorForm.setValue('imagem', url || undefined)}
                       bucket="produtores-images"
                     />
                   </div>
