@@ -81,7 +81,7 @@ export default function AreaUsuario() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">
-                    Olá, {profile?.nome || 'Usuário'}!
+                    Olá, {profile?.nome_completo || 'Usuário'}!
                   </h1>
                   <p className="text-gray-600">{session.user.email || 'Email não disponível'}</p>
                 </div>
