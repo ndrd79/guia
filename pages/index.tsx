@@ -352,7 +352,7 @@ const HomePage: React.FC<HomePageProps> = ({ noticias }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {featuredNews && <NewsCard {...featuredNews} />}
-              {recentNews.slice(0, 4).map((news) => (
+              {recentNews.slice(0, 8).map((news) => (
                 <NewsCard key={news.id} {...news} />
               ))}
             </div>
@@ -555,19 +555,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const supabase = createServerSupabaseClient(context)
     
-    // Buscar notícias em destaque (máximo 3) e notícias recentes (máximo 3)
+    // Buscar mais notícias em destaque (máximo 5) e notícias recentes (máximo 8)
     const { data: noticiasDestaque, error: errorDestaque } = await supabase
       .from('noticias')
       .select('*')
       .eq('destaque', true)
       .order('data', { ascending: false })
-      .limit(3)
+      .limit(5)
     
     const { data: noticiasRecentes, error: errorRecentes } = await supabase
       .from('noticias')
       .select('*')
       .order('data', { ascending: false })
-      .limit(3)
+      .limit(8)
     
     if (errorDestaque || errorRecentes) {
       console.error('Erro ao buscar notícias:', errorDestaque || errorRecentes)
@@ -583,7 +583,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const noticiasRecentesFiltered = (noticiasRecentes || []).filter(
       noticia => !todasNoticias.some(n => n.id === noticia.id)
     )
-    todasNoticias.push(...noticiasRecentesFiltered.slice(0, 6 - todasNoticias.length))
+    todasNoticias.push(...noticiasRecentesFiltered.slice(0, 9 - todasNoticias.length))
     
     return {
       props: {
