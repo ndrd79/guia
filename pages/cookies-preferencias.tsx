@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import Layout from '../components/Layout';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 interface CookiePreferences {
   essential: boolean;
@@ -101,12 +102,14 @@ const CookiesPreferencias: NextPage = () => {
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>Preferências de Cookies - Guia Comercial</title>
         <meta name="description" content="Gerencie suas preferências de cookies no Guia Comercial" />
         <meta name="robots" content="noindex, nofollow" />
       </Head>
+
+      <Header />
 
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -298,7 +301,9 @@ const CookiesPreferencias: NextPage = () => {
           </div>
         </div>
       </div>
-    </Layout>
+
+      <Footer />
+    </>
   );
 };
 

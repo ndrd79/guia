@@ -1,15 +1,18 @@
 import { NextPage } from 'next';
 import Head from 'next/head';
-import Layout from '../components/Layout';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const PoliticaPrivacidade: NextPage = () => {
   return (
-    <Layout>
+    <>
       <Head>
         <title>Política de Privacidade - Guia Comercial</title>
         <meta name="description" content="Política de Privacidade do Guia Comercial - Como coletamos, usamos e protegemos seus dados pessoais" />
         <meta name="robots" content="index, follow" />
       </Head>
+
+      <Header />
 
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -178,7 +181,9 @@ const PoliticaPrivacidade: NextPage = () => {
           </div>
         </div>
       </div>
-    </Layout>
+
+      <Footer />
+    </>
   );
 };
 
