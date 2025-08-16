@@ -52,7 +52,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null)
   const [empresasList, setEmpresasList] = useState<Empresa[]>(empresas)
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageUrl, setImageUrl] = useState<string>('')
 
   const {
     register,
@@ -358,7 +358,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
             </label>
             <ImageUploader
               value={imageUrl}
-              onChange={setImageUrl}
+              onChange={(url) => setImageUrl(url || '')}
               bucket="empresas"
               folder="logos"
             />
