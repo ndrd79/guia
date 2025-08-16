@@ -28,3 +28,36 @@ export interface FeiraProdutor {
   feiraInfo: FeiraInfo | null
   produtores: Produtor[]
 }
+
+
+// Tipos para usuários
+export interface UserProfile {
+  id: string
+  nome_completo: string
+  telefone?: string
+  cidade?: string
+  estado?: string
+  data_nascimento?: string
+  avatar_url?: string
+  bio?: string
+  ativo: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ClassificadoComUsuario {
+  id: string
+  titulo: string
+  categoria: string
+  preco?: number
+  imagem?: string
+  localizacao?: string
+  descricao?: string
+  user_id?: string
+  contato_nome?: string
+  contato_telefone?: string
+  contato_email?: string
+  created_at?: string
+  updated_at?: string
+  user_profile?: UserProfile
+}
