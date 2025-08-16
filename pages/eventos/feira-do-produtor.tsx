@@ -31,7 +31,8 @@ export default function FeiraDoProdutor({ feiraInfo, produtores }: FeiraDoProdut
     data_funcionamento: "Toda terça-feira",
     horario_funcionamento: "06:00 às 12:00",
     local: "Praça Central - Maria Helena",
-    informacoes_adicionais: "Venha conhecer os melhores produtos da nossa região! Apoie os produtores locais e leve para casa alimentos frescos e de qualidade."
+    informacoes_adicionais: "Venha conhecer os melhores produtos da nossa região! Apoie os produtores locais e leve para casa alimentos frescos e de qualidade.",
+    contato: undefined
   }
 
   const info = feiraInfo || defaultInfo
