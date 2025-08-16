@@ -95,10 +95,20 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
     setIsLoading(true)
     try {
       const empresaData = {
-        ...data,
-        image: imageUrl || null,
-        email: data.email || null,
-        website: data.website || null
+        name: data.name,
+        description: data.description || undefined,
+        category: data.category,
+        rating: data.rating,
+        reviews: data.reviews,
+        location: data.location || undefined,
+        phone: data.phone || undefined,
+        email: data.email || undefined,
+        website: data.website || undefined,
+        address: data.address || undefined,
+        image: imageUrl || undefined,
+        featured: data.featured,
+        is_new: data.is_new,
+        ativo: data.ativo
       }
 
       if (editingEmpresa) {
@@ -111,10 +121,16 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
         if (error) throw error
 
         // Atualizar lista local
+        const updatedEmpresaData = {
+          ...empresaData,
+          email: empresaData.email || undefined,
+          website: empresaData.website || undefined
+        }
+        
         setEmpresasList(prev => 
           prev.map(emp => 
             emp.id === editingEmpresa.id 
-              ? { ...emp, ...empresaData, updated_at: new Date().toISOString() }
+              ? { ...emp, ...updatedEmpresaData, updated_at: new Date().toISOString() }
               : emp
           )
         )
