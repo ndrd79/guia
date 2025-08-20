@@ -78,11 +78,9 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                           <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
                             {banner.nome}
                           </h2>
-                          {banner.descricao && (
-                            <p className="text-lg md:text-xl mb-6 drop-shadow opacity-90">
-                              {banner.descricao}
-                            </p>
-                          )}
+                          <p className="text-lg md:text-xl mb-6 drop-shadow opacity-90">
+                            Descubra mais sobre este anúncio
+                          </p>
                           <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 inline-block">
                             <span className="text-sm md:text-base font-medium">
                               Clique para saber mais
@@ -120,15 +118,9 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                         <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
                           {banner ? banner.nome : `Categorias ${slideIndex + 1}`}
                         </h2>
-                        {banner && banner.descricao ? (
-                          <p className="text-lg md:text-xl drop-shadow opacity-90">
-                            {banner.descricao}
-                          </p>
-                        ) : (
-                          <p className="text-lg md:text-xl drop-shadow opacity-90">
-                            Explore nossas categorias de negócios
-                          </p>
-                        )}
+                        <p className="text-lg md:text-xl drop-shadow opacity-90">
+                          {banner ? 'Descubra mais sobre este anúncio' : 'Explore nossas categorias de negócios'}
+                        </p>
                       </div>
                     </div>
                   </div>
