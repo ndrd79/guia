@@ -22,7 +22,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 4);
-    }, 4000); // Muda a cada 4 segundos
+    }, 4000);
 
     return () => clearInterval(interval);
   }, []);
@@ -34,10 +34,10 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
   };
 
   return (
-    <section className="py-8 bg-gray-50">
-      <div className="container mx-auto px-4">
-        {/* Container do slide */}
-        <div className="max-w-[1170px] mx-auto h-[330px] relative overflow-hidden rounded-lg shadow-2xl">
+    <section className="py-4 md:py-8 bg-gray-50">
+      <div className="container mx-auto px-2 md:px-4">
+        {/* Container do slide - Altura responsiva */}
+        <div className="max-w-[1170px] mx-auto h-[200px] sm:h-[250px] md:h-[300px] lg:h-[330px] relative overflow-hidden rounded-lg shadow-2xl">
           {/* 4 Slides de cores diferentes */}
           {[0, 1, 2, 3].map((slideIndex) => {
             const banner = getCurrentBanner(slideIndex);
@@ -59,7 +59,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                             alt={banner.nome}
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            sizes="100vw"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1170px"
                             priority={slideIndex === 0}
                             onError={(e) => {
                               console.error('Erro ao carregar banner:', banner.imagem);
@@ -72,17 +72,17 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                         <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                       )}
                       
-                      {/* Conteúdo do Banner */}
-                      <div className="absolute inset-0 flex items-center justify-center p-8">
+                      {/* Conteúdo do Banner - Responsivo */}
+                      <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
                         <div className="text-center text-white max-w-2xl">
-                          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
+                          <h2 className="text-lg sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 md:mb-4 drop-shadow-lg">
                             {banner.nome}
                           </h2>
-                          <p className="text-lg md:text-xl mb-6 drop-shadow opacity-90">
+                          <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 md:mb-6 drop-shadow opacity-90">
                             Descubra mais sobre este anúncio
                           </p>
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 inline-block">
-                            <span className="text-sm md:text-base font-medium">
+                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 md:px-6 md:py-3 inline-block">
+                            <span className="text-xs sm:text-sm md:text-base font-medium">
                               Clique para saber mais
                             </span>
                           </div>
@@ -99,7 +99,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                           alt={banner.nome}
                           fill
                           className="object-cover"
-                          sizes="100vw"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1170px"
                           priority={slideIndex === 0}
                           onError={(e) => {
                             console.error('Erro ao carregar banner:', banner.imagem);
@@ -112,13 +112,13 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                       <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                     )}
                     
-                    {/* Conteúdo do Slide */}
-                    <div className="absolute inset-0 flex items-center justify-center p-8">
+                    {/* Conteúdo do Slide - Responsivo */}
+                    <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
                       <div className="text-center text-white max-w-2xl">
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
+                        <h2 className="text-lg sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 md:mb-4 drop-shadow-lg">
                           {banner ? banner.nome : `Slide ${slideIndex + 1}`}
                         </h2>
-                        <p className="text-lg md:text-xl drop-shadow opacity-90">
+                        <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow opacity-90">
                           {banner ? 'Descubra mais sobre este anúncio' : 'Conteúdo em destaque'}
                         </p>
                       </div>
