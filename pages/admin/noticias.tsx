@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
+import AINewsRewriter from '../../components/admin/AINewsRewriter'
 import { createServerSupabaseClient, supabase, Noticia, Banner } from '../../lib/supabase'
 import { formatDate, formatDateInput } from '../../lib/formatters'
 import { useBanners } from '../../hooks/useBanners'
@@ -88,7 +89,18 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     },
   })
 
+  // Adicionar os watches necessários
   const watchedImagem = watch('imagem')
+  const watchedTitulo = watch('titulo')
+  const watchedDescricao = watch('descricao')
+  const watchedConteudo = watch('conteudo')
+  
+  // Função para atualizar o conteúdo reescrito pela IA
+  const handleRewrittenContent = (rewrittenContent: { title: string; subtitle: string; content: string }) => {
+    setValue('titulo', rewrittenContent.title)
+    setValue('descricao', rewrittenContent.subtitle)
+    setValue('conteudo', rewrittenContent.content)
+  }
 
   const loadNoticias = async () => {
     if (!supabase) return
@@ -112,11 +124,25 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     setLoading(true)
     
     try {
+      // Se a notícia está sendo marcada como destaque, desmarcar todas as outras
+      if (data.destaque) {
+        const { error: updateError } = await supabase
+          .from('noticias')
+          .update({ destaque: false })
+          .neq('id', editingNoticia?.id || 'new') // Não atualizar a notícia atual se estiver editando
+        
+        if (updateError) {
+          console.error('Erro ao desmarcar outras notícias em destaque:', updateError)
+          // Continua mesmo com erro, pois não é crítico
+        }
+      }
+      
       // Preparar dados, removendo campos vazios que devem ser null
       const preparedData = {
         ...data,
         banner_id: data.banner_id || null,
         imagem: data.imagem || null,
+        destaque: data.destaque || false, // Garantir que destaque seja sempre boolean
       }
       
       if (editingNoticia) {
@@ -234,7 +260,10 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
 
         {/* Formulário */}
         {showForm && (
-          <FormCard title={editingNoticia ? 'Editar Notícia' : 'Nova Notícia'}>
+          <FormCard 
+            title={editingNoticia ? 'Editar Notícia' : 'Nova Notícia'}
+            showForm={false}
+          >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -364,6 +393,18 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
                   <p className="mt-1 text-sm text-red-600">{errors.conteudo.message}</p>
                 )}
               </div>
+              
+              {/* Componente de IA para reescrita */}
+              {watchedTitulo && watchedConteudo && (
+                <div className="mt-4">
+                  <AINewsRewriter
+                    title={watchedTitulo}
+                    subtitle={watchedDescricao}
+                    content={watchedConteudo}
+                    onRewrite={handleRewrittenContent}
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end space-x-4">
                 <button

@@ -16,11 +16,11 @@ const Nav: React.FC = () => {
 
   const navItems = [
     { href: '/', label: 'Início' },
+    { href: '/noticias', label: 'Notícias' },
     { href: '/guia', label: 'Guia Comercial' },
     { href: '/classificados', label: 'Classificados' },
     { href: '/eventos', label: 'Eventos' },
     { href: '/servicos', label: 'Serviços' },
-    { href: '/noticias', label: 'Notícias' },
     { href: '/contato', label: 'Contato' },
   ];
 

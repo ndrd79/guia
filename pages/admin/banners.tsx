@@ -29,6 +29,30 @@ interface BannersPageProps {
 // Configurações de posições com tamanhos recomendados
 const posicoesBanner = [
   {
+    nome: 'Hero Carousel',
+    descricao: 'Carrossel principal da página inicial (4 slides de cores)',
+    tamanhoRecomendado: '1170x330 (Hero Banner)',
+    larguraRecomendada: 1170,
+    alturaRecomendada: 330,
+    paginas: ['Página Inicial']
+  },
+  {
+    nome: 'Categorias Banner',
+    descricao: 'Banner acima da seção "Explore Nossas Categorias"',
+    tamanhoRecomendado: '1170x330 (Hero Banner)',
+    larguraRecomendada: 1170,
+    alturaRecomendada: 330,
+    paginas: ['Página Inicial']
+  },
+  {
+    nome: 'Serviços Banner',
+    descricao: 'Banner abaixo da seção "Serviços Úteis"',
+    tamanhoRecomendado: '1170x330 (Hero Banner)',
+    larguraRecomendada: 1170,
+    alturaRecomendada: 330,
+    paginas: ['Página Inicial']
+  },
+  {
     nome: 'Header Superior',
     descricao: 'Topo da página, acima do menu principal',
     tamanhoRecomendado: '728x90 (Leaderboard)',
@@ -320,7 +344,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   }
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    console.log('🔄 Alterando status do banner:', id, 'de', currentStatus, 'para', !currentStatus)
+    console.log('🔄 Alterando status do banner:', id, 'para:', !currentStatus)
     if (!supabase) {
       console.error('❌ Supabase não configurado')
       alert('Sistema não está configurado')
@@ -330,7 +354,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     try {
       const { error } = await supabase
         .from('banners')
-        .update({ 
+        .update({
           ativo: !currentStatus,
           updated_at: new Date().toISOString(),
         })
@@ -381,8 +405,16 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
         {/* Formulário */}
         {showForm && (
-          <FormCard title={editingBanner ? 'Editar Banner' : 'Novo Banner'}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <FormCard 
+            title={editingBanner ? 'Editar Banner' : 'Novo Banner'}
+            onSubmit={handleSubmit(onSubmit)}
+            isLoading={loading}
+            submitText={editingBanner ? 'Atualizar' : 'Criar'}
+            onCancel={handleCloseForm}
+            showForm={true} // Altere de false para true
+          >
+            {/* Remover a tag <form> daqui */}
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -398,7 +430,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     <p className="mt-1 text-sm text-red-600">{errors.nome.message}</p>
                   )}
                 </div>
-
+                
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Posição no Site *
@@ -540,7 +572,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   {loading ? 'Salvando...' : editingBanner ? 'Atualizar' : 'Criar'}
                 </button>
               </div>
-            </form>
+            </div>
+            {/* REMOVA ESTA LINHA: </form> */}
           </FormCard>
         )}
 

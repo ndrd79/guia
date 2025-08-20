@@ -537,3 +537,14 @@
     100% { transform: rotate(360deg); }
   }
 }
+
+/* Remover estas linhas de debug */
+.debug-newscard {
+  border: 3px solid red !important;
+  background: yellow !important;
+}
+
+.debug-newscard * {
+  border: 1px solid blue !important;
+  background: rgba(0,255,0,0.1) !important;
+}

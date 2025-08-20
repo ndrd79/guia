@@ -1,22 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-
-interface Business {
-  id: string;
-  name: string;
-  description: string;
-  rating: number;
-  reviews: number;
-  location: string;
-  featured: boolean;
-  isNew?: boolean;
-  image: string;
-  category: string;
-}
+import { Empresa } from '../lib/supabase';
 
 interface BusinessCarouselProps {
-  businesses: Business[];
+  businesses: Empresa[];
 }
 
 const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
@@ -25,7 +13,7 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
 
   // Auto-play functionality
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !businesses || businesses.length === 0) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => 
@@ -34,7 +22,7 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [businesses.length, isAutoPlaying]);
+  }, [businesses?.length, isAutoPlaying]);
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
@@ -43,19 +31,23 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
   };
 
   const goToPrevious = () => {
+    if (!businesses || businesses.length === 0) return;
     setCurrentIndex(currentIndex === 0 ? businesses.length - 1 : currentIndex - 1);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToNext = () => {
+    if (!businesses || businesses.length === 0) return;
     setCurrentIndex(currentIndex === businesses.length - 1 ? 0 : currentIndex + 1);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const getVisibleBusinesses = () => {
-    const visibleCount = 4; // Show 4 businesses at a time
+    if (!businesses || businesses.length === 0) return [];
+    
+    const visibleCount = Math.min(4, businesses.length); // Show up to 4 businesses at a time
     const result = [];
     
     for (let i = 0; i < visibleCount; i++) {
@@ -78,24 +70,37 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
     ));
   };
 
+  // Se não há empresas, não renderiza nada
+  if (!businesses || businesses.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Nenhuma empresa em destaque no momento.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
-      {/* Navigation Buttons */}
-      <button
-        onClick={goToPrevious}
-        className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-indigo-50"
-        aria-label="Empresa anterior"
-      >
-        <i className="fas fa-chevron-left text-indigo-600"></i>
-      </button>
-      
-      <button
-        onClick={goToNext}
-        className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-indigo-50"
-        aria-label="Próxima empresa"
-      >
-        <i className="fas fa-chevron-right text-indigo-600"></i>
-      </button>
+      {/* Navigation Buttons - só mostra se há mais de 4 empresas */}
+      {businesses.length > 4 && (
+        <>
+          <button
+            onClick={goToPrevious}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-indigo-50"
+            aria-label="Empresa anterior"
+          >
+            <i className="fas fa-chevron-left text-indigo-600"></i>
+          </button>
+          
+          <button
+            onClick={goToNext}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-indigo-50"
+            aria-label="Próxima empresa"
+          >
+            <i className="fas fa-chevron-right text-indigo-600"></i>
+          </button>
+        </>
+      )}
 
       {/* Business Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -105,13 +110,24 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
             className="bg-white rounded-xl shadow-md overflow-hidden card-hover transition-all duration-500 transform hover:scale-105"
           >
             <div className="relative h-48 overflow-hidden">
-              <Image
-                src={business.image}
-                alt={business.name}
-                fill
-                className="object-cover transition-transform duration-300 hover:scale-110"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-              />
+              {business.image ? (
+                <Image
+                  src={business.image}
+                  alt={business.name}
+                  fill
+                  className="object-cover transition-transform duration-300 hover:scale-110"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                  onError={(e) => {
+                    console.error('Erro ao carregar imagem da empresa:', business.image);
+                    // Fallback para imagem padrão
+                    e.currentTarget.src = '/images/placeholder-business.jpg';
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <i className="fas fa-building text-gray-400 text-4xl"></i>
+                </div>
+              )}
               
               {/* Badges */}
               <div className="absolute top-2 right-2 flex flex-col gap-1">
@@ -120,7 +136,7 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
                     ⭐ Destaque
                   </div>
                 )}
-                {business.isNew && (
+                {business.is_new && (
                   <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
                     🆕 Novo
                   </div>
@@ -134,7 +150,7 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
                 </span>
               </div>
             </div>
-            
+
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2 text-gray-800 hover:text-indigo-600 transition-colors">
                 {business.name}

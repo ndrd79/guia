@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
 
 interface ImageUploaderProps {
   value?: string
@@ -21,25 +20,15 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
-  const [isClient, setIsClient] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  const generateFileName = (originalName: string): string => {
-    const fileExt = originalName.split('.').pop()
-    const timestamp = Date.now()
-    const randomStr = Math.random().toString(36).substring(2)
-    return `${timestamp}-${randomStr}.${fileExt}`
-  }
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     setError('')
+    setUploadProgress(0)
 
     // Validar tamanho do arquivo
     if (file.size > maxSize * 1024 * 1024) {
@@ -56,50 +45,41 @@ export default function ImageUploader({
     setUploading(true)
 
     try {
-      // Gerar nome único para o arquivo apenas no cliente
-      if (!isClient) {
-        setError('Aguarde a inicialização do componente')
-        return
-      }
+      console.log('📤 Iniciando upload via API:', file.name)
       
-      // Converter arquivo para base64 como solução temporária
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        onChange(result)
-        setUploading(false)
+      // Criar FormData para enviar via API
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('bucket', bucket)
+      formData.append('folder', folder)
+      
+      // Upload via API route
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Erro no upload')
       }
-      reader.onerror = () => {
-        setError('Erro ao processar a imagem')
-        setUploading(false)
-      }
-      reader.readAsDataURL(file)
+
+      console.log('✅ Upload concluído via API:', result.url)
+      
+      // Atualizar o valor no formulário
+      onChange(result.url)
       
     } catch (err: any) {
+      console.error('❌ Erro no upload:', err)
       setError(err.message || 'Erro ao fazer upload da imagem')
+    } finally {
       setUploading(false)
+      setUploadProgress(0)
     }
   }
 
-  const handleRemove = async () => {
-    if (value) {
-      try {
-        // Extrair o caminho do arquivo da URL
-        const url = new URL(value)
-        const pathParts = url.pathname.split('/')
-        const filePath = pathParts.slice(-2).join('/') // bucket/filename
-        
-        // Verificar se o supabase está disponível
-        if (supabase) {
-          // Remover do storage
-          await supabase.storage
-            .from(bucket)
-            .remove([filePath.split('/').slice(1).join('/')])
-        }
-      } catch (err) {
-        console.error('Erro ao remover imagem:', err)
-      }
-    }
+  const handleRemove = () => {
     onChange(null)
   }
 
@@ -111,12 +91,17 @@ export default function ImageUploader({
           <img
             src={value}
             alt="Preview"
-            className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+            className="w-32 h-32 object-cover rounded-lg border border-gray-200 shadow-sm"
+            onError={(e) => {
+              console.error('❌ Erro ao carregar imagem:', value)
+              e.currentTarget.src = '/placeholder-image.png'
+            }}
           />
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-lg"
+            title="Remover imagem"
           >
             <X className="h-4 w-4" />
           </button>
@@ -135,7 +120,7 @@ export default function ImageUploader({
         />
         
         {uploading ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="text-sm text-gray-600">Fazendo upload...</p>
           </div>
@@ -162,7 +147,17 @@ export default function ImageUploader({
       {/* Mensagem de erro */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-          {error}
+          <div className="flex items-center">
+            <span className="mr-2">❌</span>
+            {error}
+          </div>
+        </div>
+      )}
+      
+      {/* Informações de debug */}
+      {value && (
+        <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+          <strong>URL:</strong> {value.length > 50 ? value.substring(0, 50) + '...' : value}
         </div>
       )}
     </div>

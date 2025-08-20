@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import BannerContainer from '../../components/BannerContainer';
+import { createServerSupabaseClient, Empresa } from '../../lib/supabase';
 
 interface Business {
   id: string;
@@ -316,47 +317,59 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
   
-  // Mock data - em produção, isso viria de um banco de dados
-  const businesses = [
-    {
-      id: '13',
-      name: 'MH Cell',
-      description: 'Assistência técnica especializada em celulares, vendas de aparelhos e acessórios.',
-      rating: 4.8,
-      reviews: 156,
-      location: 'Rua Piedade, 1385',
-      featured: true,
-      isNew: true,
-      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=300&q=80',
-      category: 'Tecnologia',
-      phone: '(44) 98435-5545',
-      email: 'contato@mhcell.com.br',
-      website: 'https://mhcell.com.br',
-      hours: 'Segunda a Sexta: 8h às 18h | Sábado: 8h às 12h',
-      about: 'A MH Cell é uma empresa especializada em assistência técnica de celulares e smartphones, oferecendo serviços de qualidade com técnicos experientes e peças originais. Localizada na Rua Piedade, 1385, atendemos Maria Helena e região com excelência há mais de 5 anos. Nossa missão é proporcionar soluções rápidas e eficientes para seus dispositivos móveis, sempre com garantia e preços justos.',
-      services: [
-        'Troca de tela e display',
-        'Reparo de placa-mãe',
-        'Substituição de bateria',
-        'Reparo de conectores de carga',
-        'Desbloqueio de aparelhos',
-        'Instalação de películas e capas',
-        'Backup e recuperação de dados',
-        'Venda de acessórios originais',
-        'Consultoria em smartphones',
-        'Manutenção preventiva'
-      ]
+  try {
+    const supabase = createServerSupabaseClient();
+    
+    // Buscar empresa real do banco de dados
+    const { data: empresa, error } = await supabase
+      .from('empresas')
+      .select('*')
+      .eq('id', id)
+      .eq('ativo', true)
+      .single();
+    
+    if (error || !empresa) {
+      console.error('Erro ao buscar empresa:', error);
+      return {
+        props: {
+          business: null
+        }
+      };
     }
-    // Adicione outras empresas aqui conforme necessário
-  ];
-  
-  const business = businesses.find(b => b.id === id) || null;
-  
-  return {
-    props: {
-      business
-    }
-  };
+    
+    // Mapear dados da empresa para o formato esperado pelo componente
+    const business = {
+      id: empresa.id,
+      name: empresa.name,
+      description: empresa.description || '',
+      rating: empresa.rating || 0,
+      reviews: empresa.reviews || 0,
+      location: empresa.location || empresa.address || '',
+      featured: empresa.featured,
+      isNew: empresa.is_new,
+      image: empresa.image || '/images/placeholder-business.jpg',
+      category: empresa.category,
+      phone: empresa.phone,
+      email: empresa.email,
+      website: empresa.website,
+      hours: 'Segunda a Sexta: 8h às 18h | Sábado: 8h às 12h', // Valor padrão
+      about: empresa.description || 'Informações sobre a empresa em breve.',
+      services: [] // Pode ser expandido futuramente
+    };
+    
+    return {
+      props: {
+        business
+      }
+    };
+  } catch (error) {
+    console.error('Erro no getServerSideProps:', error);
+    return {
+      props: {
+        business: null
+      }
+    };
+  }
 };
 
 export default BusinessPage;
