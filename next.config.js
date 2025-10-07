@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: false, // Temporariamente desabilitado para evitar erros de hidratação
   swcMinify: true,
+  eslint: {
+    // Desabilita ESLint durante o build para evitar conflitos com ESLint v9
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     // Configurações para melhorar a hidratação
     optimizeCss: true,
