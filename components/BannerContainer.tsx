@@ -19,12 +19,15 @@ const BannerContainer: React.FC<BannerContainerProps> = ({
 }) => {
   const { banner, loading, error } = useBanner(position)
 
-  // Se está carregando, mostra placeholder
+  // Se está carregando, mostra skeleton
   if (loading) {
     return (
-      <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`}>
-        <div className="h-full w-full flex items-center justify-center text-gray-500">
-          Carregando banner...
+      <div className={`banner-responsive banner-skeleton rounded-lg ${className}`}>
+        <div className="h-full w-full flex items-center justify-center text-gray-500 min-h-[120px]">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
+            <span className="text-xs sm:text-sm md:text-base opacity-70">Carregando...</span>
+          </div>
         </div>
       </div>
     )
@@ -41,16 +44,18 @@ const BannerContainer: React.FC<BannerContainerProps> = ({
   }
 
   return (
-    <BannerAd
-      position={position}
-      className={className}
-      width={width || banner?.largura || 400}
-      height={height || banner?.altura || 200}
-      imageUrl={banner?.imagem}
-      linkUrl={banner?.link}
-      altText={banner?.nome || `Banner ${position}`}
-      title={banner?.nome}
-    />
+    <div className={`banner-responsive overflow-hidden ${className}`}>
+      <BannerAd
+        position={position}
+        className="w-full h-full"
+        width={width || banner?.largura || 400}
+        height={height || banner?.altura || 200}
+        imageUrl={banner?.imagem}
+        linkUrl={banner?.link}
+        altText={banner?.nome || `Banner ${position}`}
+        title={banner?.nome}
+      />
+    </div>
   )
 }
 

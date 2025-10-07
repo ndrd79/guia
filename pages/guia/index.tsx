@@ -166,7 +166,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
             <div className="md:w-1/2">
               <BannerAd 
                 position="hero"
-                className="h-48 rounded-xl"
+                className="w-full h-32 md:h-48 rounded-xl"
                 title="ESPAÇO PUBLICITÁRIO - DESTAQUE"
               />
             </div>
@@ -224,7 +224,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
 
             <BannerAd 
               position="sidebar"
-              className="h-64 rounded-xl"
+              className="w-full h-48 md:h-64 rounded-xl"
               title="PUBLICIDADE"
             />
           </aside>

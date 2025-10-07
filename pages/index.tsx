@@ -150,7 +150,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   </Link>
                 </div>
               </div>
-              <BannerContainer position="Banner Principal" className="md:w-1/2 h-64 rounded-xl" />
+              <BannerContainer position="Banner Principal" className="w-full md:w-1/2 h-48 md:h-64 rounded-xl" />
             </div>
           </div>
         </section>

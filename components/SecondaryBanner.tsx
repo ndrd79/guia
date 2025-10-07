@@ -34,10 +34,10 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
   };
 
   return (
-    <section className="py-4 md:py-8 bg-gray-50">
-      <div className="container mx-auto px-2 md:px-4">
-        {/* Container do slide - Altura responsiva */}
-        <div className="max-w-[1170px] mx-auto h-[180px] sm:h-[220px] md:h-[280px] lg:h-[330px] relative overflow-hidden rounded-lg shadow-2xl">
+    <section className="py-4 sm:py-6 md:py-8 bg-white">
+      <div className="banner-container">
+        {/* Container do slide */}
+        <div className="banner-responsive banner-secondary relative rounded-none sm:rounded-lg shadow-lg md:shadow-2xl banner-transition">
           {/* Resto do código igual ao HeroBanner com as mesmas correções responsivas */}
           {[0, 1, 2, 3].map((slideIndex) => {
             const banner = getCurrentBanner(slideIndex);

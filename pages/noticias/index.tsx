@@ -347,7 +347,7 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
               {/* Advertising Space */}
               <BannerContainer 
                 position="sidebar"
-                className="h-64 rounded-lg mb-8"
+                className="w-full h-48 md:h-64 rounded-lg mb-8"
               />
 
               {/* Popular News */}

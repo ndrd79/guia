@@ -34,10 +34,10 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
   };
 
   return (
-    <section className="py-8 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section className="py-4 sm:py-6 md:py-8 bg-gray-50">
+      <div className="banner-container">
         {/* Container do slide */}
-        <div className="max-w-[1170px] mx-auto h-[330px] relative overflow-hidden rounded-lg shadow-2xl">
+        <div className="banner-responsive banner-footer relative rounded-none sm:rounded-lg shadow-lg md:shadow-2xl banner-transition">
           {/* 4 Slides de cores diferentes */}
           {[0, 1, 2, 3].map((slideIndex) => {
             const banner = getCurrentBanner(slideIndex);
