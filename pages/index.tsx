@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps } from 'next';
 import Header from '../components/Header';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -291,89 +291,90 @@ const HomePage: React.FC<HomePageProps> = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   try {
     const supabase = createServerSupabaseClient();
     
-    const { data: noticias, error: noticiasError } = await supabase
-      .from('noticias')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // Otimização: Executar consultas em paralelo em vez de sequencial
+    const [
+      noticiasResult,
+      eventosResult,
+      empresasResult,
+      classificadosResult,
+      bannersResult,
+      categoriasBannersResult,
+      servicosBannersResult
+    ] = await Promise.all([
+      supabase
+        .from('noticias')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10),
+      
+      supabase
+        .from('eventos')
+        .select('*')
+        .gte('data_evento', new Date().toISOString().split('T')[0])
+        .order('data_evento', { ascending: true })
+        .limit(10),
+      
+      supabase
+        .from('empresas')
+        .select('*')
+        .eq('featured', true)
+        .eq('ativo', true)
+        .order('created_at', { ascending: false })
+        .limit(8),
+      
+      supabase
+        .from('classificados')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(8),
+      
+      supabase
+        .from('banners')
+        .select('*')
+        .eq('ativo', true)
+        .eq('posicao', 'Hero Carousel')
+        .limit(5),
+      
+      supabase
+        .from('banners')
+        .select('*')
+        .eq('ativo', true)
+        .eq('posicao', 'Categorias Banner')
+        .limit(5),
+      
+      supabase
+        .from('banners')
+        .select('*')
+        .eq('ativo', true)
+        .eq('posicao', 'Serviços Banner')
+        .limit(5)
+    ]);
 
-    if (noticiasError) {
-      console.error('Erro ao buscar notícias:', noticiasError);
-    }
-
-    const { data: eventos, error: eventosError } = await supabase
-      .from('eventos')
-      .select('*')
-      .gte('data_evento', new Date().toISOString().split('T')[0])
-      .order('data_evento', { ascending: true })
-      .limit(10);
-
-    if (eventosError) {
-      console.error('Erro ao buscar eventos:', eventosError);
-    }
-
-    const { data: empresas, error: empresasError } = await supabase
-      .from('empresas')
-      .select('*')
-      .eq('featured', true)
-      .eq('ativo', true)
-      .order('created_at', { ascending: false })
-      .limit(8);
-
-    if (empresasError) {
-      console.error('Erro ao buscar empresas:', empresasError);
-    }
-
-    const { data: classificados, error: classificadosError } = await supabase
-      .from('classificados')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(8);
-
-    if (classificadosError) {
-      console.error('Erro ao buscar classificados:', classificadosError);
-    }
-
-    const { data: banners, error: bannersError } = await supabase
-      .from('banners')
-      .select('*')
-      .eq('ativo', true)
-      .eq('posicao', 'Hero Carousel')
-      .limit(5);
-
-    // Buscar banners para categorias
-    const { data: categoriasBanners } = await supabase
-      .from('banners')
-      .select('*')
-      .eq('ativo', true)
-      .eq('posicao', 'Categorias Banner')
-      .limit(5);
-
-    // Buscar banners para serviços
-    const { data: servicosBanners } = await supabase
-      .from('banners')
-      .select('*')
-      .eq('ativo', true)
-      .eq('posicao', 'Serviços Banner')
-      .limit(5);
+    // Log de erros se houver
+    if (noticiasResult.error) console.error('Erro ao buscar notícias:', noticiasResult.error);
+    if (eventosResult.error) console.error('Erro ao buscar eventos:', eventosResult.error);
+    if (empresasResult.error) console.error('Erro ao buscar empresas:', empresasResult.error);
+    if (classificadosResult.error) console.error('Erro ao buscar classificados:', classificadosResult.error);
 
     return {
       props: {
-        noticias: noticias || [],
-        eventos: eventos || [],
-        empresas: empresas || [],
-        classificados: classificados || [],
-        banners: banners || [],
-        categoriasBanners: categoriasBanners || [],
-        servicosBanners: servicosBanners || []
-      }
+        noticias: noticiasResult.data || [],
+        eventos: eventosResult.data || [],
+        empresas: empresasResult.data || [],
+        classificados: classificadosResult.data || [],
+        banners: bannersResult.data || [],
+        categoriasBanners: categoriasBannersResult.data || [],
+        servicosBanners: servicosBannersResult.data || []
+      },
+      // ISR: Revalidar a cada 5 minutos
+      revalidate: 300
     };
   } catch (error) {
-    console.error('Erro no getServerSideProps:', error);
+    console.error('Erro no getStaticProps:', error);
     return {
       props: {
         noticias: [],
@@ -383,7 +384,9 @@ export const getServerSideProps: GetServerSideProps = async () => {
         banners: [],
         categoriasBanners: [],
         servicosBanners: []
-      }
+      },
+      // Em caso de erro, tentar novamente em 1 minuto
+      revalidate: 60
     };
   }
 };

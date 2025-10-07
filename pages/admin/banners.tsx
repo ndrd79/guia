@@ -10,13 +10,61 @@ import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
 import { formatDate } from '../../lib/formatters'
 
+// Função para validar URLs seguras
+const isSecureUrl = (url: string): boolean => {
+  if (!url) return true // URLs vazias são permitidas
+  
+  try {
+    const parsedUrl = new URL(url)
+    
+    // Permitir apenas protocolos seguros
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return false
+    }
+    
+    // Bloquear IPs locais e privados
+    const hostname = parsedUrl.hostname.toLowerCase()
+    const blockedPatterns = [
+      /^localhost$/,
+      /^127\./,
+      /^192\.168\./,
+      /^10\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^0\./,
+      /^169\.254\./,
+      /^::1$/,
+      /^fc00:/,
+      /^fe80:/
+    ]
+    
+    return !blockedPatterns.some(pattern => pattern.test(hostname))
+  } catch {
+    return false
+  }
+}
+
 const bannerSchema = z.object({
-  nome: z.string().min(1, 'Nome é obrigatório'),
+  nome: z.string()
+    .min(1, 'Nome é obrigatório')
+    .max(100, 'Nome deve ter no máximo 100 caracteres')
+    .regex(/^[a-zA-Z0-9\s\-_áéíóúàèìòùâêîôûãõçÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃÕÇ]+$/, 'Nome contém caracteres inválidos'),
   posicao: z.string().min(1, 'Posição é obrigatória'),
-  imagem: z.string().min(1, 'Imagem é obrigatória'),
-  link: z.string().url('Link deve ser uma URL válida').optional().or(z.literal('')),
-  largura: z.number().min(50, 'Largura mínima é 50px').max(2000, 'Largura máxima é 2000px'),
-  altura: z.number().min(50, 'Altura mínima é 50px').max(1000, 'Altura máxima é 1000px'),
+  imagem: z.string()
+    .min(1, 'Imagem é obrigatória')
+    .url('URL da imagem inválida')
+    .refine(url => url.includes('supabase'), 'Apenas imagens do Supabase são permitidas'),
+  link: z.string()
+    .optional()
+    .refine(url => !url || isSecureUrl(url), 'URL não é segura ou contém protocolo inválido')
+    .transform(url => url?.trim() || ''),
+  largura: z.number()
+    .min(50, 'Largura mínima é 50px')
+    .max(2000, 'Largura máxima é 2000px')
+    .int('Largura deve ser um número inteiro'),
+  altura: z.number()
+    .min(50, 'Altura mínima é 50px')
+    .max(1000, 'Altura máxima é 1000px')
+    .int('Altura deve ser um número inteiro'),
   ativo: z.boolean(),
 })
 
@@ -179,6 +227,10 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [loading, setLoading] = useState(false)
+  const [loadingList, setLoadingList] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const {
     register,
@@ -222,8 +274,12 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     console.log('📊 Iniciando carregamento dos banners...')
     if (!supabase) {
       console.error('❌ Supabase não configurado')
+      setError('Sistema não está configurado')
       return
     }
+    
+    setLoadingList(true)
+    setError(null)
     
     try {
       const { data, error } = await supabase
@@ -233,6 +289,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       
       if (error) {
         console.error('❌ Erro ao carregar banners:', error)
+        setError('Erro ao carregar banners: ' + error.message)
         return
       }
       
@@ -240,6 +297,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       setBanners(data || [])
     } catch (error) {
       console.error('❌ Erro na função loadBanners:', error)
+      setError('Erro inesperado ao carregar banners')
+    } finally {
+      setLoadingList(false)
     }
   }
 
@@ -254,13 +314,92 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     setLoading(true)
     
     try {
+      // Validações de segurança adicionais
+      
+      // 1. Verificar se a imagem existe no bucket
+      if (data.imagem) {
+        try {
+          const imageUrl = new URL(data.imagem)
+          const pathParts = imageUrl.pathname.split('/')
+          const bucketIndex = pathParts.findIndex(part => part === 'banners')
+          
+          if (bucketIndex === -1) {
+            throw new Error('Imagem deve estar no bucket "banners"')
+          }
+          
+          const imagePath = pathParts.slice(bucketIndex + 1).join('/')
+          
+          // Verificar se o arquivo existe
+          const { data: fileData, error: fileError } = await supabase.storage
+            .from('banners')
+            .list(imagePath.split('/').slice(0, -1).join('/') || '', {
+              search: imagePath.split('/').pop()
+            })
+          
+          if (fileError || !fileData?.length) {
+            throw new Error('Arquivo de imagem não encontrado no storage')
+          }
+        } catch (error) {
+          console.error('❌ Erro na validação da imagem:', error)
+          alert('Erro: ' + (error as Error).message)
+          return
+        }
+      }
+      
+      // 2. Verificar se já existe um banner ativo na mesma posição (apenas para novos banners)
+      if (!editingBanner) {
+        const { data: existingBanners, error: checkError } = await supabase
+          .from('banners')
+          .select('id, nome')
+          .eq('posicao', data.posicao)
+          .eq('ativo', true)
+        
+        if (checkError) {
+          console.error('❌ Erro ao verificar banners existentes:', checkError)
+          throw checkError
+        }
+        
+        if (existingBanners && existingBanners.length > 0) {
+          const confirmReplace = confirm(
+            `Já existe um banner ativo na posição "${data.posicao}" (${existingBanners[0].nome}). ` +
+            'Deseja continuar? O banner existente será desativado automaticamente.'
+          )
+          
+          if (!confirmReplace) {
+            return
+          }
+          
+          // Desativar banners existentes na mesma posição
+          const { error: deactivateError } = await supabase
+            .from('banners')
+            .update({ ativo: false, updated_at: new Date().toISOString() })
+            .eq('posicao', data.posicao)
+            .eq('ativo', true)
+          
+          if (deactivateError) {
+            console.error('❌ Erro ao desativar banners existentes:', deactivateError)
+            throw deactivateError
+          }
+        }
+      }
+      
+      // 3. Sanitizar dados antes de salvar
+      const sanitizedData = {
+        ...data,
+        nome: data.nome.trim(),
+        link: data.link?.trim() || null,
+        // Garantir que dimensões sejam números inteiros
+        largura: Math.round(data.largura),
+        altura: Math.round(data.altura)
+      }
+      
       if (editingBanner) {
         console.log('✏️ Atualizando banner existente:', editingBanner.id)
         // Atualizar banner existente
         const { error } = await supabase
           .from('banners')
           .update({
-            ...data,
+            ...sanitizedData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingBanner.id)
@@ -276,7 +415,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         const { error } = await supabase
           .from('banners')
           .insert([{
-            ...data,
+            ...sanitizedData,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }])
@@ -294,7 +433,13 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       console.log('✅ Operação concluída com sucesso')
     } catch (error) {
       console.error('❌ Erro ao salvar banner:', error)
-      alert('Erro ao salvar banner: ' + (error as Error).message)
+      const errorMessage = (error as Error).message
+      setError('Erro ao salvar banner: ' + errorMessage)
+      
+      // Mostrar alerta apenas para erros críticos
+      if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
+        alert('Erro de permissão: Você não tem autorização para realizar esta ação.')
+      }
     } finally {
       setLoading(false)
     }
@@ -319,9 +464,12 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     console.log('🗑️ Excluindo banner:', id)
     if (!supabase) {
       console.error('❌ Supabase não configurado')
-      alert('Sistema não está configurado')
+      setError('Sistema não está configurado')
       return
     }
+    
+    setDeletingId(id)
+    setError(null)
     
     try {
       const { error } = await supabase
@@ -339,7 +487,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       await loadBanners()
     } catch (error) {
       console.error('❌ Erro ao excluir banner:', error)
-      alert('Erro ao excluir banner: ' + (error as Error).message)
+      setError('Erro ao excluir banner: ' + (error as Error).message)
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -347,9 +497,12 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     console.log('🔄 Alterando status do banner:', id, 'para:', !currentStatus)
     if (!supabase) {
       console.error('❌ Supabase não configurado')
-      alert('Sistema não está configurado')
+      setError('Sistema não está configurado')
       return
     }
+    
+    setTogglingId(id)
+    setError(null)
     
     try {
       const { error } = await supabase
@@ -370,7 +523,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       await loadBanners()
     } catch (error) {
       console.error('❌ Erro ao alterar status do banner:', error)
-      alert('Erro ao alterar status do banner: ' + (error as Error).message)
+      setError('Erro ao alterar status do banner: ' + (error as Error).message)
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -392,16 +547,45 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     <AdminLayout title="Gerenciar Banners">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Banners Publicitários</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Banners Publicitários</h1>
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            disabled={loadingList}
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             Novo Banner
           </button>
         </div>
+
+        {/* Alerta de Erro */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Erro</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    className="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Formulário */}
         {showForm && (
@@ -411,9 +595,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
             isLoading={loading}
             submitText={editingBanner ? 'Atualizar' : 'Criar'}
             onCancel={handleCloseForm}
-            showForm={true} // Altere de false para true
+            showForm={true}
           >
-            {/* Remover a tag <form> daqui */}
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -555,25 +738,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   <span className="ml-2 text-sm text-gray-700">Banner ativo</span>
                 </label>
               </div>
-
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={handleCloseForm}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-                >
-                  {loading ? 'Salvando...' : editingBanner ? 'Atualizar' : 'Criar'}
-                </button>
-              </div>
             </div>
-            {/* REMOVA ESTA LINHA: </form> */}
           </FormCard>
         )}
 
@@ -583,116 +748,258 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
             <h3 className="text-lg font-medium text-gray-900">Lista de Banners</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Banner
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Posição
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dimensões
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Link
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {banners.map((banner) => (
-                  <tr key={banner.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
+            {loadingList ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                <span className="ml-3 text-gray-600">Carregando banners...</span>
+              </div>
+            ) : banners.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-500">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum banner encontrado</h3>
+                  <p className="mt-1 text-sm text-gray-500">Comece criando seu primeiro banner publicitário.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Versão Desktop - Tabela */}
+                <div className="hidden md:block">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Banner
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Posição
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Dimensões
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Link
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ações
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {banners.map((banner) => (
+                        <tr key={banner.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <img
+                                className="h-16 w-24 rounded-lg object-cover mr-4"
+                                src={banner.imagem}
+                                alt={banner.nome}
+                              />
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {banner.nome}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  Criado em {formatDate(banner.created_at)}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                              {banner.posicao}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {banner.largura || 400} × {banner.altura || 200} px
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {banner.link ? (
+                              <a
+                                href={banner.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center text-sm text-blue-600 hover:text-blue-900"
+                              >
+                                <ExternalLink className="h-4 w-4 mr-1" />
+                                Link
+                              </a>
+                            ) : (
+                              <span className="text-sm text-gray-400">Sem link</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => handleToggleStatus(banner.id, banner.ativo)}
+                              disabled={togglingId === banner.id}
+                              className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                                banner.ativo
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                              } transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              {togglingId === banner.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1"></div>
+                                  Alterando...
+                                </>
+                              ) : banner.ativo ? (
+                                <>
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  Ativo
+                                </>
+                              ) : (
+                                <>
+                                  <EyeOff className="h-3 w-3 mr-1" />
+                                  Inativo
+                                </>
+                              )}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEdit(banner)}
+                                disabled={deletingId === banner.id || togglingId === banner.id}
+                                className="text-orange-600 hover:text-orange-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(banner.id)}
+                                disabled={deletingId === banner.id || togglingId === banner.id}
+                                className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {deletingId === banner.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b border-current"></div>
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Versão Mobile - Cards */}
+                <div className="md:hidden space-y-4 p-4">
+                  {banners.map((banner) => (
+                    <div key={banner.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                      <div className="flex items-start space-x-4">
                         <img
-                          className="h-16 w-24 rounded-lg object-cover mr-4"
+                          className="h-20 w-28 rounded-lg object-cover flex-shrink-0"
                           src={banner.imagem}
                           alt={banner.nome}
                         />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {banner.nome}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-sm font-medium text-gray-900 truncate">
+                                {banner.nome}
+                              </h3>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Criado em {formatDate(banner.created_at)}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2 ml-2">
+                              <button
+                                onClick={() => handleEdit(banner)}
+                                disabled={deletingId === banner.id || togglingId === banner.id}
+                                className="text-orange-600 hover:text-orange-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(banner.id)}
+                                disabled={deletingId === banner.id || togglingId === banner.id}
+                                className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {deletingId === banner.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b border-current"></div>
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500">
-                            Criado em {formatDate(banner.created_at)}
+                          
+                          <div className="mt-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Posição:</span>
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                {banner.posicao}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Dimensões:</span>
+                              <span className="text-xs text-gray-900">
+                                {banner.largura || 400} × {banner.altura || 200} px
+                              </span>
+                            </div>
+                            
+                            {banner.link && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Link:</span>
+                                <a
+                                  href={banner.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center text-xs text-blue-600 hover:text-blue-900"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Abrir
+                                </a>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center justify-between pt-2">
+                              <span className="text-xs text-gray-500">Status:</span>
+                              <button
+                                onClick={() => handleToggleStatus(banner.id, banner.ativo)}
+                                disabled={togglingId === banner.id}
+                                className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                                  banner.ativo
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                } transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                              >
+                                {togglingId === banner.id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1"></div>
+                                    Alterando...
+                                  </>
+                                ) : banner.ativo ? (
+                                  <>
+                                    <Eye className="h-3 w-3 mr-1" />
+                                    Ativo
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="h-3 w-3 mr-1" />
+                                    Inativo
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-                        {banner.posicao}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {banner.largura || 400} × {banner.altura || 200} px
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {banner.link ? (
-                        <a
-                          href={banner.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-sm text-blue-600 hover:text-blue-900"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Link
-                        </a>
-                      ) : (
-                        <span className="text-sm text-gray-400">Sem link</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleStatus(banner.id, banner.ativo)}
-                        className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
-                          banner.ativo
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        } transition-colors`}
-                      >
-                        {banner.ativo ? (
-                          <>
-                            <Eye className="h-3 w-3 mr-1" />
-                            Ativo
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="h-3 w-3 mr-1" />
-                            Inativo
-                          </>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(banner)}
-                          className="text-orange-600 hover:text-orange-900"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(banner.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -705,10 +1012,14 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     const supabase = createServerSupabaseClient(ctx)
     
     // Buscar banners
-    const { data: banners } = await supabase
+    const { data: banners, error: bannersError } = await supabase
       .from('banners')
       .select('*')
       .order('created_at', { ascending: false })
+
+    if (bannersError) {
+      console.error('Erro ao buscar banners:', bannersError)
+    }
 
     return {
       props: {
@@ -716,8 +1027,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       },
     }
   } catch (error) {
-    // Durante o build, as variáveis de ambiente podem não estar disponíveis
-    console.warn('Supabase not configured during build time:', error)
+    console.error('Erro no getServerSideProps:', error)
     return {
       props: {
         initialBanners: [],

@@ -88,7 +88,7 @@ async function testHeroBanners() {
     const testBanner = {
       nome: `Teste Hero Banner ${Date.now()}`,
       posicao: 'Hero Carousel',
-      imagem: 'https://via.placeholder.com/1270x250',
+      imagem: '/images/placeholder-banner-1270x250.svg',
       link: 'https://example.com',
       largura: 1270,
       altura: 250,

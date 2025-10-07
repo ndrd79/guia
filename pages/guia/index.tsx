@@ -1,155 +1,37 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
+import { GetStaticProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerAd from '../../components/BannerAd'
+import { createServerSupabaseClient, Empresa } from '../../lib/supabase'
 
-interface Business {
-  id: number
-  name: string
-  category: string
-  description: string
-  address: string
-  phone: string
-  website?: string
-  rating: number
-  image: string
-  featured: boolean
+interface Business extends Empresa {
+  // Mantendo compatibilidade com a interface existente
 }
 
-const mockBusinesses: Business[] = [
-  {
-    id: 1,
-    name: "Restaurante Sabor da Terra",
-    category: "Restaurantes",
-    description: "Culinária regional com ingredientes frescos e ambiente acolhedor.",
-    address: "Rua das Flores, 123 - Centro",
-    phone: "(11) 3456-7890",
-    website: "www.sabordaterra.com.br",
-    rating: 4.8,
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
-    featured: true
-  },
-  {
-    id: 2,
-    name: "Auto Peças Central",
-    category: "Automóveis",
-    description: "Peças automotivas originais e nacionais com garantia.",
-    address: "Av. Principal, 456 - Industrial",
-    phone: "(11) 2345-6789",
-    rating: 4.5,
-    image: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400",
-    featured: false
-  },
-  {
-    id: 3,
-    name: "Farmácia Vida Saudável",
-    category: "Saúde",
-    description: "Medicamentos, cosméticos e produtos de higiene.",
-    address: "Rua da Saúde, 789 - Centro",
-    phone: "(11) 4567-8901",
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400",
-    featured: true
-  },
-  // Adicionando mais empresas para demonstrar a paginação
-  {
-    id: 4,
-    name: "Padaria Pão Dourado",
-    category: "Comércio",
-    description: "Pães frescos, bolos e doces artesanais todos os dias.",
-    address: "Rua do Comércio, 321 - Centro",
-    phone: "(11) 5678-9012",
-    rating: 4.6,
-    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
-    featured: false
-  },
-  {
-    id: 5,
-    name: "Oficina do João",
-    category: "Automóveis",
-    description: "Serviços automotivos especializados em motor e suspensão.",
-    address: "Av. Industrial, 654 - Industrial",
-    phone: "(11) 6789-0123",
-    rating: 4.4,
-    image: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400",
-    featured: false
-  },
-  {
-    id: 6,
-    name: "Clínica Bem Estar",
-    category: "Saúde",
-    description: "Atendimento médico especializado e exames laboratoriais.",
-    address: "Rua da Saúde, 987 - Centro",
-    phone: "(11) 7890-1234",
-    rating: 4.9,
-    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400",
-    featured: true
-  },
-  {
-    id: 7,
-    name: "Escola Futuro Brilhante",
-    category: "Educação",
-    description: "Educação infantil e ensino fundamental com metodologia inovadora.",
-    address: "Rua da Educação, 147 - Centro",
-    phone: "(11) 8901-2345",
-    rating: 4.7,
-    image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400",
-    featured: false
-  },
-  {
-    id: 8,
-    name: "Loja de Roupas Fashion",
-    category: "Comércio",
-    description: "Moda feminina e masculina com as últimas tendências.",
-    address: "Rua da Moda, 258 - Centro",
-    phone: "(11) 9012-3456",
-    rating: 4.3,
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400",
-    featured: false
-  },
-  {
-    id: 9,
-    name: "Imobiliária Casa Nova",
-    category: "Imóveis",
-    description: "Compra, venda e locação de imóveis residenciais e comerciais.",
-    address: "Av. Principal, 369 - Centro",
-    phone: "(11) 0123-4567",
-    rating: 4.5,
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400",
-    featured: true
-  },
-  {
-    id: 10,
-    name: "Assistência Técnica TechFix",
-    category: "Serviços",
-    description: "Conserto de celulares, computadores e eletrodomésticos.",
-    address: "Rua da Tecnologia, 741 - Centro",
-    phone: "(11) 1234-5678",
-    rating: 4.2,
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400",
-    featured: false
-  }
-]
+interface Category {
+  name: string
+  icon: string
+  count: number
+}
 
-const categories = [
-  { name: "Restaurantes", icon: "fas fa-utensils", count: 42 },
-  { name: "Comércio", icon: "fas fa-shopping-bag", count: 87 },
-  { name: "Automóveis", icon: "fas fa-car", count: 23 },
-  { name: "Imóveis", icon: "fas fa-home", count: 31 },
-  { name: "Saúde", icon: "fas fa-briefcase-medical", count: 18 },
-  { name: "Educação", icon: "fas fa-graduation-cap", count: 12 },
-  { name: "Serviços", icon: "fas fa-tools", count: 34 }
-]
+interface GuiaComercialProps {
+  businesses: Business[]
+  categories: Category[]
+  totalCount: number
+}
 
-export default function GuiaComercial() {
+export default function GuiaComercial({ businesses: initialBusinesses, categories, totalCount }: GuiaComercialProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [filteredBusinesses, setFilteredBusinesses] = useState(mockBusinesses)
+  const [filteredBusinesses, setFilteredBusinesses] = useState(initialBusinesses)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(5) // 5 empresas por página
+  const [itemsPerPage] = useState(8) // 8 empresas por página para melhor performance
+  const [isLoading, setIsLoading] = useState(false)
 
   // Calcular índices para paginação
   const indexOfLastItem = currentPage * itemsPerPage
@@ -158,27 +40,38 @@ export default function GuiaComercial() {
   const totalPages = Math.ceil(filteredBusinesses.length / itemsPerPage)
 
   const handleSearch = () => {
-    let filtered = mockBusinesses
+    setIsLoading(true)
     
-    if (searchTerm) {
-      filtered = filtered.filter(business => 
-        business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        business.description.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-    
-    if (selectedCategory) {
-      filtered = filtered.filter(business => business.category === selectedCategory)
-    }
-    
-    setFilteredBusinesses(filtered)
-    setCurrentPage(1) // Reset para primeira página quando filtrar
+    // Simular um pequeno delay para mostrar loading state
+    setTimeout(() => {
+      let filtered = initialBusinesses
+      
+      if (searchTerm) {
+        filtered = filtered.filter(business => 
+          business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (business.description && business.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+      }
+      
+      if (selectedCategory) {
+        filtered = filtered.filter(business => business.category === selectedCategory)
+      }
+      
+      setFilteredBusinesses(filtered)
+      setCurrentPage(1) // Reset para primeira página quando filtrar
+      setIsLoading(false)
+    }, 300)
   }
 
   // Resetar para primeira página quando os filtros mudarem
   useEffect(() => {
     setCurrentPage(1)
   }, [filteredBusinesses])
+
+  // Resetar filtros quando a página carrega
+  useEffect(() => {
+    setFilteredBusinesses(initialBusinesses)
+  }, [initialBusinesses])
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber)
@@ -312,12 +205,12 @@ export default function GuiaComercial() {
                 ))}
                 
                 {/* Botão para limpar filtros */}
-                {selectedCategory && (
+                {(selectedCategory || searchTerm) && (
                   <button
                     onClick={() => {
                       setSelectedCategory('')
                       setSearchTerm('')
-                      setFilteredBusinesses(mockBusinesses)
+                      setFilteredBusinesses(initialBusinesses)
                       setCurrentPage(1)
                     }}
                     className="w-full mt-4 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
@@ -350,7 +243,13 @@ export default function GuiaComercial() {
               </div>
             </div>
 
-            {currentItems.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">Carregando...</h3>
+                <p className="text-gray-500">Buscando estabelecimentos...</p>
+              </div>
+            ) : currentItems.length === 0 ? (
               <div className="text-center py-12">
                 <i className="fas fa-search text-6xl text-gray-300 mb-4"></i>
                 <h3 className="text-xl font-semibold text-gray-600 mb-2">Nenhum resultado encontrado</h3>
@@ -362,12 +261,23 @@ export default function GuiaComercial() {
                   {currentItems.map(business => (
                     <div key={business.id} className="business-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
                       <div className="flex flex-col md:flex-row">
-                        <div className="md:w-1/3">
-                          <img 
-                            src={business.image} 
-                            alt={business.name}
-                            className="w-full h-48 md:h-full object-cover"
-                          />
+                        <div className="md:w-1/3 relative">
+                          {business.image ? (
+                            <Image 
+                              src={business.image} 
+                              alt={business.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              loading="lazy"
+                              placeholder="blur"
+                              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rj5m4xbDLdpkZfVZGjjVmRZEjkjdGKOjKrKQQQQCCOQQetTnhKhPTvYfEfxjlMcuoLvM5nUl+dVnvJzLM7HqxPQD0AAA9AKAv/9k="
+                            />
+                          ) : (
+                            <div className="w-full h-48 md:h-full bg-gray-200 flex items-center justify-center">
+                              <i className="fas fa-building text-4xl text-gray-400"></i>
+                            </div>
+                          )}
                         </div>
                         <div className="md:w-2/3 p-6">
                           <div className="flex justify-between items-start mb-2">
@@ -380,21 +290,25 @@ export default function GuiaComercial() {
                           </div>
                           
                           <p className="text-indigo-600 font-medium mb-2">{business.category}</p>
-                          <p className="text-gray-600 mb-4">{business.description}</p>
+                          <p className="text-gray-600 mb-4">{business.description || 'Descrição não disponível'}</p>
                           
                           <div className="space-y-2 mb-4">
-                            <div className="flex items-center text-gray-600">
-                              <i className="fas fa-map-marker-alt mr-2 text-indigo-600"></i>
-                              {business.address}
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                              <i className="fas fa-phone mr-2 text-indigo-600"></i>
-                              {business.phone}
-                            </div>
+                            {business.address && (
+                              <div className="flex items-center text-gray-600">
+                                <i className="fas fa-map-marker-alt mr-2 text-indigo-600"></i>
+                                {business.address}
+                              </div>
+                            )}
+                            {business.phone && (
+                              <div className="flex items-center text-gray-600">
+                                <i className="fas fa-phone mr-2 text-indigo-600"></i>
+                                {business.phone}
+                              </div>
+                            )}
                             {business.website && (
                               <div className="flex items-center text-gray-600">
                                 <i className="fas fa-globe mr-2 text-indigo-600"></i>
-                                <a href={`https://${business.website}`} className="text-indigo-600 hover:underline">
+                                <a href={`https://${business.website}`} className="text-indigo-600 hover:underline" target="_blank" rel="noopener noreferrer">
                                   {business.website}
                                 </a>
                               </div>
@@ -417,9 +331,13 @@ export default function GuiaComercial() {
                                   <i className="fas fa-info-circle mr-2"></i>Detalhes
                                 </button>
                               </Link>
-                              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                                <i className="fas fa-phone mr-2"></i>Contato
-                              </button>
+                              {business.phone && (
+                                <a href={`tel:${business.phone}`}>
+                                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                                    <i className="fas fa-phone mr-2"></i>Contato
+                                  </button>
+                                </a>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -483,4 +401,82 @@ export default function GuiaComercial() {
       <Footer />
     </>
   )
+}
+
+export const getStaticProps: GetStaticProps = async () => {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Buscar empresas ativas do banco de dados
+    const { data: empresas, error: empresasError } = await supabase
+      .from('empresas')
+      .select('*')
+      .eq('ativo', true)
+      .order('featured', { ascending: false })
+      .order('created_at', { ascending: false })
+    
+    if (empresasError) {
+      console.error('Erro ao buscar empresas:', empresasError)
+    }
+
+    // Buscar categorias e contar empresas por categoria
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('empresas')
+      .select('category')
+      .eq('ativo', true)
+    
+    if (categoriesError) {
+      console.error('Erro ao buscar categorias:', categoriesError)
+    }
+
+    // Processar categorias e contar
+    const categoryMap = new Map()
+    categoriesData?.forEach(item => {
+      const count = categoryMap.get(item.category) || 0
+      categoryMap.set(item.category, count + 1)
+    })
+
+    // Mapear categorias com ícones
+    const categoryIcons: { [key: string]: string } = {
+      'Restaurantes': 'fas fa-utensils',
+      'Comércio': 'fas fa-shopping-bag',
+      'Automóveis': 'fas fa-car',
+      'Imóveis': 'fas fa-home',
+      'Saúde': 'fas fa-briefcase-medical',
+      'Educação': 'fas fa-graduation-cap',
+      'Serviços': 'fas fa-tools',
+      'Alimentação': 'fas fa-utensils',
+      'Beleza': 'fas fa-cut',
+      'Tecnologia': 'fas fa-laptop',
+      'Esportes': 'fas fa-dumbbell',
+      'Moda': 'fas fa-tshirt'
+    }
+
+    const categories = Array.from(categoryMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+      icon: categoryIcons[name] || 'fas fa-store'
+    })).sort((a, b) => b.count - a.count)
+
+    return {
+      props: {
+        businesses: empresas || [],
+        categories: categories || [],
+        totalCount: empresas?.length || 0
+      },
+      // ISR: Revalidar a cada 10 minutos
+      revalidate: 600
+    }
+  } catch (error) {
+    console.error('Erro no getStaticProps do guia:', error)
+    return {
+      props: {
+        businesses: [],
+        categories: [],
+        totalCount: 0
+      },
+      // Em caso de erro, tentar novamente em 1 minuto
+      revalidate: 60
+    }
+  }
 }

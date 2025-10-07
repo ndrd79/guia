@@ -12,9 +12,15 @@ export default function CookieBanner({ onAccept, onReject }: CookieBannerProps) 
 
   useEffect(() => {
     // Verifica se o usuário já deu consentimento
-    const cookieConsent = localStorage.getItem('cookieConsent');
-    if (!cookieConsent) {
-      setIsVisible(true);
+    try {
+      const cookieConsent = localStorage.getItem('cookieConsent');
+      if (!cookieConsent) {
+        // Delay para não bloquear a renderização inicial
+        setTimeout(() => setIsVisible(true), 100);
+      }
+    } catch (error) {
+      // Fallback se localStorage não estiver disponível
+      console.warn('localStorage não disponível');
     }
   }, []);
 

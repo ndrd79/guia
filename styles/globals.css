@@ -200,16 +200,39 @@
     animation: pulse 2s infinite;
   }
   
-  .news-ticker {
+  /* News Ticker Styles */
+  .news-ticker-container {
     overflow: hidden;
     white-space: nowrap;
     box-sizing: border-box;
+    position: relative;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
   }
   
-  .news-ticker span {
+  .news-ticker-content {
+    display: flex;
+    align-items: center;
+    animation: ticker-scroll 30s linear infinite;
+    white-space: nowrap;
+    will-change: transform;
+  }
+  
+  .news-ticker-container:hover .news-ticker-content {
+    animation-play-state: paused;
+  }
+  
+  .news-ticker-item {
     display: inline-block;
-    padding-right: 100%;
-    animation: ticker-rtl 120s linear infinite;
+    margin-right: 3rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    flex-shrink: 0;
+  }
+  
+  .news-ticker-item:last-child {
+    margin-right: 3rem;
   }
   
   .breaking-news {
@@ -453,8 +476,43 @@
     }
     
     /* Correção para news ticker em mobile */
-    .news-ticker {
-      font-size: 0.875rem;
+    .news-ticker-container {
+      height: 1.25rem;
+    }
+
+    .news-ticker-content {
+      animation: ticker-scroll 25s linear infinite;
+    }
+
+    .news-ticker-item {
+      font-size: 0.75rem;
+      margin-right: 2rem;
+      line-height: 1rem;
+    }
+
+    .news-ticker-item:last-child {
+      margin-right: 2rem;
+    }
+    
+    /* Correções para telas muito pequenas */
+    @media (max-width: 480px) {
+      .news-ticker-container {
+        height: 1rem;
+      }
+      
+      .news-ticker-content {
+        animation: ticker-scroll 20s linear infinite;
+      }
+      
+      .news-ticker-item {
+        font-size: 0.7rem;
+        margin-right: 1.5rem;
+        line-height: 0.875rem;
+      }
+      
+      .news-ticker-item:last-child {
+        margin-right: 1.5rem;
+      }
     }
     
     /* Correção para gradientes em mobile */
@@ -496,6 +554,15 @@
     }
     100% {
       box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    }
+  }
+  
+  @keyframes ticker-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
     }
   }
   

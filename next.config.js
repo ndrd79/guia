@@ -6,6 +6,8 @@ const nextConfig = {
     // Configurações para melhorar a hidratação
     optimizeCss: true,
     scrollRestoration: true,
+    // Otimizações de performance
+    optimizePackageImports: ['lucide-react'],
   },
   compiler: {
     // Remove console.log em produção
@@ -22,20 +24,37 @@ const nextConfig = {
         hostname: 'mlkpnapnijdbskaimquj.supabase.co',
       },
       {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-      {
         protocol: 'http',
         hostname: 'localhost',
       },
     ],
     formats: ['image/webp', 'image/avif'],
+    // Otimizações de imagem
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Configurações para melhorar a performance e evitar problemas de hidratação
   poweredByHeader: false,
   compress: true,
   generateEtags: false,
+  // Otimizações de bundle
+  webpack: (config, { dev, isServer }) => {
+    // Otimizações de produção
+    if (!dev && !isServer) {
+      config.optimization.splitChunks.cacheGroups = {
+        ...config.optimization.splitChunks.cacheGroups,
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      };
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig

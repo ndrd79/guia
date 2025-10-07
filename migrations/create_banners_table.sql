@@ -47,9 +47,9 @@ CREATE TRIGGER update_banners_updated_at
 
 -- Inserir alguns banners de exemplo (opcional)
 INSERT INTO banners (nome, posicao, imagem, link, largura, altura, ativo) VALUES
-('Banner Header Principal', 'Header Superior', 'https://via.placeholder.com/728x90/FF6B35/FFFFFF?text=Header+Banner', 'https://exemplo.com', 728, 90, true),
-('Banner Hero Homepage', 'Banner Principal', 'https://via.placeholder.com/600x300/4ECDC4/FFFFFF?text=Banner+Principal', 'https://exemplo.com', 600, 300, true),
-('Banner Empresas Topo', 'Empresas Destaque - Topo', 'https://via.placeholder.com/800x200/45B7D1/FFFFFF?text=Empresas+Destaque', 'https://exemplo.com', 800, 200, true)
+('Banner Header Principal', 'Header Superior', '/images/placeholder-banner-728x90.svg', 'https://exemplo.com', 728, 90, true),
+('Banner Hero Homepage', 'Banner Principal', '/images/placeholder-banner-600x300.svg', 'https://exemplo.com', 600, 300, true),
+('Banner Empresas Topo', 'Empresas Destaque - Topo', '/images/placeholder-banner-800x200.svg', 'https://exemplo.com', 800, 200, true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Verificar se a tabela foi criada corretamente

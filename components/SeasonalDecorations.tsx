@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 interface DecorationProps {
@@ -35,16 +35,44 @@ const SeasonalDecorations: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchActiveTheme();
+  // Cache do tema para evitar consultas desnecessárias
+  const getCachedTheme = useCallback(() => {
+    const cached = sessionStorage.getItem('seasonalTheme');
+    const cacheTime = sessionStorage.getItem('seasonalThemeTime');
+    
+    if (cached && cacheTime) {
+      const now = Date.now();
+      const cacheAge = now - parseInt(cacheTime);
+      // Cache válido por 5 minutos
+      if (cacheAge < 5 * 60 * 1000) {
+        return JSON.parse(cached);
+      }
+    }
+    return null;
+  }, []);
+
+  const setCachedTheme = useCallback((theme: any) => {
+    sessionStorage.setItem('seasonalTheme', JSON.stringify(theme));
+    sessionStorage.setItem('seasonalThemeTime', Date.now().toString());
   }, []);
 
   useEffect(() => {
+    // Primeiro tenta usar o cache
+    const cachedTheme = getCachedTheme();
+    if (cachedTheme) {
+      setActiveTheme(cachedTheme);
+      setLoading(false);
+      return;
+    }
+    
+    // Se não há cache, busca do servidor
+    fetchActiveTheme();
+  }, [getCachedTheme]);
+
+  useEffect(() => {
     if (activeTheme?.decoration_type && activeTheme.decoration_type !== 'none') {
-      console.log('🎨 Tema ativo encontrado:', activeTheme);
       generateDecorations();
     } else {
-      console.log('❌ Nenhum tema ativo ou decoração é "none":', activeTheme);
       setDecorations([]);
     }
   }, [activeTheme]);
@@ -54,40 +82,30 @@ const SeasonalDecorations: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 Buscando tema ativo...');
-      
       const { data, error: fetchError } = await supabase
         .from('seasonal_themes')
         .select('*')
         .eq('is_active', true)
-        .maybeSingle(); // Usar maybeSingle() em vez de single() para evitar erro se não houver resultado
+        .maybeSingle();
       
       if (fetchError) {
-        console.error('❌ Erro ao buscar tema:', fetchError);
         setError(fetchError.message);
         return;
       }
       
-      if (data) {
-        console.log('✅ Tema ativo encontrado:', data);
-        setActiveTheme(data);
-      } else {
-        console.log('⚠️ Nenhum tema ativo encontrado');
-        setActiveTheme(null);
-      }
+      const theme = data || null;
+      setActiveTheme(theme);
+      setCachedTheme(theme);
     } catch (err) {
-      console.error('❌ Erro inesperado:', err);
       setError('Erro inesperado ao carregar tema');
     } finally {
       setLoading(false);
     }
   };
 
-  const generateDecorations = () => {
+  const generateDecorations = useCallback(() => {
     const newDecorations = [];
-    const count = 8; // Número de decorações
-    
-    console.log(`🎭 Gerando ${count} decorações do tipo: ${activeTheme.decoration_type}`);
+    const count = 6; // Reduzido de 8 para 6 para melhor performance
     
     for (let i = 0; i < count; i++) {
       newDecorations.push({
@@ -102,35 +120,19 @@ const SeasonalDecorations: React.FC = () => {
     }
     
     setDecorations(newDecorations);
-    console.log('🎉 Decorações geradas:', newDecorations.length);
-  };
-
-  // Debug: mostrar estado atual no console
-  useEffect(() => {
-    console.log('📊 Estado atual:', {
-      loading,
-      error,
-      activeTheme,
-      decorationsCount: decorations.length
-    });
-  }, [loading, error, activeTheme, decorations]);
+  }, []);
 
   if (loading) {
-    console.log('⏳ Carregando tema...');
     return null;
   }
 
   if (error) {
-    console.error('💥 Erro no componente:', error);
     return null;
   }
 
   if (!activeTheme || activeTheme.decoration_type === 'none') {
-    console.log('🚫 Não exibindo decorações');
     return null;
   }
-
-  console.log('🎨 Renderizando decorações:', decorations.length);
 
   return (
     <>

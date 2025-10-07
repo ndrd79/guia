@@ -57,7 +57,7 @@ async function testFrontendBannerSave() {
   const bannerData = {
     nome: 'Teste Banner Frontend',
     posicao: 'Hero Carousel',
-    imagem: 'https://via.placeholder.com/1270x250/ff6b6b/ffffff?text=Banner+Teste',
+    imagem: '/images/placeholder-banner-1270x250.svg',
     link: 'https://exemplo.com',
     largura: 1270,
     altura: 250,

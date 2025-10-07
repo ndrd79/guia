@@ -90,15 +90,37 @@ const Header: React.FC = () => {
       </header>
 
       {/* News Ticker */}
-      <div className="bg-red-600 text-white py-2 px-4">
+      <div className="bg-red-600 text-white py-2 px-4 overflow-hidden">
         <div className="container mx-auto flex items-center">
-          <div className="font-bold mr-4 hidden sm:block">ÚLTIMAS NOTÍCIAS:</div>
-          <div className="news-ticker flex-1">
-            <span>
-              {noticias.map((noticia, index) => (
-                <span key={index} className="mr-8">{noticia}</span>
-              ))}
-            </span>
+          <div className="font-bold mr-4 hidden sm:block text-sm md:text-base">ÚLTIMAS NOTÍCIAS:</div>
+          <div className="news-ticker-container flex-1 relative overflow-hidden">
+            <div className="news-ticker-content">
+              {noticias.length > 0 ? (
+                <>
+                  {/* Primeira cópia das notícias */}
+                  {noticias.map((noticia, index) => (
+                    <span key={`first-${index}`} className="news-ticker-item">
+                      {noticia}
+                    </span>
+                  ))}
+                  {/* Segunda cópia para loop contínuo */}
+                  {noticias.map((noticia, index) => (
+                    <span key={`second-${index}`} className="news-ticker-item">
+                      {noticia}
+                    </span>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <span className="news-ticker-item">
+                    Carregando últimas notícias...
+                  </span>
+                  <span className="news-ticker-item">
+                    Carregando últimas notícias...
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

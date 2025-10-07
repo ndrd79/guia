@@ -67,7 +67,7 @@ async function testBannerSave() {
   const testBanner = {
     nome: 'Teste Banner ' + Date.now(),
     posicao: 'Header Superior',
-    imagem: 'https://via.placeholder.com/728x90',
+    imagem: '/images/placeholder-banner-728x90.svg',
     link: 'https://example.com',
     largura: 728,
     altura: 90,

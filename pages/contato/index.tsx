@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import Header from '../../components/Header';
+import Nav from '../../components/Nav';
+import Footer from '../../components/Footer';
 
 const ContatoPage = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,8 +37,8 @@ const ContatoPage = () => {
     });
   };
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
+  const toggleFAQ = (index: number) => {
+    setOpenFAQ(openFAQ === index ? null : index);
   };
 
   const faqData = [
@@ -97,91 +99,9 @@ const ContatoPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      {/* Top Bar */}
-      <div className="bg-indigo-900 text-white py-2 px-4 flex justify-between items-center text-sm">
-        <div>
-          <span className="hidden md:inline">Portal Oficial de Maria Helena - Conectando pessoas e negócios</span>
-        </div>
-        <div className="flex space-x-4">
-          <Link href="/area-usuario" className="hover:text-indigo-200">
-            <i className="fas fa-user mr-1"></i> Área do Usuário
-          </Link>
-          <a href="#" className="hover:text-indigo-200"><i className="fas fa-lock mr-1"></i> Painel Admin</a>
-        </div>
-      </div>
-
-      {/* Header */}
-      <header className="gradient-bg text-white py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="bg-white rounded-full p-2 mr-4 pulse">
-                <i className="fas fa-city text-indigo-600 text-3xl"></i>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold neon-text">PORTAL MARIA HELENA</h1>
-                <p className="text-indigo-100">Sua cidade em um só lugar</p>
-              </div>
-            </div>
-            
-            <div className="ad-space w-full md:w-1/3 h-24 rounded-lg mb-4 md:mb-0">
-              [ESPAÇO PUBLICITÁRIO 1]
-            </div>
-            
-            <div className="w-full md:w-1/4">
-              <div className="relative">
-                <input type="text" placeholder="Buscar no portal..." className="w-full py-2 px-4 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-                <button className="absolute right-3 top-2 text-indigo-600">
-                  <i className="fas fa-search"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="bg-white shadow-md sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center py-3">
-            <div className="md:hidden">
-              <button 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-indigo-600 focus:outline-none"
-              >
-                <i className="fas fa-bars text-2xl"></i>
-              </button>
-            </div>
-            <div className="hidden md:flex space-x-6">
-              <Link href="/" className="text-gray-600 hover:text-indigo-600 transition">Início</Link>
-              <Link href="/guia" className="text-gray-600 hover:text-indigo-600 transition">Guia Comercial</Link>
-              <Link href="/classificados" className="text-gray-600 hover:text-indigo-600 transition">Classificados</Link>
-              <Link href="/eventos" className="text-gray-600 hover:text-indigo-600 transition">Eventos</Link>
-              <a href="#" className="text-gray-600 hover:text-indigo-600 transition">Serviços</a>
-              <Link href="/noticias" className="text-gray-600 hover:text-indigo-600 transition">Notícias</Link>
-              <Link href="/contato" className="text-indigo-600 font-medium border-b-2 border-indigo-600 pb-1">Contato</Link>
-            </div>
-            <div>
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition flex items-center">
-                <i className="fas fa-plus-circle mr-2"></i> Anunciar
-              </button>
-            </div>
-          </div>
-          
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t mt-2">
-              <Link href="/" className="block py-2 text-gray-600">Início</Link>
-              <Link href="/guia" className="block py-2 text-gray-600">Guia Comercial</Link>
-              <Link href="/classificados" className="block py-2 text-gray-600">Classificados</Link>
-              <Link href="/eventos" className="block py-2 text-gray-600">Eventos</Link>
-              <a href="#" className="block py-2 text-gray-600">Serviços</a>
-              <Link href="/noticias" className="block py-2 text-gray-600">Notícias</Link>
-              <Link href="/contato" className="block py-2 text-indigo-600">Contato</Link>
-            </div>
-          )}
-        </div>
-      </nav>
+      {/* Header e Nav padrão */}
+      <Header />
+      <Nav />
 
       {/* Page Header */}
       <div className="bg-gray-900 text-white py-12">
@@ -395,15 +315,15 @@ const ContatoPage = () => {
             {faqData.map((faq, index) => (
               <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
                 <button 
-                  onClick={() => toggleFaq(index)}
+                  onClick={() => toggleFAQ(index)}
                   className="w-full text-left p-6 flex justify-between items-center focus:outline-none"
                 >
                   <h3 className="font-medium text-lg text-gray-800">{faq.question}</h3>
                   <i className={`fas fa-chevron-down text-indigo-600 transition-transform duration-300 ${
-                    openFaq === index ? 'transform rotate-180' : ''
+                    openFAQ === index ? 'transform rotate-180' : ''
                   }`}></i>
                 </button>
-                {openFaq === index && (
+                {openFAQ === index && (
                   <div className="px-6 pb-6">
                     <p className="text-gray-600">{faq.answer}</p>
                   </div>
@@ -441,79 +361,8 @@ const ContatoPage = () => {
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="py-12 gradient-bg text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Receba as novidades no seu e-mail</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">Cadastre-se e receba promoções, eventos e notícias importantes da sua cidade.</p>
-          
-          <div className="max-w-md mx-auto flex">
-            <input type="email" placeholder="Seu melhor e-mail" className="flex-grow py-3 px-4 rounded-l-lg focus:outline-none text-gray-800" />
-            <button className="bg-indigo-900 hover:bg-indigo-800 py-3 px-6 rounded-r-lg font-medium transition">Cadastrar</button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-white font-bold text-lg mb-4">Portal Maria Helena</h3>
-              <p className="mb-4">O guia completo da sua cidade, conectando pessoas, negócios e oportunidades.</p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-facebook-f"></i></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-instagram"></i></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-whatsapp"></i></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-youtube"></i></a>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-white font-bold text-lg mb-4">Links Rápidos</h3>
-              <ul className="space-y-2">
-                <li><Link href="/" className="hover:text-white transition">Início</Link></li>
-                <li><Link href="/guia" className="hover:text-white transition">Guia Comercial</Link></li>
-                <li><Link href="/classificados" className="hover:text-white transition">Classificados</Link></li>
-                <li><Link href="/eventos" className="hover:text-white transition">Eventos</Link></li>
-                <li><a href="#" className="hover:text-white transition">Serviços</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-white font-bold text-lg mb-4">Informações</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">Sobre Nós</a></li>
-                <li><a href="#" className="hover:text-white transition">Anuncie Conosco</a></li>
-                <li><a href="#" className="hover:text-white transition">Termos de Uso</a></li>
-                <li><a href="#" className="hover:text-white transition">Política de Privacidade</a></li>
-                <li><Link href="/contato" className="hover:text-white transition">Fale Conosco</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-white font-bold text-lg mb-4">Contato</h3>
-              <ul className="space-y-2">
-                <li className="flex items-center"><i className="fas fa-map-marker-alt mr-2"></i> Rua Principal, 123 - Centro</li>
-                <li className="flex items-center"><i className="fas fa-phone-alt mr-2"></i> (44) 1234-5678</li>
-                <li className="flex items-center"><i className="fas fa-envelope mr-2"></i> contato@portalmariahelena.com.br</li>
-                <li className="flex items-center"><i className="fas fa-clock mr-2"></i> Seg-Sex: 8h às 18h</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              &copy; 2023 Portal Maria Helena. Todos os direitos reservados.
-            </div>
-            <div className="flex space-x-6">
-              <a href="#" className="hover:text-white transition">Termos de Serviço</a>
-              <a href="#" className="hover:text-white transition">Política de Privacidade</a>
-              <a href="#" className="hover:text-white transition">Mapa do Site</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Footer padrão */}
+      <Footer />
 
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
@@ -6,15 +6,18 @@ const Nav: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  // Memoizar a função de toggle para evitar re-renders desnecessários
+  const toggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(prev => !prev);
+  }, []);
 
-  const isActive = (path: string) => {
+  // Memoizar a função isActive
+  const isActive = useCallback((path: string) => {
     return router.pathname === path;
-  };
+  }, [router.pathname]);
 
-  const navItems = [
+  // Memoizar os itens de navegação
+  const navItems = useMemo(() => [
     { href: '/', label: 'Início' },
     { href: '/noticias', label: 'Notícias' },
     { href: '/guia', label: 'Guia Comercial' },
@@ -22,7 +25,12 @@ const Nav: React.FC = () => {
     { href: '/eventos', label: 'Eventos' },
     { href: '/servicos', label: 'Serviços' },
     { href: '/contato', label: 'Contato' },
-  ];
+  ], []);
+
+  // Memoizar o callback para fechar o menu mobile
+  const closeMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -41,7 +49,8 @@ const Nav: React.FC = () => {
             {navItems.map((item) => (
               <Link 
                 key={item.href}
-                href={item.href} 
+                href={item.href}
+                prefetch={true}
                 className={`${
                   isActive(item.href)
                     ? 'text-indigo-600 font-medium border-b-2 border-indigo-600 pb-1'
@@ -67,11 +76,12 @@ const Nav: React.FC = () => {
           {navItems.map((item) => (
             <Link 
               key={item.href}
-              href={item.href} 
+              href={item.href}
+              prefetch={true}
               className={`block py-2 ${
                 isActive(item.href) ? 'text-indigo-600' : 'text-gray-600'
               }`}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               {item.label}
             </Link>

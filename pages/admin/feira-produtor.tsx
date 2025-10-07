@@ -74,6 +74,9 @@ export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) 
   })
 
   const onSubmitFeira = async (data: FeiraForm) => {
+    console.log('🔍 Dados do formulário:', data)
+    console.log('🔍 feiraInfo existente:', feiraInfo)
+    
     if (!supabase) {
       alert('Sistema não está configurado')
       return
@@ -105,8 +108,7 @@ export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) 
       alert('Informações da feira atualizadas com sucesso!')
       window.location.reload()
     } catch (error) {
-      console.error('Erro ao salvar:', error)
-      alert('Erro ao salvar informações da feira')
+      alert(`Erro ao salvar informações da feira: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setLoading(false)
     }
@@ -231,143 +233,145 @@ export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) 
         </div>
 
         {activeTab === 'feira' && (
-          <FormCard title="Informações da Feira">
-            <form onSubmit={feiraForm.handleSubmit(onSubmitFeira)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={feiraForm.handleSubmit(onSubmitFeira)} className="space-y-4">
+            <FormCard title="Informações da Feira" showForm={false}>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Título
+                    </label>
+                    <input
+                      {...feiraForm.register('titulo')}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {feiraForm.formState.errors.titulo && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {feiraForm.formState.errors.titulo.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Data de Funcionamento
+                    </label>
+                    <input
+                      {...feiraForm.register('data_funcionamento')}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {feiraForm.formState.errors.data_funcionamento && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {feiraForm.formState.errors.data_funcionamento.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Horário de Funcionamento
+                    </label>
+                    <input
+                      {...feiraForm.register('horario_funcionamento')}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {feiraForm.formState.errors.horario_funcionamento && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {feiraForm.formState.errors.horario_funcionamento.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Local
+                    </label>
+                    <input
+                      {...feiraForm.register('local')}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {feiraForm.formState.errors.local && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {feiraForm.formState.errors.local.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contato
+                    </label>
+                    <input
+                      {...feiraForm.register('contato')}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Telefone ou email"
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      {...feiraForm.register('ativa')}
+                      className="mr-2"
+                    />
+                    <label className="text-sm font-medium text-gray-700">
+                      Feira ativa
+                    </label>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Título
+                    Descrição
                   </label>
-                  <input
-                    {...feiraForm.register('titulo')}
+                  <textarea
+                    {...feiraForm.register('descricao')}
+                    rows={3}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  {feiraForm.formState.errors.titulo && (
+                  {feiraForm.formState.errors.descricao && (
                     <p className="text-red-500 text-sm mt-1">
-                      {feiraForm.formState.errors.titulo.message}
+                      {feiraForm.formState.errors.descricao.message}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Data de Funcionamento
+                    Informações Adicionais
                   </label>
-                  <input
-                    {...feiraForm.register('data_funcionamento')}
+                  <textarea
+                    {...feiraForm.register('informacoes_adicionais')}
+                    rows={4}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Informações extras sobre a feira..."
                   />
-                  {feiraForm.formState.errors.data_funcionamento && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {feiraForm.formState.errors.data_funcionamento.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Horário de Funcionamento
+                    Imagem Banner
                   </label>
-                  <input
-                    {...feiraForm.register('horario_funcionamento')}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  {feiraForm.formState.errors.horario_funcionamento && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {feiraForm.formState.errors.horario_funcionamento.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Local
-                  </label>
-                  <input
-                    {...feiraForm.register('local')}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  {feiraForm.formState.errors.local && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {feiraForm.formState.errors.local.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contato
-                  </label>
-                  <input
-                    {...feiraForm.register('contato')}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Telefone ou email"
+                  <ImageUploader
+                    value={feiraForm.watch('imagem_banner') || ''}
+                    onChange={(url) => feiraForm.setValue('imagem_banner', url || undefined)}
+                    bucket="feira-images"
                   />
                 </div>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    {...feiraForm.register('ativa')}
-                    className="mr-2"
-                  />
-                  <label className="text-sm font-medium text-gray-700">
-                    Feira ativa
-                  </label>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {loading ? 'Salvando...' : 'Salvar Informações'}
+                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrição
-                </label>
-                <textarea
-                  {...feiraForm.register('descricao')}
-                  rows={3}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {feiraForm.formState.errors.descricao && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {feiraForm.formState.errors.descricao.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Informações Adicionais
-                </label>
-                <textarea
-                  {...feiraForm.register('informacoes_adicionais')}
-                  rows={4}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Informações extras sobre a feira..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Imagem Banner
-                </label>
-                <ImageUploader
-                  value={feiraForm.watch('imagem_banner') || ''}
-                  onChange={(url) => feiraForm.setValue('imagem_banner', url || undefined)}
-                  bucket="feira-images"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Salvando...' : 'Salvar Informações'}
-                </button>
-              </div>
-            </form>
-          </FormCard>
+            </FormCard>
+          </form>
         )}
 
         {activeTab === 'produtores' && (
@@ -384,106 +388,108 @@ export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) 
             </div>
 
             {showProdutorForm && (
-              <FormCard title={editingProdutor ? 'Editar Produtor' : 'Novo Produtor'}>
-                <form onSubmit={produtorForm.handleSubmit(onSubmitProdutor)} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nome do Produtor
-                      </label>
-                      <input
-                        {...produtorForm.register('nome')}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      {produtorForm.formState.errors.nome && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {produtorForm.formState.errors.nome.message}
-                        </p>
-                      )}
+              <form onSubmit={produtorForm.handleSubmit(onSubmitProdutor)} className="space-y-4">
+                <FormCard title={editingProdutor ? 'Editar Produtor' : 'Novo Produtor'} showForm={false}>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nome do Produtor
+                        </label>
+                        <input
+                          {...produtorForm.register('nome')}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        {produtorForm.formState.errors.nome && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {produtorForm.formState.errors.nome.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Produtos
+                        </label>
+                        <input
+                          {...produtorForm.register('produtos')}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Ex: Frutas, Verduras, Legumes"
+                        />
+                        {produtorForm.formState.errors.produtos && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {produtorForm.formState.errors.produtos.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Contato
+                        </label>
+                        <input
+                          {...produtorForm.register('contato')}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Telefone ou WhatsApp"
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          {...produtorForm.register('ativo')}
+                          className="mr-2"
+                        />
+                        <label className="text-sm font-medium text-gray-700">
+                          Produtor ativo
+                        </label>
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Produtos
+                        Descrição
                       </label>
-                      <input
-                        {...produtorForm.register('produtos')}
+                      <textarea
+                        {...produtorForm.register('descricao')}
+                        rows={3}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Ex: Frutas, Verduras, Legumes"
+                        placeholder="Descrição do produtor e seus produtos..."
                       />
-                      {produtorForm.formState.errors.produtos && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {produtorForm.formState.errors.produtos.message}
-                        </p>
-                      )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Contato
+                        Foto do Produtor
                       </label>
-                      <input
-                        {...produtorForm.register('contato')}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Telefone ou WhatsApp"
+                      <ImageUploader
+                        value={produtorForm.watch('imagem') || ''}
+                        onChange={(url) => produtorForm.setValue('imagem', url || undefined)}
+                        bucket="produtores-images"
                       />
                     </div>
 
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        {...produtorForm.register('ativo')}
-                        className="mr-2"
-                      />
-                      <label className="text-sm font-medium text-gray-700">
-                        Produtor ativo
-                      </label>
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelProdutor}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 flex items-center"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {loading ? 'Salvando...' : 'Salvar Produtor'}
+                      </button>
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Descrição
-                    </label>
-                    <textarea
-                      {...produtorForm.register('descricao')}
-                      rows={3}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Descrição do produtor e seus produtos..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Foto do Produtor
-                    </label>
-                    <ImageUploader
-                      value={produtorForm.watch('imagem') || ''}
-                      onChange={(url) => produtorForm.setValue('imagem', url || undefined)}
-                      bucket="produtores-images"
-                    />
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={handleCancelProdutor}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 flex items-center"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      {loading ? 'Salvando...' : 'Salvar Produtor'}
-                    </button>
-                  </div>
-                </form>
-              </FormCard>
+                </FormCard>
+              </form>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -557,20 +563,25 @@ export default function FeiraProdutor({ feiraInfo, produtores }: FeiraProdutor) 
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const supabaseServer = createServerSupabaseClient()
+  // Usar cliente simples para evitar problemas de SSR
+  const { createClient } = require('@supabase/supabase-js')
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabaseServer = createClient(supabaseUrl, supabaseAnonKey)
   
   let feiraInfo = null
   let produtores: Produtor[] = []
 
   try {
-    // Buscar informações da feira
-    const { data: feiraData } = await supabaseServer
+    // Buscar informações da feira (pegar o mais recente)
+    const { data: feiraData, error: feiraError } = await supabaseServer
       .from('feira_produtor')
       .select('*')
-      .single()
+      .order('updated_at', { ascending: false })
+      .limit(1)
     
-    if (feiraData) {
-      feiraInfo = feiraData
+    if (feiraData && feiraData.length > 0) {
+      feiraInfo = feiraData[0]
     }
 
     // Buscar produtores

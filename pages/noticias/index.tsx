@@ -1,170 +1,232 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
-import { GetServerSideProps } from 'next'
+import { GetStaticProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
-import NewsCard from '../../components/NewsCard'
 import BannerContainer from '../../components/BannerContainer'
 import { formatDate } from '../../lib/formatters'
 import { createServerSupabaseClient, Noticia } from '../../lib/supabase'
 
-interface NewsArticle {
-  id: number
-  title: string
-  description: string
-  content: string
-  category: string
-  image: string
-  publishedAt: string
-  views: number
-  comments: number
-  isFeatured: boolean
-}
-
-const mockNews: NewsArticle[] = [
-  {
-    id: 1,
-    title: "Prefeito anuncia novo plano de desenvolvimento urbano para Maria Helena",
-    description: "O prefeito de Maria Helena apresentou hoje um ambicioso plano de desenvolvimento urbano que promete transformar a infraestrutura da cidade nos próximos cinco anos. O projeto inclui a revitalização do centro histórico, construção de novas ciclovias e a modernização do sistema de transporte público.",
-    content: "Conteúdo completo da notícia...",
-    category: "POLÍTICA",
-    image: "https://images.unsplash.com/photo-1588681664899-f142ff2dc9b1?w=800",
-    publishedAt: "15 Jun, 2023",
-    views: 2458,
-    comments: 42,
-    isFeatured: true
-  },
-  {
-    id: 2,
-    title: "Hospital Municipal recebe novos equipamentos de diagnóstico",
-    description: "Investimento de R$ 1,2 milhão permite modernização do setor de radiologia.",
-    content: "Conteúdo completo da notícia...",
-    category: "SAÚDE",
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600",
-    publishedAt: "14 Jun, 2023",
-    views: 1234,
-    comments: 18,
-    isFeatured: false
-  },
-  {
-    id: 3,
-    title: "Escolas municipais terão ensino integral a partir de 2024",
-    description: "Projeto piloto será implementado em três unidades educacionais.",
-    content: "Conteúdo completo da notícia...",
-    category: "EDUCAÇÃO",
-    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600",
-    publishedAt: "13 Jun, 2023",
-    views: 987,
-    comments: 25,
-    isFeatured: false
-  },
-  {
-    id: 4,
-    title: "Feira do Empreendedor atrai investidores para Maria Helena",
-    description: "Evento gerou mais de R$ 3 milhões em negócios para pequenas empresas locais.",
-    content: "Conteúdo completo da notícia...",
-    category: "ECONOMIA",
-    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600",
-    publishedAt: "12 Jun, 2023",
-    views: 1567,
-    comments: 31,
-    isFeatured: false
-  },
-  {
-    id: 5,
-    title: "Festival de Inverno terá shows gratuitos na praça central",
-    description: "Evento cultural acontecerá de 20 a 25 de julho com atrações locais e nacionais.",
-    content: "Conteúdo completo da notícia...",
-    category: "CULTURA",
-    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600",
-    publishedAt: "11 Jun, 2023",
-    views: 2103,
-    comments: 56,
-    isFeatured: false
-  },
-  {
-    id: 6,
-    title: "Time de futebol sub-17 conquista título estadual",
-    description: "Jovens atletas de Maria Helena trazem o troféu após vitória na final.",
-    content: "Conteúdo completo da notícia...",
-    category: "ESPORTES",
-    image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600",
-    publishedAt: "10 Jun, 2023",
-    views: 1876,
-    comments: 43,
-    isFeatured: false
-  }
-]
-
-const categories = ['Todas', 'Política', 'Economia', 'Saúde', 'Educação', 'Esportes', 'Cultura']
-
-const popularNews = [
-  { title: "Novo hospital será inaugurado em julho", date: "10 de Junho, 2023" },
-  { title: "Prefeitura abre concurso público com 200 vagas", date: "9 de Junho, 2023" },
-  { title: "Maria Helena é destaque em ranking de educação", date: "8 de Junho, 2023" },
-  { title: "Festival gastronômico atrai milhares de visitantes", date: "7 de Junho, 2023" }
-]
-
-const categoryStats = [
-  { name: "Política", count: 24 },
-  { name: "Economia", count: 18 },
-  { name: "Saúde", count: 15 },
-  { name: "Educação", count: 22 },
-  { name: "Esportes", count: 12 },
-  { name: "Cultura", count: 9 }
-]
-
-interface NoticiasPageProps {
+interface NewsPageProps {
   noticias: Noticia[]
+  categorias: string[]
+  totalNoticias: number
 }
 
-export default function Noticias({ noticias }: NoticiasPageProps) {
-  const [selectedCategory, setSelectedCategory] = useState('Todas')
-  
-  // Converter notícias do Supabase para o formato esperado
-  const newsArticles: NewsArticle[] = noticias.map(noticia => ({
-    id: parseInt(noticia.id || '0'),
-    title: noticia.titulo,
-    description: noticia.descricao || '',
-    content: noticia.conteudo,
-    category: noticia.categoria?.toUpperCase() || 'GERAL',
-    image: noticia.imagem || 'https://images.unsplash.com/photo-1588681664899-f142ff2dc9b1?w=800',
-    publishedAt: formatDate(noticia.data),
-    views: 0,
-    comments: 0,
-    isFeatured: noticia.destaque || false
-  }))
-  
-  const [filteredNews, setFilteredNews] = useState(newsArticles)
-  const [email, setEmail] = useState('')
-
-  const handleCategoryFilter = (category: string) => {
-    setSelectedCategory(category)
-    if (category === 'Todas') {
-      setFilteredNews(newsArticles)
-    } else {
-      setFilteredNews(newsArticles.filter(news => news.category.toLowerCase() === category.toLowerCase()))
-    }
+// Componente de skeleton para loading
+const NewsSkeleton = ({ isLarge = false }: { isLarge?: boolean }) => {
+  if (isLarge) {
+    return (
+      <div className="mb-12 bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+        <div className="h-96 bg-gray-200"></div>
+        <div className="p-6">
+          <div className="h-4 bg-gray-200 rounded w-20 mb-3"></div>
+          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-6"></div>
+          <div className="h-4 bg-gray-200 rounded w-32"></div>
+        </div>
+      </div>
+    )
   }
 
-  const getCategoryColor = (category: string) => {
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
+      <div className="h-48 bg-gray-200"></div>
+      <div className="p-4">
+        <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+        <div className="h-6 bg-gray-200 rounded mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded mb-3"></div>
+        <div className="flex justify-between items-center">
+          <div className="h-3 bg-gray-200 rounded w-20"></div>
+          <div className="h-3 bg-gray-200 rounded w-16"></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+
+// Componente memoizado para card de notícia
+const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean }) => {
+  const getCategoryColor = useCallback((category: string) => {
     const colors: { [key: string]: string } = {
-      'POLÍTICA': 'bg-indigo-500',
-      'SAÚDE': 'bg-green-500',
-      'EDUCAÇÃO': 'bg-yellow-500',
-      'ECONOMIA': 'bg-blue-500',
-      'CULTURA': 'bg-purple-500',
-      'ESPORTES': 'bg-orange-500',
-      'MEIO AMBIENTE': 'bg-teal-500'
+      'Política': 'bg-red-500',
+      'Economia': 'bg-green-500',
+      'Esportes': 'bg-blue-500',
+      'Cultura': 'bg-purple-500',
+      'Saúde': 'bg-pink-500',
+      'Educação': 'bg-indigo-500',
+      'Tecnologia': 'bg-gray-500',
+      'Meio Ambiente': 'bg-emerald-500'
     }
     return colors[category] || 'bg-gray-500'
+  }, [])
+
+  const formatDate = useCallback((dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }, [])
+
+  if (isLarge) {
+    return (
+      <div className="mb-12 bg-white rounded-xl shadow-lg overflow-hidden news-card">
+        <div className="relative">
+          <div className="absolute top-4 left-4 z-10">
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">DESTAQUE</span>
+          </div>
+          <div className="absolute top-4 right-4 z-10 text-white">
+            <i className="far fa-calendar mr-1"></i> {formatDate(news.data || news.created_at)}
+          </div>
+          <div className="h-96 relative overflow-hidden">
+            {news.imagem ? (
+              <Image
+                src={news.imagem}
+                alt={news.titulo}
+                fill
+                className="object-cover"
+                priority={true}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <i className="fas fa-newspaper text-gray-400 text-6xl"></i>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="p-6">
+          <span className={`${getCategoryColor(news.categoria)} text-white px-3 py-1 rounded-full text-sm font-bold mb-3 inline-block`}>
+            {news.categoria}
+          </span>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">{news.titulo}</h2>
+          <p className="text-gray-600 mb-6">{news.descricao}</p>
+          <div className="flex items-center justify-between">
+            <Link 
+              href={`/noticias/${news.id}`} 
+              className="text-indigo-600 font-medium hover:text-indigo-800 flex items-center"
+              prefetch={true}
+            >
+              Leia a matéria completa <i className="fas fa-arrow-right ml-2"></i>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const featuredNews = filteredNews.filter(news => news.isFeatured).slice(0, 1)[0]
-  const regularNews = filteredNews.filter(news => !news.isFeatured)
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden news-card">
+      <div className="relative">
+        <div className="absolute top-2 left-2 z-10">
+          <span className={`${getCategoryColor(news.categoria)} text-white px-2 py-1 rounded-full text-xs`}>
+            {news.categoria}
+          </span>
+        </div>
+        <div className="h-48 relative overflow-hidden">
+          {news.imagem ? (
+            <Image
+              src={news.imagem}
+              alt={news.titulo}
+              fill
+              className="object-cover"
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <i className="fas fa-newspaper text-gray-400 text-4xl"></i>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="font-bold text-lg mb-2 line-clamp-2">{news.titulo}</h3>
+        <p className="text-gray-600 text-sm mb-3 line-clamp-3">{news.descricao}</p>
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-500">
+            <i className="far fa-calendar mr-1"></i> {formatDate(news.data || news.created_at)}
+          </span>
+          <Link 
+            href={`/noticias/${news.id}`} 
+            className="text-indigo-600 hover:text-indigo-800 font-medium"
+            prefetch={true}
+          >
+            Ler mais
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function Noticias({ noticias, categorias, totalNoticias }: NewsPageProps) {
+  const [selectedCategory, setSelectedCategory] = useState('Todas')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [email, setEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const itemsPerPage = 8
+
+  // Memoizar notícias filtradas
+  const filteredNews = useMemo(() => {
+    if (selectedCategory === 'Todas') {
+      return noticias
+    }
+    return noticias.filter(news => news.categoria.toLowerCase() === selectedCategory.toLowerCase())
+  }, [noticias, selectedCategory])
+
+  // Memoizar notícias paginadas
+  const paginatedNews = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredNews.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredNews, currentPage, itemsPerPage])
+
+  // Memoizar notícia em destaque
+  const featuredNews = useMemo(() => {
+    return noticias.find(news => news.destaque) || noticias[0]
+  }, [noticias])
+
+  // Memoizar notícias regulares
+  const regularNews = useMemo(() => {
+    return paginatedNews.filter(news => news.id !== featuredNews?.id)
+  }, [paginatedNews, featuredNews])
+
+  // Memoizar notícias populares
+  const popularNews = useMemo(() => {
+    return noticias.slice(0, 5)
+  }, [noticias])
+
+  // Callbacks memoizados
+  const handleCategoryFilter = useCallback((category: string) => {
+    setIsLoading(true)
+    setSelectedCategory(category)
+    setCurrentPage(1)
+    // Simular pequeno delay para mostrar loading
+    setTimeout(() => setIsLoading(false), 300)
+  }, [])
+
+  const handlePageChange = useCallback((page: number) => {
+    setIsLoading(true)
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Simular pequeno delay para mostrar loading
+    setTimeout(() => setIsLoading(false), 300)
+  }, [])
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+  }, [])
+
+  // Calcular total de páginas
+  const totalPages = Math.ceil(filteredNews.length / itemsPerPage)
 
   return (
     <>
@@ -183,7 +245,7 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
           <p className="text-xl max-w-3xl mx-auto">Fique por dentro de tudo o que acontece na nossa cidade. Informações atualizadas sobre política, eventos, economia e muito mais.</p>
           
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            {categories.map(category => (
+            {['Todas', ...categorias].map(category => (
               <button 
                 key={category}
                 className={`px-5 py-2 rounded-full font-medium transition ${
@@ -207,93 +269,77 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
             {/* Main News Column */}
             <div className="lg:w-2/3">
               {/* Featured News */}
-              {featuredNews && (
-                <div className="mb-12 bg-white rounded-xl shadow-lg overflow-hidden news-card">
-                  <div className="relative">
-                    <div className="absolute top-4 left-4 z-10">
-                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">DESTAQUE</span>
-                    </div>
-                    <div className="absolute top-4 right-4 z-10 text-white">
-                      <i className="far fa-calendar mr-1"></i> {featuredNews.publishedAt}
-                    </div>
-                    <div className="h-96 overflow-hidden">
-                      <img 
-                        src={featuredNews.image} 
-                        alt={featuredNews.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <span className={`${getCategoryColor(featuredNews.category)} text-white px-3 py-1 rounded-full text-sm font-bold mb-3 inline-block`}>
-                      {featuredNews.category}
-                    </span>
-                    <h2 className="text-2xl md:text-3xl font-bold mb-4">{featuredNews.title}</h2>
-                    <p className="text-gray-600 mb-6">{featuredNews.description}</p>
-                    <div className="flex items-center justify-between">
-                      <Link href={`/noticias/${featuredNews.id}`} className="text-indigo-600 font-medium hover:text-indigo-800 flex items-center">
-                        Leia a matéria completa <i className="fas fa-arrow-right ml-2"></i>
-                      </Link>
-                      <div className="flex items-center text-gray-500">
-                        <i className="far fa-eye mr-1"></i> {featuredNews.views} visualizações
-                        <i className="far fa-comment ml-4 mr-1"></i> {featuredNews.comments} comentários
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {isLoading ? (
+                selectedCategory === 'Todas' && currentPage === 1 && <NewsSkeleton isLarge={true} />
+              ) : (
+                featuredNews && selectedCategory === 'Todas' && currentPage === 1 && (
+                  <NewsCard news={featuredNews} isLarge={true} />
+                )
               )}
 
               {/* News Grid */}
-              <h2 className="text-3xl font-bold mb-8">Últimas Notícias</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {regularNews.map(news => (
-                  <div key={news.id} className="bg-white rounded-xl shadow-md overflow-hidden news-card">
-                    <div className="relative">
-                      <div className="absolute top-2 left-2 z-10">
-                        <span className={`${getCategoryColor(news.category)} text-white px-2 py-1 rounded-full text-xs`}>
-                          {news.category}
-                        </span>
-                      </div>
-                      <div className="h-48 overflow-hidden">
-                        <img 
-                          src={news.image} 
-                          alt={news.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2">{news.title}</h3>
-                      <p className="text-gray-600 text-sm mb-3">{news.description}</p>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-500">
-                          <i className="far fa-calendar mr-1"></i> {news.publishedAt}
-                        </span>
-                        <Link href={`/noticias/${news.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
-                          Ler mais
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h2 className="text-3xl font-bold mb-8">
+                {selectedCategory === 'Todas' ? 'Últimas Notícias' : `Notícias - ${selectedCategory}`}
+              </h2>
+              
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <NewsSkeleton key={i} />
+                  ))}
+                </div>
+              ) : regularNews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {regularNews.map(news => (
+                    <NewsCard key={news.id} news={news} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <i className="fas fa-newspaper text-gray-400 text-6xl mb-4"></i>
+                  <p className="text-gray-500 text-lg">Nenhuma notícia encontrada para esta categoria.</p>
+                </div>
+              )}
 
               {/* Pagination */}
-              <div className="mt-12 flex justify-center">
-                <nav className="flex space-x-2">
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <i className="fas fa-chevron-left"></i>
-                  </button>
-                  <button className="px-3 py-2 bg-indigo-600 text-white rounded-lg">1</button>
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">2</button>
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">3</button>
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">4</button>
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">5</button>
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </nav>
-              </div>
+              {totalPages > 1 && (
+                <div className="mt-12 flex justify-center">
+                  <nav className="flex space-x-2">
+                    <button 
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 rounded-lg ${
+                            currentPage === page
+                              ? 'bg-indigo-600 text-white'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    })}
+                    
+                    <button 
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </nav>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -310,21 +356,36 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
                   <i className="fas fa-fire text-orange-500 mr-2"></i> Notícias Populares
                 </h3>
                 <ul className="space-y-4">
-                  {newsArticles.slice(0, 5).map((news, index) => (
-                    <li key={index}>
-                      <Link href={`/noticias/${news.id}`} className="flex items-start space-x-3 group">
+                  {popularNews.map((news) => (
+                    <li key={news.id}>
+                      <Link 
+                        href={`/noticias/${news.id}`} 
+                        className="flex items-start space-x-3 group"
+                        prefetch={true}
+                      >
                         <div className="flex-shrink-0">
-                          <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center overflow-hidden">
-                            {news.image ? (
-                              <img src={news.image} alt={news.title} className="w-full h-full object-cover" />
+                          <div className="relative w-16 h-16 rounded-xl overflow-hidden">
+                            {news.imagem ? (
+                              <Image 
+                                src={news.imagem} 
+                                alt={news.titulo} 
+                                fill
+                                className="object-cover"
+                                loading="lazy"
+                                sizes="64px"
+                              />
                             ) : (
-                              <i className="fas fa-newspaper text-gray-400"></i>
+                              <div className="w-full h-full bg-gray-200 border-2 border-dashed rounded-xl flex items-center justify-center">
+                                <i className="fas fa-newspaper text-gray-400"></i>
+                              </div>
                             )}
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-bold group-hover:text-indigo-600">{news.title}</h4>
-                          <div className="text-sm text-gray-500">{news.publishedAt}</div>
+                          <h4 className="font-bold group-hover:text-indigo-600 line-clamp-2">{news.titulo}</h4>
+                          <div className="text-sm text-gray-500">
+                            {new Date(news.data || news.created_at).toLocaleDateString('pt-BR')}
+                          </div>
                         </div>
                       </Link>
                     </li>
@@ -338,21 +399,23 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
                   <i className="fas fa-folder-open text-indigo-600 mr-2"></i> Categorias
                 </h3>
                 <ul className="space-y-2">
-                  {categories.map(category => {
+                  {['Todas', ...categorias].map(category => {
                     const count = category === 'Todas' 
-                      ? newsArticles.length 
-                      : newsArticles.filter(news => news.category.toLowerCase() === category.toLowerCase()).length;
+                      ? totalNoticias 
+                      : noticias.filter(news => news.categoria.toLowerCase() === category.toLowerCase()).length
                     return (
                       <li key={category}>
                         <button 
-                          className="w-full flex justify-between items-center py-2 border-b border-gray-100 hover:text-indigo-600 text-left"
+                          className={`w-full flex justify-between items-center py-2 border-b border-gray-100 hover:text-indigo-600 text-left transition ${
+                            selectedCategory === category ? 'text-indigo-600 font-semibold' : ''
+                          }`}
                           onClick={() => handleCategoryFilter(category)}
                         >
                           <span>{category}</span>
                           <span className="bg-gray-200 text-gray-800 px-2 rounded-full text-xs">{count}</span>
                         </button>
                       </li>
-                    );
+                    )
                   })}
                 </ul>
               </div>
@@ -367,7 +430,7 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
                     placeholder="Seu e-mail" 
                     className="flex-grow py-2 px-4 rounded-l-lg text-gray-800 focus:outline-none"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                   />
                   <button className="bg-indigo-900 hover:bg-indigo-800 py-2 px-4 rounded-r-lg font-medium transition">
                     <i className="fas fa-paper-plane"></i>
@@ -384,35 +447,53 @@ export default function Noticias({ noticias }: NoticiasPageProps) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const supabase = createServerSupabaseClient();
-  
+export const getStaticProps: GetStaticProps = async () => {
   try {
+    const supabase = createServerSupabaseClient()
+    
+    // Buscar notícias ativas ordenadas por data
     const { data: noticias, error } = await supabase
       .from('noticias')
       .select('*')
-      .order('data', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50) // Limitar para performance
 
     if (error) {
-      console.error('Erro ao buscar notícias:', error);
+      console.error('Erro ao buscar notícias:', error)
       return {
         props: {
-          noticias: []
-        }
-      };
+          noticias: [],
+          categorias: [],
+          totalNoticias: 0
+        },
+        revalidate: 60 // Revalidar em 1 minuto em caso de erro
+      }
     }
+
+    const noticiasData = noticias || []
+    
+    // Extrair categorias únicas
+    const categorias = Array.from(new Set(noticiasData.map(n => n.categoria)))
+      .filter(Boolean)
+      .sort()
 
     return {
       props: {
-        noticias: noticias || []
-      }
-    };
+        noticias: noticiasData,
+        categorias,
+        totalNoticias: noticiasData.length
+      },
+      revalidate: 600 // Revalidar a cada 10 minutos
+    }
   } catch (error) {
-    console.error('Erro ao conectar com Supabase:', error);
+    console.error('Erro ao conectar com Supabase:', error)
     return {
       props: {
-        noticias: []
-      }
-    };
+        noticias: [],
+        categorias: [],
+        totalNoticias: 0
+      },
+      revalidate: 60 // Revalidar em 1 minuto em caso de erro
+    }
   }
-};
+}
