@@ -808,8 +808,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       largura: banner.largura || 400,
       altura: banner.altura || 200,
       ativo: banner.ativo,
-      data_inicio: formatDateForInput(banner.data_inicio),
-      data_fim: formatDateForInput(banner.data_fim),
+      data_inicio: formatDateForInput(banner.data_inicio ?? null),
+      data_fim: formatDateForInput(banner.data_fim ?? null),
     })
     setShowForm(true)
   }
