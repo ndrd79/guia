@@ -7,14 +7,16 @@ const path = require('path');
 // ========================================
 
 // Configurações do projeto
+// ⚠️ SEGURANÇA: Nunca exponha chaves de API diretamente no código!
+// Use variáveis de ambiente (.env.local) para proteger informações sensíveis
 const CONFIG = {
-  // Supabase
-  SUPABASE_URL: 'https://mlkpnapnijdbskaimquj.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa3BuYXBuaWpkYnNrYWltcXVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NTc0MjUsImV4cCI6MjA2OTIzMzQyNX0.p4OR5eltxJ9jRMMY1r51REhByxHA26XK27uAztUsuF8',
-  SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa3BuYXBuaWpkYnNrYWltcXVqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY1NzQyNSwiZXhwIjoyMDY5MjMzNDI1fQ.yhrc1YYwt4r-FOa3Iqa094hNEmGPj3PDEF0GkLmLZ6s',
+  // Supabase - USAR VARIÁVEIS DE AMBIENTE
+  SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mlkpnapnijdbskaimquj.supabase.co',
+  SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   
-  // OpenWeatherMap API
-  OPENWEATHER_API_KEY: 'd3ef9852b52357500adbce61ec2e3a0e',
+  // OpenWeatherMap API - USAR VARIÁVEIS DE AMBIENTE
+  OPENWEATHER_API_KEY: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY,
   
   // Admin
   ADMIN_EMAIL: 'admin@portal.com',
@@ -23,6 +25,16 @@ const CONFIG = {
   // Site
   SITE_URL: 'http://localhost:3000'
 };
+
+// ⚠️ VALIDAÇÃO DE SEGURANÇA: Verificar se as variáveis de ambiente estão configuradas
+if (!CONFIG.SUPABASE_ANON_KEY || !CONFIG.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ ERRO DE SEGURANÇA: Variáveis de ambiente do Supabase não configuradas!');
+  console.error('📝 Crie um arquivo .env.local com:');
+  console.error('   NEXT_PUBLIC_SUPABASE_URL=sua_url_aqui');
+  console.error('   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anon_aqui');
+  console.error('   SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_aqui');
+  process.exit(1);
+}
 
 // Inicializar cliente Supabase
 const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_SERVICE_ROLE_KEY);

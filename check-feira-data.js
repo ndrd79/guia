@@ -1,7 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://mlkpnapnijdbskaimquj.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa3BuYXBuaWpkYnNrYWltcXVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NTc0MjUsImV4cCI6MjA2OTIzMzQyNX0.p4OR5eltxJ9jRMMY1r51REhByxHA26XK27uAztUsuF8';
+// ⚠️ SEGURANÇA: Use variáveis de ambiente em vez de chaves hardcoded
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mlkpnapnijdbskaimquj.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Validação de segurança
+if (!supabaseKey) {
+  console.error('❌ ERRO: NEXT_PUBLIC_SUPABASE_ANON_KEY não configurada no .env.local');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

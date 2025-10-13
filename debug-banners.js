@@ -1,9 +1,17 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const supabase = createClient(
-  'https://mlkpnapnijdbskaimquj.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sa3BuYXBuaWpkYnNrYWltcXVqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY1NzQyNSwiZXhwIjoyMDY5MjMzNDI1fQ.yhrc1YYwt4r-FOa3Iqa094hNEmGPj3PDEF0GkLmLZ6s'
-)
+// ⚠️ SEGURANÇA: Use variáveis de ambiente em vez de chaves hardcoded
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mlkpnapnijdbskaimquj.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Validação de segurança
+if (!supabaseServiceKey) {
+  console.error('❌ ERRO: SUPABASE_SERVICE_ROLE_KEY não configurada no .env.local');
+  console.error('📝 Este script precisa da chave service_role para funcionar.');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 async function debugBanners() {
   console.log('🔍 Verificando banners no banco de dados...\n')
