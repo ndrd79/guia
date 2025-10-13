@@ -571,7 +571,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   // Obter posições únicas dos banners
   const availablePositions = useMemo(() => {
-    const positions = [...new Set(banners.map(banner => banner.posicao))]
+    const positions = Array.from(new Set(banners.map(banner => banner.posicao)))
     return positions.sort()
   }, [banners])
 
