@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, BarChart3, Search, X, Fi
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
+import { AnalyticsDashboard } from '../../src/components/analytics/AnalyticsDashboard'
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
 import { formatDate } from '../../lib/formatters'
 
@@ -411,6 +412,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   })
   const [searchDebounced, setSearchDebounced] = useState(filters.search)
   const [isFiltering, setIsFiltering] = useState(false)
+  
+  // Estado para controlar as abas
+  const [activeTab, setActiveTab] = useState<'banners' | 'analytics'>('banners')
 
   const {
     register,
@@ -434,6 +438,89 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   const watchedImagem = watch('imagem')
   const watchedPosicao = watch('posicao')
+
+  // Funções de carregamento de dados
+  const loadBanners = async () => {
+    console.log('📊 Iniciando carregamento dos banners...')
+    if (!supabase) {
+      console.error('❌ Supabase não configurado')
+      setError('Sistema não está configurado')
+      return
+    }
+    
+    setLoadingList(true)
+    setError(null)
+    
+    try {
+      const { data, error } = await supabase
+        .from('banners')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('❌ Erro ao carregar banners:', error)
+        setError('Erro ao carregar banners: ' + error.message)
+        return
+      }
+      
+      console.log('✅ Banners carregados:', data?.length || 0)
+      setBanners(data || [])
+    } catch (error) {
+      console.error('❌ Erro na função loadBanners:', error)
+      setError('Erro inesperado ao carregar banners')
+    } finally {
+      setLoadingList(false)
+    }
+  }
+
+  const loadBannerStats = async () => {
+    console.log('📊 Carregando estatísticas dos banners...')
+    setLoadingAllStats(true)
+    
+    try {
+      // Obter token de autenticação
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        console.warn('⚠️ Usuário não autenticado para carregar estatísticas')
+        return
+      }
+
+      const response = await fetch('/api/analytics/stats/all', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        console.warn('⚠️ Não foi possível carregar estatísticas:', response.status)
+        return
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.data?.banners) {
+        const statsMap: Record<string, BannerStats> = {}
+        
+        data.data.banners.forEach((banner: any) => {
+          statsMap[banner.id] = {
+            impressoes: banner.impressoes || 0,
+            cliques: banner.cliques || 0,
+            ctr: banner.ctr || 0
+          }
+        })
+        
+        setBannerStats(statsMap)
+        console.log('✅ Estatísticas carregadas para', Object.keys(statsMap).length, 'banners')
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao carregar estatísticas:', error)
+      // Não mostrar erro para o usuário, apenas log
+    } finally {
+      setLoadingAllStats(false)
+    }
+  }
 
   // Carregar banners e estatísticas quando o componente for montado
   useEffect(() => {
@@ -575,75 +662,6 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     const positions = Array.from(new Set(banners.map(banner => banner.posicao)))
     return positions.sort()
   }, [banners])
-
-  const loadBanners = async () => {
-    console.log('📊 Iniciando carregamento dos banners...')
-    if (!supabase) {
-      console.error('❌ Supabase não configurado')
-      setError('Sistema não está configurado')
-      return
-    }
-    
-    setLoadingList(true)
-    setError(null)
-    
-    try {
-      const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) {
-        console.error('❌ Erro ao carregar banners:', error)
-        setError('Erro ao carregar banners: ' + error.message)
-        return
-      }
-      
-      console.log('✅ Banners carregados:', data?.length || 0)
-      setBanners(data || [])
-    } catch (error) {
-      console.error('❌ Erro na função loadBanners:', error)
-      setError('Erro inesperado ao carregar banners')
-    } finally {
-      setLoadingList(false)
-    }
-  }
-
-  const loadBannerStats = async () => {
-    console.log('📊 Carregando estatísticas dos banners...')
-    setLoadingAllStats(true)
-    
-    try {
-      const response = await fetch('/api/analytics/stats/all')
-      
-      if (!response.ok) {
-        console.warn('⚠️ Não foi possível carregar estatísticas:', response.status)
-        return
-      }
-      
-      const data = await response.json()
-      
-      if (data.success && data.data?.banners) {
-        const statsMap: Record<string, BannerStats> = {}
-        
-        data.data.banners.forEach((banner: any) => {
-          statsMap[banner.id] = {
-            impressoes: banner.impressoes || 0,
-            cliques: banner.cliques || 0,
-            ctr: banner.ctr || 0
-          }
-        })
-        
-        setBannerStats(statsMap)
-        console.log('✅ Estatísticas carregadas para', Object.keys(statsMap).length, 'banners')
-      }
-    } catch (error) {
-      console.warn('⚠️ Erro ao carregar estatísticas:', error)
-      // Não mostrar erro para o usuário, apenas log
-    } finally {
-      setLoadingAllStats(false)
-    }
-  }
 
   const onSubmit = async (data: BannerForm) => {
     console.log('💾 Salvando banner:', data)
@@ -901,59 +919,92 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   return (
     <AdminLayout title="Gerenciar Banners">
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header com Abas */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Banners Publicitários</h1>
-          <button
-            onClick={() => setShowForm(true)}
-            disabled={loadingList}
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Banner
-          </button>
+          {activeTab === 'banners' && (
+            <button
+              onClick={() => setShowForm(true)}
+              disabled={loadingList}
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Banner
+            </button>
+          )}
         </div>
 
-        {/* Alerta de Banners Expirando */}
-        {(() => {
-          const expiringSoon = banners.filter(isBannerExpiringSoon)
-          if (expiringSoon.length === 0) return null
-          
-          return (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-amber-800">
-                    {expiringSoon.length === 1 
-                      ? 'Banner expirando em breve' 
-                      : `${expiringSoon.length} banners expirando em breve`
-                    }
-                  </h3>
-                  <div className="mt-2 text-sm text-amber-700">
-                    <p className="mb-2">
-                      {expiringSoon.length === 1 
-                        ? 'O seguinte banner expira nas próximas 24 horas:' 
-                        : 'Os seguintes banners expiram nas próximas 24 horas:'
-                      }
-                    </p>
-                    <ul className="list-disc list-inside space-y-1">
-                      {expiringSoon.map(banner => (
-                        <li key={banner.id}>
-                          <span className="font-medium">{banner.nome}</span>
-                          {banner.data_fim && (
-                            <span className="text-amber-600 ml-2">
-                              (expira em {formatDate(banner.data_fim)})
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
+        {/* Navegação por Abas */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('banners')}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'banners'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Filter className="h-4 w-4 inline mr-2" />
+              Gerenciar Banners
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'analytics'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4 inline mr-2" />
+              Analytics
+            </button>
+          </nav>
+        </div>
+
+        {/* Conteúdo da Aba Banners */}
+        {activeTab === 'banners' && (
+          <>
+            {/* Alerta de Banners Expirando */}
+            {(() => {
+              const expiringSoon = banners.filter(isBannerExpiringSoon)
+              if (expiringSoon.length === 0) return null
+              
+              return (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-800">
+                        {expiringSoon.length === 1 
+                          ? 'Banner expirando em breve' 
+                          : `${expiringSoon.length} banners expirando em breve`
+                        }
+                      </h3>
+                      <div className="mt-2 text-sm text-amber-700">
+                        <p className="mb-2">
+                          {expiringSoon.length === 1 
+                            ? 'O seguinte banner expira nas próximas 24 horas:' 
+                            : 'Os seguintes banners expiram nas próximas 24 horas:'
+                          }
+                        </p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {expiringSoon.map(banner => (
+                            <li key={banner.id}>
+                              <span className="font-medium">{banner.nome}</span>
+                              {banner.data_fim && (
+                                <span className="text-amber-600 ml-2">
+                                  (expira em {formatDate(banner.data_fim)})
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )
+              )
         })()}
 
         {/* Seção de Filtros e Busca */}
@@ -1692,6 +1743,13 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
             )}
           </div>
         </div>
+            </>
+        )}
+
+        {/* Conteúdo da Aba Analytics */}
+        {activeTab === 'analytics' && (
+          <AnalyticsDashboard banners={banners} />
+        )}
       </div>
     </AdminLayout>
   )

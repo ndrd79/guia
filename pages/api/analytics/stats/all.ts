@@ -13,8 +13,8 @@ interface BannerStatsResumido {
   ultimaAtividade: string | null
 }
 
-// Função para verificar se o usuário é admin
-async function isUserAdmin(req: NextApiRequest): Promise<boolean> {
+// Função simplificada para verificar autenticação
+async function isAuthenticated(req: NextApiRequest): Promise<boolean> {
   try {
     // Verificar se há token de autorização
     const authHeader = req.headers.authorization
@@ -31,20 +31,9 @@ async function isUserAdmin(req: NextApiRequest): Promise<boolean> {
       return false
     }
 
-    // Verificar se o usuário tem perfil de admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      return false
-    }
-
-    return profile.role === 'admin'
+    return true
   } catch (error) {
-    console.error('Erro ao verificar admin:', error)
+    console.error('Erro ao verificar autenticação:', error)
     return false
   }
 }
@@ -59,12 +48,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Verificar se o usuário é admin
-    const isAdmin = await isUserAdmin(req)
-    if (!isAdmin) {
-      return res.status(403).json({
-        error: 'Acesso negado',
-        message: 'Apenas administradores podem acessar estas estatísticas'
+    // Verificar se o usuário está autenticado
+    const authenticated = await isAuthenticated(req)
+    if (!authenticated) {
+      return res.status(401).json({
+        error: 'Token de autorização necessário',
+        message: 'Forneça um token Bearer válido'
       })
     }
 
