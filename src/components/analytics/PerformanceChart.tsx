@@ -215,7 +215,11 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
         )
 
       default:
-        return null
+        return (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Tipo de gráfico não suportado
+          </div>
+        )
     }
   }
 

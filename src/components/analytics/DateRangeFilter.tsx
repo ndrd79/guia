@@ -13,7 +13,7 @@ interface DateRangeFilterProps {
   className?: string
 }
 
-const getDateRange = (period: DateRange['period']): { startDate: string; endDate: string } => {
+const getDateRange = (period: DateRange['period'], currentValue?: DateRange): { startDate: string; endDate: string } => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   
@@ -60,8 +60,8 @@ const getDateRange = (period: DateRange['period']): { startDate: string; endDate
     
     default:
       return {
-        startDate: value.startDate,
-        endDate: value.endDate
+        startDate: currentValue?.startDate || today.toISOString().split('T')[0],
+        endDate: currentValue?.endDate || today.toISOString().split('T')[0]
       }
   }
 }
@@ -98,7 +98,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         endDate: tempEndDate
       })
     } else {
-      const range = getDateRange(period)
+      const range = getDateRange(period, value)
       onChange({
         period,
         startDate: range.startDate,

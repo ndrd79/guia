@@ -2,20 +2,18 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAnalyticsCache } from './useAnalyticsCache'
 import { supabase } from '../../lib/supabase'
 
-export interface AnalyticsData {
-  impressoes: number
-  cliques: number
-  ctr: number
-  conversoes?: number
-  receita?: number
-  roi?: number
+export interface BannerAnalytics {
+  bannerId: string
+  title: string
+  position: string
+  impressions: number
+  clicks: number
+  revenue: number
 }
 
-export interface BannerAnalytics extends AnalyticsData {
-  id: string
-  nome: string
-  posicao: string
-  data: string
+export interface AnalyticsData {
+  summary: AnalyticsSummary
+  banners: BannerAnalytics[]
 }
 
 export interface AnalyticsFilters {

@@ -76,7 +76,8 @@ class AnalyticsCache {
     const now = Date.now()
     const expiredKeys: string[] = []
 
-    for (const [key, entry] of this.cache.entries()) {
+    const entries = Array.from(this.cache.entries())
+    for (const [key, entry] of entries) {
       if (now > entry.expiresAt) {
         expiredKeys.push(key)
       }
@@ -99,7 +100,8 @@ class AnalyticsCache {
     let validEntries = 0
     let expiredEntries = 0
 
-    for (const entry of this.cache.values()) {
+    const values = Array.from(this.cache.values())
+    for (const entry of values) {
       if (now > entry.expiresAt) {
         expiredEntries++
       } else {

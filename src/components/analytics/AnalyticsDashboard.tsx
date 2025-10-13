@@ -25,11 +25,11 @@ import { LoadingOverlay, MetricCardSkeleton, ChartSkeleton, TableSkeleton } from
 
 interface Banner {
   id: string
-  titulo: string
+  nome: string
   posicao: string
   ativo: boolean
-  data_inicio: string
-  data_fim: string
+  data_inicio?: string | null
+  data_fim?: string | null
 }
 
 interface AnalyticsDashboardProps {
@@ -75,7 +75,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   // Get unique positions from banners
   const positions = useMemo(() => {
-    const uniquePositions = [...new Set(banners.map(b => b.posicao))]
+    const positionSet = new Set(banners.map(b => b.posicao))
+    const uniquePositions = Array.from(positionSet)
     return uniquePositions.sort()
   }, [banners])
 
@@ -87,8 +88,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         totalClicks: 0,
         averageCTR: 0,
         totalRevenue: 0,
-        averageViewTime: 0,
-        conversionRate: 0
+        totalConversions: 0,
+        averageROI: 0
       }
     }
 
@@ -96,11 +97,27 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     return {
       totalImpressions: summary.totalImpressions || 0,
       totalClicks: summary.totalClicks || 0,
-      averageCTR: summary.totalImpressions > 0 ? (summary.totalClicks / summary.totalImpressions) * 100 : 0,
+      averageCTR: summary.averageCTR || 0,
       totalRevenue: summary.totalRevenue || 0,
-      averageViewTime: summary.averageViewTime || 0,
-      conversionRate: summary.conversionRate || 0
+      totalConversions: summary.totalConversions || 0,
+      averageROI: summary.averageROI || 0
     }
+  }, [data])
+
+  // Convert BannerAnalytics to BannerData for TopPerformers
+  const topPerformersData = useMemo(() => {
+    if (!data?.banners) return []
+    
+    return data.banners.map(banner => ({
+      id: banner.bannerId,
+      title: banner.title,
+      position: banner.position,
+      impressions: banner.impressions,
+      clicks: banner.clicks,
+      ctr: banner.impressions > 0 ? (banner.clicks / banner.impressions) * 100 : 0,
+      revenue: banner.revenue,
+      conversionRate: 0 // Default value since it's not available in BannerAnalytics
+    }))
   }, [data])
 
   // Prepare chart data
@@ -244,7 +261,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <option value="all">Todos os banners</option>
               {banners.map(banner => (
                 <option key={banner.id} value={banner.id}>
-                  {banner.titulo}
+                  {banner.nome}
                 </option>
               ))}
             </select>
@@ -313,20 +330,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 />
                 
                 <MetricCard
-                  title="Tempo Médio"
-                  value={`${summaryMetrics.averageViewTime}s`}
+                  title="ROI Médio"
+                  value={summaryMetrics.averageROI}
                   icon={Clock}
                   color="purple"
                   loading={loading}
+                  format="percentage"
                 />
                 
                 <MetricCard
-                  title="Conversão"
-                  value={summaryMetrics.conversionRate}
+                  title="Conversões"
+                  value={summaryMetrics.totalConversions}
                   icon={Target}
                   color="red"
                   loading={loading}
-                  format="percentage"
+                  format="number"
                 />
               </>
             )}
@@ -391,7 +409,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <TableSkeleton rows={5} />
           ) : (
             <TopPerformers 
-              banners={data?.banners || []} 
+              banners={topPerformersData} 
               loading={loading}
             />
           )}
@@ -400,8 +418,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         <div className="p-6">
           <AdvancedReports 
             banners={banners}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
           />
         </div>
       )}

@@ -14,7 +14,7 @@ import {
   Activity,
   Zap
 } from 'lucide-react'
-import { useAnalytics } from '../../hooks/useAnalytics'
+import { useAnalytics } from '../../../src/hooks/useAnalytics'
 import { MetricCard } from './MetricCard'
 import { PerformanceChart } from './PerformanceChart'
 import { DateRangeFilter, DateRange } from './DateRangeFilter'
@@ -24,11 +24,11 @@ import { ReportScheduler } from './ReportScheduler'
 
 interface Banner {
   id: string
-  titulo: string
+  nome: string
   posicao: string
   ativo: boolean
-  data_inicio: string
-  data_fim: string
+  data_inicio?: string | null
+  data_fim?: string | null
 }
 
 interface AdvancedReportsProps {
@@ -144,7 +144,8 @@ export const AdvancedReports: React.FC<AdvancedReportsProps> = ({
 
   // Posições únicas
   const positions = useMemo(() => {
-    const uniquePositions = [...new Set(banners.map(b => b.posicao))]
+    const positionSet = new Set(banners.map(b => b.posicao))
+    const uniquePositions = Array.from(positionSet)
     return uniquePositions.sort()
   }, [banners])
 
@@ -263,7 +264,7 @@ export const AdvancedReports: React.FC<AdvancedReportsProps> = ({
               <option value="all">Todos os banners</option>
               {banners.map(banner => (
                 <option key={banner.id} value={banner.id}>
-                  {banner.titulo}
+                  {banner.nome}
                 </option>
               ))}
             </select>
@@ -477,7 +478,10 @@ export const AdvancedReports: React.FC<AdvancedReportsProps> = ({
       {reportType === 'advanced' && (
         <AdvancedMetrics 
           banners={banners}
-          dateRange={currentPeriod}
+          dateRange={{
+            startDate: new Date(currentPeriod.startDate),
+            endDate: new Date(currentPeriod.endDate)
+          }}
         />
       )}
 
