@@ -73,22 +73,7 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                         <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                       )}
                       
-                      {/* Conteúdo responsivo */}
-                      <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
-                        <div className="text-center text-white max-w-2xl">
-                          <h2 className="text-lg sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 md:mb-4 drop-shadow-lg">
-                            {banner.nome}
-                          </h2>
-                          <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 md:mb-6 drop-shadow opacity-90">
-                            Descubra mais sobre este anúncio
-                          </p>
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 md:px-6 md:py-3 inline-block">
-                            <span className="text-xs sm:text-sm md:text-base font-medium">
-                              Clique para saber mais
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+
                     </div>
                   </Link>
                 ) : (
@@ -113,16 +98,7 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                       <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                     )}
                     
-                    <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
-                      <div className="text-center text-white max-w-2xl">
-                        <h2 className="text-lg sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 md:mb-4 drop-shadow-lg">
-                          {banner ? banner.nome : `Categorias ${slideIndex + 1}`}
-                        </h2>
-                        <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow opacity-90">
-                          {banner ? 'Descubra mais sobre este anúncio' : 'Explore nossas categorias de negócios'}
-                        </p>
-                      </div>
-                    </div>
+
                   </div>
                 )}
               </div>

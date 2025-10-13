@@ -72,19 +72,7 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                         <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                       )}
                       
-                      {/* Conteúdo do Banner */}
-                      <div className="absolute inset-0 flex items-center justify-center p-8">
-                        <div className="text-center text-white max-w-2xl">
-                          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
-                            {banner.nome}
-                          </h2>
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 inline-block">
-                            <span className="text-sm md:text-base font-medium">
-                              Clique para saber mais
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+
                     </div>
                   </Link>
                 ) : (
@@ -109,17 +97,7 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                       <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                     )}
                     
-                    {/* Conteúdo do Slide */}
-                    <div className="absolute inset-0 flex items-center justify-center p-8">
-                      <div className="text-center text-white max-w-2xl">
-                        <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 drop-shadow-lg">
-                          {banner ? banner.nome : `Serviços ${slideIndex + 1}`}
-                        </h2>
-                        <p className="text-lg md:text-xl drop-shadow opacity-90">
-                          Descubra nossos serviços úteis
-                        </p>
-                      </div>
-                    </div>
+
                   </div>
                 )}
               </div>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import SearchBar from './SearchBar';
-import BannerContainer from './BannerContainer';
 import { supabase } from '../lib/supabase';
 
 const Header: React.FC = () => {
@@ -76,13 +75,7 @@ const Header: React.FC = () => {
               </div>
             </div>
             
-            {/* Advertising Space (Top) */}
-            <BannerContainer 
-              position="Header Superior" 
-              className="w-full md:w-1/3 h-24 rounded-lg mb-4 md:mb-0" 
-            />
-            
-            <div className="w-full md:w-1/4">
+            <div className="w-full md:w-1/3">
               <SearchBar />
             </div>
           </div>

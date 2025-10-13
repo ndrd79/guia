@@ -1,14 +1,32 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { GetServerSideProps } from 'next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, BarChart3, Search, X, Filter, Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
 import { formatDate } from '../../lib/formatters'
+
+interface BannerStats {
+  impressoes: number
+  cliques: number
+  ctr: number
+}
+
+interface BannerWithStats extends Banner {
+  stats?: BannerStats
+}
+
+interface FilterState {
+  search: string
+  status: 'all' | 'active' | 'inactive'
+  position: string
+  period: 'all' | 'week' | 'month'
+  schedule: 'all' | 'active' | 'scheduled' | 'expired' | 'inactive'
+}
 
 // Função para validar URLs seguras
 const isSecureUrl = (url: string): boolean => {
@@ -66,6 +84,22 @@ const bannerSchema = z.object({
     .max(1000, 'Altura máxima é 1000px')
     .int('Altura deve ser um número inteiro'),
   ativo: z.boolean(),
+  data_inicio: z.string()
+    .optional()
+    .refine(val => !val || !isNaN(Date.parse(val)), 'Data de início inválida'),
+  data_fim: z.string()
+    .optional()
+    .refine(val => !val || !isNaN(Date.parse(val)), 'Data de fim inválida'),
+}).refine(data => {
+  if (data.data_inicio && data.data_fim) {
+    const inicio = new Date(data.data_inicio)
+    const fim = new Date(data.data_fim)
+    return fim > inicio
+  }
+  return true
+}, {
+  message: 'Data de fim deve ser posterior à data de início',
+  path: ['data_fim']
 })
 
 type BannerForm = z.infer<typeof bannerSchema>
@@ -100,14 +134,7 @@ const posicoesBanner = [
     alturaRecomendada: 330,
     paginas: ['Página Inicial']
   },
-  {
-    nome: 'Header Superior',
-    descricao: 'Topo da página, acima do menu principal',
-    tamanhoRecomendado: '728x90 (Leaderboard)',
-    larguraRecomendada: 728,
-    alturaRecomendada: 90,
-    paginas: ['Todas as páginas']
-  },
+
   {
     nome: 'Header Inferior', 
     descricao: 'Abaixo do menu principal',
@@ -222,8 +249,146 @@ const posicoesBanner = [
   }
 ]
 
+// Função para determinar o status de agendamento de um banner
+const getBannerScheduleStatus = (banner: Banner) => {
+  const now = new Date()
+  
+  // Se o banner está inativo, retorna inativo
+  if (!banner.ativo) {
+    return {
+      status: 'inactive' as const,
+      label: 'Inativo',
+      color: 'bg-gray-100 text-gray-800',
+      icon: EyeOff
+    }
+  }
+  
+  // Se não tem agendamento, é ativo normal
+  if (!banner.data_inicio && !banner.data_fim) {
+    return {
+      status: 'active' as const,
+      label: 'Ativo',
+      color: 'bg-green-100 text-green-800',
+      icon: CheckCircle
+    }
+  }
+  
+  const dataInicio = banner.data_inicio ? new Date(banner.data_inicio) : null
+  const dataFim = banner.data_fim ? new Date(banner.data_fim) : null
+  
+  // Banner agendado para o futuro
+  if (dataInicio && now < dataInicio) {
+    return {
+      status: 'scheduled' as const,
+      label: 'Agendado',
+      color: 'bg-blue-100 text-blue-800',
+      icon: Calendar
+    }
+  }
+  
+  // Banner expirado
+  if (dataFim && now > dataFim) {
+    return {
+      status: 'expired' as const,
+      label: 'Expirado',
+      color: 'bg-red-100 text-red-800',
+      icon: AlertTriangle
+    }
+  }
+  
+  // Banner ativo no período
+  return {
+    status: 'active' as const,
+    label: 'Ativo',
+    color: 'bg-green-100 text-green-800',
+    icon: CheckCircle
+  }
+}
+
+// Função para calcular tempo restante
+const getTimeRemaining = (targetDate: Date) => {
+  const now = new Date()
+  const diff = targetDate.getTime() - now.getTime()
+  
+  if (diff <= 0) return null
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  
+  if (days > 0) return `${days}d ${hours}h`
+  if (hours > 0) return `${hours}h ${minutes}m`
+  return `${minutes}m`
+}
+
+// Função para verificar se banner está prestes a expirar (menos de 24h)
+const isBannerExpiringSoon = (banner: Banner) => {
+  if (!banner.data_fim) return false
+  
+  const now = new Date()
+  const dataFim = new Date(banner.data_fim)
+  const hoursUntilExpiry = (dataFim.getTime() - now.getTime()) / (1000 * 60 * 60)
+  
+  return hoursUntilExpiry > 0 && hoursUntilExpiry <= 24
+}
+
+// Componente de contagem regressiva
+const CountdownTimer = ({ banner }: { banner: Banner }) => {
+  const [timeRemaining, setTimeRemaining] = useState<string | null>(null)
+  const [targetDate, setTargetDate] = useState<Date | null>(null)
+  const [countdownType, setCountdownType] = useState<'start' | 'end' | null>(null)
+
+  useEffect(() => {
+    const now = new Date()
+    const dataInicio = banner.data_inicio ? new Date(banner.data_inicio) : null
+    const dataFim = banner.data_fim ? new Date(banner.data_fim) : null
+
+    // Determinar qual data usar para contagem regressiva
+    if (dataInicio && now < dataInicio) {
+      setTargetDate(dataInicio)
+      setCountdownType('start')
+    } else if (dataFim && now < dataFim) {
+      setTargetDate(dataFim)
+      setCountdownType('end')
+    } else {
+      setTargetDate(null)
+      setCountdownType(null)
+    }
+  }, [banner.data_inicio, banner.data_fim])
+
+  useEffect(() => {
+    if (!targetDate) {
+      setTimeRemaining(null)
+      return
+    }
+
+    const updateTimer = () => {
+      const remaining = getTimeRemaining(targetDate)
+      setTimeRemaining(remaining)
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 60000) // Atualizar a cada minuto
+
+    return () => clearInterval(interval)
+  }, [targetDate])
+
+  if (!timeRemaining || !countdownType) return null
+
+  return (
+    <div className={`text-xs px-2 py-1 rounded-full ${
+      countdownType === 'start' 
+        ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+        : 'bg-orange-50 text-orange-700 border border-orange-200'
+    }`}>
+      <Clock className="h-3 w-3 inline mr-1" />
+      {countdownType === 'start' ? 'Inicia em' : 'Expira em'} {timeRemaining}
+    </div>
+  )
+}
+
 export default function BannersPage({ initialBanners }: BannersPageProps) {
-  const [banners, setBanners] = useState<Banner[]>(initialBanners)
+  const [banners, setBanners] = useState<BannerWithStats[]>(initialBanners)
   const [showForm, setShowForm] = useState(false)
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [loading, setLoading] = useState(false)
@@ -231,6 +396,20 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [bannerStats, setBannerStats] = useState<Record<string, BannerStats>>({})
+  const [loadingStats, setLoadingStats] = useState<{ [key: string]: boolean }>({})
+  
+  // Estados para filtros e busca
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    status: 'all' as const,
+    position: 'all',
+    period: 'all' as const,
+    schedule: 'all' as const
+  })
+  const [searchDebounced, setSearchDebounced] = useState(filters.search)
+  const [isFiltering, setIsFiltering] = useState(false)
 
   const {
     register,
@@ -255,11 +434,50 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedImagem = watch('imagem')
   const watchedPosicao = watch('posicao')
 
-  // Carregar banners quando o componente for montado
+  // Carregar banners e estatísticas quando o componente for montado
   useEffect(() => {
     console.log('🔄 Carregando banners...')
     loadBanners()
+    loadBannerStats()
   }, [])
+
+  // Carregar filtros do localStorage após montagem
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('bannerFilters')
+      if (saved) {
+        try {
+          const parsedFilters = JSON.parse(saved)
+          // Garantir que todos os campos necessários existem
+          setFilters({
+            search: parsedFilters.search || '',
+            status: parsedFilters.status || 'all',
+            position: parsedFilters.position || 'all',
+            period: parsedFilters.period || 'all',
+            schedule: parsedFilters.schedule || 'all'
+          })
+        } catch {
+          // Se houver erro ao parsear, manter valores padrão
+        }
+      }
+    }
+  }, [])
+
+  // Debounce para busca
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounced(filters.search)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [filters.search])
+
+  // Persistir filtros no localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bannerFilters', JSON.stringify(filters))
+    }
+  }, [filters])
 
   // Função para preencher automaticamente as dimensões baseado na posição
   const handlePosicaoChange = (posicaoNome: string) => {
@@ -269,6 +487,93 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       setValue('altura', posicao.alturaRecomendada)
     }
   }
+
+  // Funções de filtro
+  const updateFilter = useCallback((key: keyof FilterState, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setFilters({
+      search: '',
+      status: 'all',
+      position: 'all',
+      period: 'all',
+      schedule: 'all'
+    })
+  }, [])
+
+  // Função para filtrar banners
+  const filteredBanners = useMemo(() => {
+    setIsFiltering(true)
+    
+    let filtered = [...banners]
+
+    // Filtro por busca (nome)
+    if (searchDebounced.trim()) {
+      const searchTerm = searchDebounced.toLowerCase().trim()
+      filtered = filtered.filter(banner =>
+        banner.nome.toLowerCase().includes(searchTerm)
+      )
+    }
+
+    // Filtro por status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(banner =>
+        filters.status === 'active' ? banner.ativo : !banner.ativo
+      )
+    }
+
+    // Filtro por posição
+    if (filters.position !== 'all') {
+      filtered = filtered.filter(banner =>
+        banner.posicao === filters.position
+      )
+    }
+
+    // Filtro por período
+    if (filters.period !== 'all') {
+      const now = new Date()
+      const filterDate = new Date()
+      
+      if (filters.period === 'week') {
+        filterDate.setDate(now.getDate() - 7)
+      } else if (filters.period === 'month') {
+        filterDate.setMonth(now.getMonth() - 1)
+      }
+
+      filtered = filtered.filter(banner => {
+        const bannerDate = new Date(banner.created_at)
+        return bannerDate >= filterDate
+      })
+    }
+
+    // Filtro por status de agendamento
+    if (filters.schedule !== 'all') {
+      filtered = filtered.filter(banner => {
+        const scheduleStatus = getBannerScheduleStatus(banner)
+        return scheduleStatus.status === filters.schedule
+      })
+    }
+
+    setTimeout(() => setIsFiltering(false), 100)
+    return filtered
+  }, [banners, searchDebounced, filters.status, filters.position, filters.period, filters.schedule])
+
+  // Verificar se há filtros ativos
+  const hasActiveFilters = useMemo(() => {
+    return filters.search.trim() !== '' ||
+           filters.status !== 'all' ||
+           filters.position !== 'all' ||
+           filters.period !== 'all' ||
+           filters.schedule !== 'all'
+  }, [filters])
+
+  // Obter posições únicas dos banners
+  const availablePositions = useMemo(() => {
+    const positions = [...new Set(banners.map(banner => banner.posicao))]
+    return positions.sort()
+  }, [banners])
 
   const loadBanners = async () => {
     console.log('📊 Iniciando carregamento dos banners...')
@@ -300,6 +605,42 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       setError('Erro inesperado ao carregar banners')
     } finally {
       setLoadingList(false)
+    }
+  }
+
+  const loadBannerStats = async () => {
+    console.log('📊 Carregando estatísticas dos banners...')
+    setLoadingStats(true)
+    
+    try {
+      const response = await fetch('/api/analytics/stats/all')
+      
+      if (!response.ok) {
+        console.warn('⚠️ Não foi possível carregar estatísticas:', response.status)
+        return
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.data?.banners) {
+        const statsMap: Record<string, BannerStats> = {}
+        
+        data.data.banners.forEach((banner: any) => {
+          statsMap[banner.id] = {
+            impressoes: banner.impressoes || 0,
+            cliques: banner.cliques || 0,
+            ctr: banner.ctr || 0
+          }
+        })
+        
+        setBannerStats(statsMap)
+        console.log('✅ Estatísticas carregadas para', Object.keys(statsMap).length, 'banners')
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao carregar estatísticas:', error)
+      // Não mostrar erro para o usuário, apenas log
+    } finally {
+      setLoadingStats(false)
     }
   }
 
@@ -390,7 +731,10 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         link: data.link?.trim() || null,
         // Garantir que dimensões sejam números inteiros
         largura: Math.round(data.largura),
-        altura: Math.round(data.altura)
+        altura: Math.round(data.altura),
+        // Converter datas para ISO string ou null
+        data_inicio: data.data_inicio ? new Date(data.data_inicio).toISOString() : null,
+        data_fim: data.data_fim ? new Date(data.data_fim).toISOString() : null,
       }
       
       if (editingBanner) {
@@ -447,6 +791,14 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner)
+    
+    // Converter datas para formato datetime-local se existirem
+    const formatDateForInput = (dateString: string | null) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toISOString().slice(0, 16) // Remove segundos e timezone
+    }
+    
     reset({
       nome: banner.nome,
       posicao: banner.posicao,
@@ -455,6 +807,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       largura: banner.largura || 400,
       altura: banner.altura || 200,
       ativo: banner.ativo,
+      data_inicio: formatDateForInput(banner.data_inicio),
+      data_fim: formatDateForInput(banner.data_fim),
     })
     setShowForm(true)
   }
@@ -557,6 +911,195 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
             <Plus className="h-4 w-4 mr-2" />
             Novo Banner
           </button>
+        </div>
+
+        {/* Alerta de Banners Expirando */}
+        {(() => {
+          const expiringSoon = banners.filter(isBannerExpiringSoon)
+          if (expiringSoon.length === 0) return null
+          
+          return (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-amber-800">
+                    {expiringSoon.length === 1 
+                      ? 'Banner expirando em breve' 
+                      : `${expiringSoon.length} banners expirando em breve`
+                    }
+                  </h3>
+                  <div className="mt-2 text-sm text-amber-700">
+                    <p className="mb-2">
+                      {expiringSoon.length === 1 
+                        ? 'O seguinte banner expira nas próximas 24 horas:' 
+                        : 'Os seguintes banners expiram nas próximas 24 horas:'
+                      }
+                    </p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {expiringSoon.map(banner => (
+                        <li key={banner.id}>
+                          <span className="font-medium">{banner.nome}</span>
+                          {banner.data_fim && (
+                            <span className="text-amber-600 ml-2">
+                              (expira em {formatDate(banner.data_fim)})
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Seção de Filtros e Busca */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-5 w-5 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900">Filtros e Busca</h3>
+              {hasActiveFilters && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  Filtros ativos
+                </span>
+              )}
+            </div>
+            
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                <X className="h-4 w-4" />
+                <span>Limpar filtros</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Barra de Busca */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Buscar por nome
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => updateFilter('search', e.target.value)}
+                  placeholder="Digite o nome do banner..."
+                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+                {filters.search && (
+                  <button
+                    onClick={() => updateFilter('search', '')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Filtro por Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => updateFilter('status', e.target.value)}
+                className="block w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
+
+            {/* Filtro por Posição */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Posição
+              </label>
+              <select
+                value={filters.position}
+                onChange={(e) => updateFilter('position', e.target.value)}
+                className="block w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="all">Todas as posições</option>
+                {availablePositions.map((position) => (
+                  <option key={position} value={position}>
+                    {position}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+            {/* Filtro por Período */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Calendar className="inline h-4 w-4 mr-1" />
+                Período de criação
+              </label>
+              <select
+                value={filters.period}
+                onChange={(e) => updateFilter('period', e.target.value)}
+                className="block w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="all">Todos os períodos</option>
+                <option value="week">Última semana</option>
+                <option value="month">Último mês</option>
+              </select>
+            </div>
+
+            {/* Filtro por Agendamento */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Clock className="inline h-4 w-4 mr-1" />
+                Status de agendamento
+              </label>
+              <select
+                value={filters.schedule}
+                onChange={(e) => updateFilter('schedule', e.target.value)}
+                className="block w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="all">Todos os status</option>
+                <option value="active">Ativo</option>
+                <option value="scheduled">Agendado</option>
+                <option value="expired">Expirado</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
+
+            {/* Contador de Resultados */}
+            <div className="lg:col-span-2 flex items-end">
+              <div className="text-sm text-gray-600">
+                {isFiltering ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b border-orange-600"></div>
+                    <span>Filtrando...</span>
+                  </div>
+                ) : (
+                  <span>
+                    Mostrando <span className="font-medium text-gray-900">{filteredBanners.length}</span> de{' '}
+                    <span className="font-medium text-gray-900">{banners.length}</span> banners
+                    {hasActiveFilters && (
+                      <span className="text-orange-600 ml-1">(filtrado)</span>
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Alerta de Erro */}
@@ -738,6 +1281,73 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   <span className="ml-2 text-sm text-gray-700">Banner ativo</span>
                 </label>
               </div>
+
+              {/* Seção de Agendamento */}
+              <div className="border-t pt-6">
+                <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-orange-600" />
+                  Agendamento (Opcional)
+                </h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Configure quando o banner deve ser exibido automaticamente. Se não definir datas, o banner seguirá apenas o status ativo/inativo.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data/Hora de Início
+                    </label>
+                    <input
+                      {...register('data_inicio')}
+                      type="datetime-local"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    {errors.data_inicio && (
+                      <p className="mt-1 text-sm text-red-600">{errors.data_inicio.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Banner começará a ser exibido nesta data/hora
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data/Hora de Fim
+                    </label>
+                    <input
+                      {...register('data_fim')}
+                      type="datetime-local"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    {errors.data_fim && (
+                      <p className="mt-1 text-sm text-red-600">{errors.data_fim.message}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Banner parará de ser exibido nesta data/hora
+                    </p>
+                  </div>
+                </div>
+
+                {/* Preview do período */}
+                {(watch('data_inicio') || watch('data_fim')) && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <h5 className="text-sm font-medium text-blue-800 mb-2">Preview do Agendamento:</h5>
+                    <div className="text-sm text-blue-600">
+                      {watch('data_inicio') && (
+                        <p>📅 Início: {new Date(watch('data_inicio')).toLocaleString('pt-BR')}</p>
+                      )}
+                      {watch('data_fim') && (
+                        <p>📅 Fim: {new Date(watch('data_fim')).toLocaleString('pt-BR')}</p>
+                      )}
+                      {watch('data_inicio') && watch('data_fim') && (
+                        <p className="mt-1 font-medium">
+                          ⏱️ Duração: {Math.ceil((new Date(watch('data_fim')).getTime() - new Date(watch('data_inicio')).getTime()) / (1000 * 60 * 60 * 24))} dias
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </FormCard>
         )}
@@ -763,6 +1373,25 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   <p className="mt-1 text-sm text-gray-500">Comece criando seu primeiro banner publicitário.</p>
                 </div>
               </div>
+            ) : filteredBanners.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-500">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum banner encontrado com os filtros aplicados</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Tente ajustar os filtros ou{' '}
+                    <button
+                      onClick={clearFilters}
+                      className="text-orange-600 hover:text-orange-500 font-medium"
+                    >
+                      limpar todos os filtros
+                    </button>
+                    .
+                  </p>
+                </div>
+              </div>
             ) : (
               <>
                 {/* Versão Desktop - Tabela */}
@@ -780,10 +1409,19 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                           Dimensões
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="flex items-center space-x-1">
+                            <BarChart3 className="h-3 w-3" />
+                            <span>Analytics</span>
+                          </div>
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Link
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Agendamento
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Ações
@@ -791,7 +1429,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {banners.map((banner) => (
+                      {filteredBanners.map((banner) => (
                         <tr key={banner.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -821,6 +1459,30 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
+                            {loadingStats ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-400"></div>
+                                <span className="text-xs text-gray-500">Carregando...</span>
+                              </div>
+                            ) : bannerStats[banner.id] ? (
+                              <div className="text-xs space-y-1">
+                                <div className="text-gray-900">
+                                  <span className="font-medium">{bannerStats[banner.id].impressoes}</span> impressões
+                                </div>
+                                <div className="text-gray-900">
+                                  <span className="font-medium">{bannerStats[banner.id].cliques}</span> cliques
+                                </div>
+                                <div className="text-gray-900">
+                                  <span className="font-medium">{bannerStats[banner.id].ctr.toFixed(2)}%</span> CTR
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-400">
+                                Sem dados
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             {banner.link ? (
                               <a
                                 href={banner.link}
@@ -834,6 +1496,20 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                             ) : (
                               <span className="text-sm text-gray-400">Sem link</span>
                             )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="space-y-1">
+                              {(() => {
+                                const status = getBannerScheduleStatus(banner)
+                                return (
+                                  <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>
+                                    <status.icon className="h-3 w-3 mr-1" />
+                                    {status.label}
+                                  </span>
+                                )
+                              })()}
+                              <CountdownTimer banner={banner} />
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
@@ -893,7 +1569,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
                 {/* Versão Mobile - Cards */}
                 <div className="md:hidden space-y-4 p-4">
-                  {banners.map((banner) => (
+                  {filteredBanners.map((banner) => (
                     <div key={banner.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                       <div className="flex items-start space-x-4">
                         <img
@@ -962,6 +1638,19 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                                 </a>
                               </div>
                             )}
+                            
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Agendamento:</span>
+                              {(() => {
+                                const status = getBannerScheduleStatus(banner)
+                                return (
+                                  <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>
+                                    <status.icon className="h-3 w-3 mr-1" />
+                                    {status.label}
+                                  </span>
+                                )
+                              })()}
+                            </div>
                             
                             <div className="flex items-center justify-between pt-2">
                               <span className="text-xs text-gray-500">Status:</span>

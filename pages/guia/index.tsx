@@ -223,8 +223,10 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
             </div>
 
             <BannerAd 
-              position="sidebar"
-              className="w-full h-48 md:h-64 rounded-xl"
+              position="Sidebar Direita"
+              className="w-full max-w-[300px] mx-auto aspect-[1/2] rounded-xl"
+              width={300}
+              height={600}
               title="PUBLICIDADE"
             />
           </aside>

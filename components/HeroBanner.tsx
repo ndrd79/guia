@@ -74,23 +74,10 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                       ) : (
                         <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                       )}
+                    
+
                       
-                      {/* Conteúdo do Banner - Responsivo */}
-                      <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8">
-                        <div className="text-center text-white max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl">
-                          <h2 className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-bold mb-1 sm:mb-2 md:mb-3 lg:mb-4 drop-shadow-lg leading-tight">
-                            {banner.nome}
-                          </h2>
-                          <p className="text-xs sm:text-sm md:text-base lg:text-lg mb-2 sm:mb-3 md:mb-4 lg:mb-6 drop-shadow opacity-90 leading-relaxed">
-                            Descubra mais sobre este anúncio
-                          </p>
-                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 inline-block banner-transition hover:bg-opacity-30">
-                            <span className="text-xs sm:text-sm md:text-base font-medium">
-                              Clique para saber mais
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+
                     </div>
                   </Link>
                 ) : (
@@ -115,17 +102,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                       <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                     )}
                     
-                    {/* Conteúdo do Slide - Responsivo */}
-                    <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8">
-                      <div className="text-center text-white max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl">
-                        <h2 className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-bold mb-1 sm:mb-2 md:mb-3 lg:mb-4 drop-shadow-lg leading-tight">
-                          {banner ? banner.nome : `Slide ${slideIndex + 1}`}
-                        </h2>
-                        <p className="text-xs sm:text-sm md:text-base lg:text-lg drop-shadow opacity-90 leading-relaxed">
-                          {banner ? 'Descubra mais sobre este anúncio' : 'Conteúdo em destaque'}
-                        </p>
-                      </div>
-                    </div>
+
                   </div>
                 )}
               </div>

@@ -265,9 +265,9 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
       {/* Main News Content */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
             {/* Main News Column */}
-            <div className="lg:w-2/3">
+            <div className="lg:w-2/3 w-full">
               {/* Featured News */}
               {isLoading ? (
                 selectedCategory === 'Todas' && currentPage === 1 && <NewsSkeleton isLarge={true} />
@@ -343,15 +343,19 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
             </div>
 
             {/* Sidebar */}
-            <div className="lg:w-1/3">
+            <div className="lg:w-1/3 w-full space-y-6">
               {/* Advertising Space */}
-              <BannerContainer 
-                position="sidebar"
-                className="w-full h-48 md:h-64 rounded-lg mb-8"
-              />
+              <div className="w-full">
+                <BannerContainer 
+                  position="Sidebar Esquerda"
+                  className="w-full rounded-lg max-h-[250px]"
+                  width={300}
+                  height={250}
+                />
+              </div>
 
               {/* Popular News */}
-              <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+              <div className="bg-white rounded-xl shadow-md p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center">
                   <i className="fas fa-fire text-orange-500 mr-2"></i> Notícias Populares
                 </h3>
@@ -394,7 +398,7 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
               </div>
 
               {/* Categories */}
-              <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+              <div className="bg-white rounded-xl shadow-md p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center">
                   <i className="fas fa-folder-open text-indigo-600 mr-2"></i> Categorias
                 </h3>

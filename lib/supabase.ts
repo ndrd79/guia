@@ -82,6 +82,8 @@ export interface Banner {
   largura?: number
   altura?: number
   ativo: boolean
+  data_inicio?: string | null
+  data_fim?: string | null
   created_at: string
   updated_at: string
 }

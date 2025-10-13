@@ -215,7 +215,11 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
         {/* Banner Ad */}
         <section className="py-6">
           <div className="container mx-auto px-4">
-            <BannerContainer position="Empresa - Topo" className="w-full h-32 rounded-lg" />
+            <BannerContainer 
+              position="Empresa - Topo" 
+              bannerType="inline"
+              className="w-full rounded-lg mx-auto max-w-4xl" 
+            />
           </div>
         </section>
 
@@ -304,7 +308,11 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
         {/* Banner Ad */}
         <section className="py-6">
           <div className="container mx-auto px-4">
-            <BannerContainer position="Empresa - Rodapé" className="w-full h-32 rounded-lg" />
+            <BannerContainer 
+              position="Empresa - Rodapé" 
+              bannerType="inline"
+              className="w-full rounded-lg mx-auto max-w-4xl" 
+            />
           </div>
         </section>
       </main>

@@ -184,16 +184,17 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
             </article>
 
             {/* Sidebar */}
-            <aside className="lg:w-1/3">
-              {/* Banner */}
+            <aside className="lg:w-1/3 space-y-6">
+              {/* Banner Principal da Sidebar */}
               <BannerContainer 
                 position="Notícia - Sidebar Topo" 
-                className="w-full h-48 md:h-64 rounded-lg mb-8"
+                bannerType="sidebar"
+                className="w-full rounded-lg"
               />
 
               {/* Related News */}
               {relatedNews.length > 0 && (
-                <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+                <div className="bg-white rounded-xl shadow-md p-6">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
                     <i className="fas fa-newspaper text-indigo-600 mr-2"></i>
                     Notícias Relacionadas
@@ -228,13 +229,15 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
               {/* Banner Publicitário 1 - Após Notícias Relacionadas */}
               <BannerContainer 
                 position="Notícia - Após Relacionadas 1" 
-                className="w-full h-32 md:h-48 rounded-lg mb-6"
+                bannerType="sidebar"
+                className="w-full rounded-lg"
               />
 
               {/* Banner Publicitário 2 - Após Notícias Relacionadas */}
               <BannerContainer 
                 position="Notícia - Após Relacionadas 2" 
-                className="w-full h-32 md:h-48 rounded-lg mb-8"
+                bannerType="sidebar"
+                className="w-full rounded-lg"
               />
             </aside>
           </div>
@@ -242,12 +245,13 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
       </main>
 
       {/* Banner Publicitário 3 - Antes do Newsletter */}
-      <div className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-4 py-8">
         <BannerContainer 
           position="Notícia - Antes Newsletter" 
-          className="w-full h-24 md:h-32 rounded-lg"
+          bannerType="inline"
+          className="w-full rounded-lg mx-auto max-w-4xl"
         />
-      </div>
+      </section>
 
       <Footer />
     </>
