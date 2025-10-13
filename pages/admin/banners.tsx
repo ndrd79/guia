@@ -1335,14 +1335,14 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     <h5 className="text-sm font-medium text-blue-800 mb-2">Preview do Agendamento:</h5>
                     <div className="text-sm text-blue-600">
                       {watch('data_inicio') && (
-                        <p>📅 Início: {new Date(watch('data_inicio')).toLocaleString('pt-BR')}</p>
+                        <p>📅 Início: {new Date(watch('data_inicio')!).toLocaleString('pt-BR')}</p>
                       )}
                       {watch('data_fim') && (
-                        <p>📅 Fim: {new Date(watch('data_fim')).toLocaleString('pt-BR')}</p>
+                        <p>📅 Fim: {new Date(watch('data_fim')!).toLocaleString('pt-BR')}</p>
                       )}
                       {watch('data_inicio') && watch('data_fim') && (
                         <p className="mt-1 font-medium">
-                          ⏱️ Duração: {Math.ceil((new Date(watch('data_fim')).getTime() - new Date(watch('data_inicio')).getTime()) / (1000 * 60 * 60 * 24))} dias
+                          ⏱️ Duração: {Math.ceil((new Date(watch('data_fim')!).getTime() - new Date(watch('data_inicio')!).getTime()) / (1000 * 60 * 60 * 24))} dias
                         </p>
                       )}
                     </div>
