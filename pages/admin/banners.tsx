@@ -399,6 +399,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const [success, setSuccess] = useState<string | null>(null)
   const [bannerStats, setBannerStats] = useState<Record<string, BannerStats>>({})
   const [loadingStats, setLoadingStats] = useState<{ [key: string]: boolean }>({})
+  const [loadingAllStats, setLoadingAllStats] = useState(false)
   
   // Estados para filtros e busca
   const [filters, setFilters] = useState<FilterState>({
@@ -610,7 +611,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   const loadBannerStats = async () => {
     console.log('📊 Carregando estatísticas dos banners...')
-    setLoadingStats(true)
+    setLoadingAllStats(true)
     
     try {
       const response = await fetch('/api/analytics/stats/all')
@@ -640,7 +641,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       console.warn('⚠️ Erro ao carregar estatísticas:', error)
       // Não mostrar erro para o usuário, apenas log
     } finally {
-      setLoadingStats(false)
+      setLoadingAllStats(false)
     }
   }
 
