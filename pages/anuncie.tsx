@@ -39,19 +39,16 @@ const AnuncieConoscoPage = () => {
   const planos = [
     {
       nome: 'Banner Básico',
-      preco: 'R$ 150/mês',
       descricao: 'Banner lateral no site',
       beneficios: ['Posição lateral', 'Formato 300x250px', 'Link direto', 'Relatório mensal']
     },
     {
       nome: 'Banner Premium',
-      preco: 'R$ 300/mês',
       descricao: 'Banner destaque no topo',
       beneficios: ['Posição de destaque', 'Formato 728x90px', 'Link direto', 'Relatório semanal', 'Prioridade na busca']
     },
     {
       nome: 'Pacote Completo',
-      preco: 'R$ 500/mês',
       descricao: 'Presença completa no portal',
       beneficios: ['Banner premium', 'Perfil no guia comercial', 'Destaque em classificados', 'Post em redes sociais', 'Relatório detalhado']
     }
@@ -170,17 +167,16 @@ const AnuncieConoscoPage = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {planos.map((plano, index) => (
-                <div key={index} className={`bg-white rounded-xl shadow-lg p-8 ${index === 1 ? 'border-4 border-indigo-600 transform scale-105' : ''}`}>
+                <div key={index} className={`bg-white rounded-xl shadow-lg p-8 flex flex-col h-full ${index === 1 ? 'border-4 border-indigo-600 transform scale-105' : ''}`}>
                   {index === 1 && (
                     <div className="bg-indigo-600 text-white text-center py-2 px-4 rounded-full text-sm font-bold mb-4 -mt-4">
                       MAIS POPULAR
                     </div>
                   )}
                   <h3 className="text-2xl font-bold mb-2">{plano.nome}</h3>
-                  <div className="text-3xl font-bold text-indigo-600 mb-4">{plano.preco}</div>
                   <p className="text-gray-600 mb-6">{plano.descricao}</p>
                   
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 flex-grow">
                     {plano.beneficios.map((beneficio, idx) => (
                       <li key={idx} className="flex items-center">
                         <i className="fas fa-check text-green-600 mr-3"></i>
@@ -189,7 +185,7 @@ const AnuncieConoscoPage = () => {
                     ))}
                   </ul>
                   
-                  <button className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">
+                  <button className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition mt-auto">
                     Escolher Plano
                   </button>
                 </div>

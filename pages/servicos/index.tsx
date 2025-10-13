@@ -152,7 +152,7 @@ const ServicosPage: React.FC = () => {
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {servicos.map((servico, index) => (
-                <div key={index} className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                <div key={index} className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
                   <div className={`bg-${servico.color}-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto`}>
                     <i className={`${servico.icon} text-${servico.color}-600 text-2xl`}></i>
                   </div>
@@ -165,7 +165,7 @@ const ServicosPage: React.FC = () => {
                     {servico.description}
                   </p>
                   
-                  <ul className="space-y-2 mb-6">
+                  <ul className="space-y-2 mb-6 flex-grow">
                     {servico.features.map((feature, idx) => (
                       <li key={idx} className="flex items-center text-sm text-gray-700">
                         <i className="fas fa-check text-green-500 mr-2"></i>
@@ -174,10 +174,7 @@ const ServicosPage: React.FC = () => {
                     ))}
                   </ul>
                   
-                  <div className="text-center">
-                    <div className={`text-lg font-bold text-${servico.color}-600 mb-4`}>
-                      {servico.price}
-                    </div>
+                  <div className="text-center mt-auto">
                     <button className={`bg-${servico.color}-600 text-white px-6 py-3 rounded-full hover:bg-${servico.color}-700 transition w-full font-medium`}>
                       Contratar Agora
                     </button>
