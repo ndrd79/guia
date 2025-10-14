@@ -1,95 +1,164 @@
-# 🔒 Guia de Segurança - Portal Maria Helena
+# Política de Segurança - Guia Comercial
 
-## ⚠️ IMPORTANTE: Proteção de Chaves de API
+## 🛡️ Visão Geral
 
-### 🚨 **NUNCA FAÇA ISSO:**
-```javascript
-// ❌ ERRADO - Chaves expostas no código
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-const apiKey = 'd3ef9852b52357500adbce61ec2e3a0e';
+Este documento descreve as medidas de segurança implementadas no projeto Guia Comercial e as configurações recomendadas para manter a segurança da aplicação.
+
+## ✅ Vulnerabilidades Corrigidas
+
+### 1. Row Level Security (RLS)
+- **Status**: ✅ Implementado
+- **Descrição**: Habilitado RLS em todas as tabelas críticas
+- **Tabelas protegidas**: `empresas`, `banners`, `noticias`, `classificados`, `eventos`, `profiles`, `user_profiles`
+- **Benefício**: Controle granular de acesso aos dados por usuário
+
+### 2. Search Path Mutável em Funções
+- **Status**: ✅ Corrigido
+- **Migração**: `006_fix_function_search_path.sql`
+- **Funções corrigidas**:
+  - `update_storage_stats`
+  - `trigger_update_storage_stats`
+  - `update_updated_at_column`
+  - `update_seasonal_themes_updated_at`
+  - `cleanup_old_data`
+  - `handle_new_user`
+- **Correção aplicada**: Adicionado `SET search_path = ''` e qualificação de schemas
+
+### 3. Políticas de Segurança
+- **Status**: ✅ Implementado
+- **Descrição**: Políticas RLS configuradas para controle de acesso
+- **Benefício**: Prevenção de acesso não autorizado aos dados
+
+### 4. Políticas RLS da Tabela Empresas
+- **Status**: ✅ Implementado
+- **Migração**: `fix_empresas_rls.sql`
+- **Data**: 2025-01-30
+- **Políticas criadas**:
+  1. **"Empresas ativas são visíveis publicamente"**
+     - Tipo: SELECT
+     - Condição: `ativo = true`
+     - Permite: Leitura pública de empresas ativas no guia comercial
+  
+  2. **"Usuários autenticados podem gerenciar empresas"**
+     - Tipo: ALL (SELECT, INSERT, UPDATE, DELETE)
+     - Condição: `auth.role() = 'authenticated'`
+     - Permite: Administração completa para usuários autenticados
+  
+  3. **"Usuários autenticados podem cadastrar empresas"**
+     - Tipo: INSERT
+     - Condição: `auth.role() = 'authenticated'`
+     - Permite: Cadastro de novas empresas por usuários autenticados
+- **Benefício**: Resolve alerta "RLS Enabled No Policy" e garante acesso seguro aos dados
+
+## ⚠️ Configurações Pendentes
+
+### 1. Proteção Contra Senhas Vazadas
+- **Status**: ⚠️ Pendente
+- **Ação necessária**: Habilitar no painel do Supabase
+- **Localização**: Authentication > Settings > Password Security
+- **Configuração**: Ativar "Leaked Password Protection"
+
+### 2. Autenticação Multi-Fator (MFA)
+- **Status**: ⚠️ Pendente
+- **Ação necessária**: Configurar TOTP no painel do Supabase
+- **Localização**: Authentication > Settings > Multi-Factor Authentication
+- **Recomendação**: Habilitar TOTP (Authenticator Apps)
+
+### 3. Upgrade do PostgreSQL
+- **Status**: ⚠️ Pendente
+- **Versão atual**: supabase-postgres-17.4.1.064
+- **Ação necessária**: Atualizar para versão mais recente
+- **Localização**: Settings > Database > Database Version
+
+## 🔧 Configurações de Segurança Implementadas
+
+### Variáveis de Ambiente
+```env
+# Configurações Supabase (já configuradas)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-### ✅ **SEMPRE FAÇA ISSO:**
-```javascript
-// ✅ CORRETO - Use variáveis de ambiente
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+### Políticas RLS Ativas
+```sql
+-- Exemplo de política implementada
+CREATE POLICY "Users can view own profile" ON profiles
+    FOR SELECT USING (auth.uid() = id);
 
-// Validação de segurança
-if (!supabaseKey) {
-  console.error('❌ ERRO: Variável de ambiente não configurada');
-  process.exit(1);
-}
+CREATE POLICY "Users can update own profile" ON profiles
+    FOR UPDATE USING (auth.uid() = id);
 ```
 
-## 📁 Arquivos Protegidos
-
-### `.env.local` - NUNCA COMMITAR
-```bash
-# Este arquivo contém informações sensíveis
-NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anon_aqui
-SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role_aqui
-NEXT_PUBLIC_OPENWEATHER_API_KEY=sua_chave_weather_aqui
+### Funções com Search Path Seguro
+```sql
+-- Exemplo de função corrigida
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
 ```
 
-### `.gitignore` - Proteção Ativa
-```bash
-# Arquivos protegidos automaticamente
-.env.local          ✅ Protegido
-.env.development.local  ✅ Protegido
-.env.production.local   ✅ Protegido
-```
+## 📋 Checklist de Segurança
 
-## 🛡️ Camadas de Segurança
+### ✅ Implementado
+- [x] Row Level Security habilitado
+- [x] Políticas RLS configuradas
+- [x] Search path seguro em funções
+- [x] Conexões SSL/TLS
+- [x] Validação de entrada de dados
+- [x] Sanitização de queries
 
-### 1. **Nível Repositório**
-- ✅ `.env.local` no `.gitignore`
-- ✅ Chaves removidas do código
-- ✅ Validação de variáveis de ambiente
+### ⚠️ Pendente
+- [ ] Proteção contra senhas vazadas
+- [ ] Autenticação multi-fator (MFA)
+- [ ] Upgrade do PostgreSQL
+- [ ] Rate limiting configurado
+- [ ] Audit logs habilitados
+- [ ] Alertas de segurança configurados
 
-### 2. **Nível Supabase**
-- ✅ RLS (Row Level Security) ativo
-- ✅ Políticas de acesso configuradas
-- ✅ Autenticação obrigatória para admin
+## 🚨 Relatório de Vulnerabilidades
 
-### 3. **Nível Deploy**
-- ✅ Variáveis configuradas no Vercel
-- ✅ Separação entre desenvolvimento/produção
+Se você descobrir uma vulnerabilidade de segurança, por favor:
 
-## 🔧 Scripts Seguros
+1. **NÃO** abra uma issue pública
+2. Envie um email para: [seu-email-de-seguranca@exemplo.com]
+3. Inclua uma descrição detalhada da vulnerabilidade
+4. Aguarde nossa resposta antes de divulgar publicamente
 
-Todos os scripts agora usam variáveis de ambiente:
-- `setup-database-complete.js` ✅
-- `check-feira-data.js` ✅
-- `debug-banners.js` ✅
-- Outros scripts de teste ✅
+## 📚 Recursos e Documentação
 
-## 📝 Checklist de Segurança
+### Links Úteis
+- [Supabase Security Best Practices](https://supabase.com/docs/guides/platform/security)
+- [Database Security Checklist](https://supabase.com/docs/guides/database/security)
+- [Authentication Security](https://supabase.com/docs/guides/auth/security)
+- [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
 
-Antes de fazer commit, verifique:
+### Documentação Interna
+- [Recomendações de Segurança Detalhadas](./docs/SECURITY_RECOMMENDATIONS.md)
+- [Guia de Configuração do Supabase](./docs/SUPABASE_SETUP.md)
 
-- [ ] Nenhuma chave de API no código
-- [ ] `.env.local` não está sendo commitado
-- [ ] Scripts usam `process.env.VARIAVEL`
-- [ ] Validação de variáveis implementada
-- [ ] Documentação de segurança atualizada
+## 🔄 Atualizações de Segurança
 
-## 🚨 Em Caso de Exposição Acidental
+### Histórico de Correções
+- **30/01/2025**: Corrigido search path mutável em 6 funções PostgreSQL
+- **30/01/2025**: Implementado RLS em todas as tabelas críticas
+- **30/01/2025**: Configuradas políticas de segurança
 
-Se uma chave foi exposta no Git:
-
-1. **Regenerar chaves imediatamente** no Supabase
-2. **Atualizar `.env.local`** com novas chaves
-3. **Atualizar variáveis no Vercel**
-4. **Verificar logs** para uso não autorizado
-
-## 📞 Contato de Segurança
-
-Para reportar vulnerabilidades:
-- Email: admin@mariahelenapor.com
-- Prioridade: ALTA para questões de segurança
+### Próximas Atualizações Planejadas
+- **Fevereiro 2025**: Implementação de MFA
+- **Fevereiro 2025**: Upgrade do PostgreSQL
+- **Março 2025**: Configuração de audit logs
 
 ---
-**Última atualização:** Janeiro 2025
-**Status:** 🔒 Seguro
+
+**Última atualização**: 30/01/2025  
+**Responsável**: Equipe de Desenvolvimento  
+**Próxima revisão**: 30/03/2025
