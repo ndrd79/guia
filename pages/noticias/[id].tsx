@@ -25,7 +25,19 @@ const getCategoryColor = (cat: string) => {
     'Cultura': 'bg-purple-600',
     'Política': 'bg-gray-600',
     'Tecnologia': 'bg-indigo-600',
-    'Entretenimento': 'bg-pink-600'
+    'Entretenimento': 'bg-pink-600',
+    'Segurança': 'bg-red-700',
+    'Meio Ambiente': 'bg-green-800',
+    'Turismo': 'bg-sky-500',
+    'Agronegócios': 'bg-amber-800',
+    'Trânsito': 'bg-yellow-700',
+    'Eventos': 'bg-violet-500',
+    'Infraestrutura': 'bg-gray-800',
+    'Assistência Social': 'bg-rose-500',
+    'Justiça': 'bg-blue-900',
+    'Clima': 'bg-cyan-500',
+    'Negócios': 'bg-emerald-700',
+    'Gastronomia': 'bg-orange-700'
   };
   return colors[cat] || 'bg-indigo-600';
 };

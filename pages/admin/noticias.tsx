@@ -1,16 +1,24 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { GetServerSideProps } from 'next'
-import { useRouter } from 'next/router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Edit, Trash2, Eye } from 'lucide-react'
+import { PlusCircle } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import AINewsRewriter from '../../components/admin/AINewsRewriter'
+import Breadcrumb from '../../components/admin/Breadcrumb'
+import EnhancedButton from '../../components/admin/EnhancedButton'
+import SearchBar from '../../components/admin/SearchBar'
+import FilterDropdowns from '../../components/admin/FilterDropdowns'
+import ModernTable from '../../components/admin/ModernTable'
+import Pagination from '../../components/admin/Pagination'
+import ToastProvider, { useToastActions } from '../../components/admin/ToastProvider'
+import StatsPanel from '../../components/admin/StatsPanel'
+import PreviewModal from '../../components/admin/PreviewModal'
 import { createServerSupabaseClient, supabase, Noticia, Banner } from '../../lib/supabase'
-import { formatDate, formatDateInput } from '../../lib/formatters'
+import { formatDateInput } from '../../lib/formatters'
 import { useBanners } from '../../hooks/useBanners'
 
 const noticiaSchema = z.object({
@@ -18,13 +26,13 @@ const noticiaSchema = z.object({
   categoria: z.string().min(1, 'Categoria é obrigatória'),
   data: z.string().min(1, 'Data é obrigatória'),
   imagem: z.string().optional(),
+  banner_id: z.string().optional(),
+  destaque: z.boolean().default(false),
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   conteudo: z.string().min(1, 'Conteúdo é obrigatório'),
-  banner_id: z.string().optional().transform(val => val === '' ? undefined : val),
-  destaque: z.boolean().optional(),
 })
 
-type NoticiaForm = z.infer<typeof noticiaSchema>
+type NoticiaFormData = z.infer<typeof noticiaSchema>
 
 interface NoticiasPageProps {
   initialNoticias: Noticia[]
@@ -38,42 +46,91 @@ const categorias = [
   'Saúde',
   'Educação',
   'Tecnologia',
-  'Entretenimento'
+  'Entretenimento',
+  'Segurança',
+  'Meio Ambiente',
+  'Turismo',
+  'Agronegócios',
+  'Trânsito',
+  'Eventos',
+  'Infraestrutura',
+  'Assistência Social',
+  'Justiça',
+  'Clima',
+  'Negócios',
+  'Gastronomia'
 ]
 
-export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
+const ITEMS_PER_PAGE = 10
+
+function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
+  const { showToast } = useToastActions()
   const [noticias, setNoticias] = useState<Noticia[]>(initialNoticias)
   const [showForm, setShowForm] = useState(false)
   const [editingNoticia, setEditingNoticia] = useState<Noticia | null>(null)
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  
+  // Filter and search states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('')
+  const [dateStart, setDateStart] = useState('')
+  const [dateEnd, setDateEnd] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [previewNoticia, setPreviewNoticia] = useState<Noticia | null>(null)
+  const [showPreview, setShowPreview] = useState(false)
+  
   const { banners } = useBanners()
-  const router = useRouter()
 
-  // Verificar autenticação
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/admin/login')
-        return
+  // Filter and paginate noticias
+  const filteredAndPaginatedNoticias = useMemo(() => {
+    let filtered = noticias.filter(noticia => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        if (!noticia.titulo.toLowerCase().includes(query) &&
+            !noticia.descricao.toLowerCase().includes(query) &&
+            !noticia.conteudo.toLowerCase().includes(query)) {
+          return false
+        }
       }
-      setUser(session.user)
-    }
-    
-    checkAuth()
-    
-    // Escutar mudanças na autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        router.push('/admin/login')
-      } else {
-        setUser(session.user)
+      
+      // Category filter
+      if (selectedCategory && noticia.categoria !== selectedCategory) {
+        return false
       }
+      
+      // Status filter
+      if (selectedStatus === 'destaque' && !noticia.destaque) {
+        return false
+      }
+      if (selectedStatus === 'normal' && noticia.destaque) {
+        return false
+      }
+      
+      // Date range filter
+      if (dateStart && new Date(noticia.data) < new Date(dateStart)) {
+        return false
+      }
+      if (dateEnd && new Date(noticia.data) > new Date(dateEnd)) {
+        return false
+      }
+      
+      return true
     })
-    
-    return () => subscription.unsubscribe()
-  }, [router])
+
+    const totalItems = filtered.length
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    const paginatedItems = filtered.slice(startIndex, endIndex)
+
+    return {
+      items: paginatedItems,
+      totalItems,
+      totalPages
+    }
+  }, [noticias, searchQuery, selectedCategory, selectedStatus, dateStart, dateEnd, currentPage])
 
   const {
     register,
@@ -82,7 +139,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<NoticiaForm>({
+  } = useForm<NoticiaFormData>({
     resolver: zodResolver(noticiaSchema),
     defaultValues: {
       data: formatDateInput(new Date()),
@@ -115,9 +172,9 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     }
   }
 
-  const onSubmit = async (data: NoticiaForm) => {
+  const onSubmit = async (data: NoticiaFormData) => {
     if (!supabase) {
-      alert('Sistema não está configurado')
+      showToast('Sistema não está configurado', 'error')
       return
     }
     
@@ -129,11 +186,10 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
         const { error: updateError } = await supabase
           .from('noticias')
           .update({ destaque: false })
-          .neq('id', editingNoticia?.id || 'new') // Não atualizar a notícia atual se estiver editando
+          .neq('id', editingNoticia?.id || 'new')
         
         if (updateError) {
           console.error('Erro ao desmarcar outras notícias em destaque:', updateError)
-          // Continua mesmo com erro, pois não é crítico
         }
       }
       
@@ -142,7 +198,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
         ...data,
         banner_id: data.banner_id || null,
         imagem: data.imagem || null,
-        destaque: data.destaque || false, // Garantir que destaque seja sempre boolean
+        destaque: data.destaque || false,
       }
       
       if (editingNoticia) {
@@ -156,6 +212,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
           .eq('id', editingNoticia.id)
         
         if (error) throw error
+        showToast('Notícia atualizada com sucesso!', 'success')
       } else {
         // Criar nova notícia
         const { error } = await supabase
@@ -167,13 +224,14 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
           }])
         
         if (error) throw error
+        showToast('Notícia criada com sucesso!', 'success')
       }
       
       await loadNoticias()
       handleCloseForm()
     } catch (error) {
       console.error('Erro ao salvar notícia:', error)
-      alert('Erro ao salvar notícia')
+      showToast('Erro ao salvar notícia', 'error')
     } finally {
       setLoading(false)
     }
@@ -197,7 +255,7 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta notícia?')) return
     if (!supabase) {
-      alert('Sistema não está configurado')
+      showToast('Sistema não está configurado', 'error')
       return
     }
     
@@ -210,9 +268,86 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
       if (error) throw error
       
       await loadNoticias()
+      showToast('Notícia excluída com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao excluir notícia:', error)
-      alert('Erro ao excluir notícia')
+      showToast('Erro ao excluir notícia', 'error')
+    }
+  }
+
+  const handleToggleFeature = async (noticia: Noticia) => {
+    if (!supabase) {
+      showToast('Sistema não está configurado', 'error')
+      return
+    }
+    
+    try {
+      const newDestaqueValue = !noticia.destaque
+
+      // Se está marcando como destaque, desmarcar outras primeiro
+      if (newDestaqueValue) {
+        await supabase
+          .from('noticias')
+          .update({ destaque: false })
+          .neq('id', noticia.id)
+      }
+
+      // Atualizar a notícia atual
+      const { error } = await supabase
+        .from('noticias')
+        .update({ destaque: newDestaqueValue })
+        .eq('id', noticia.id)
+
+      if (error) throw error
+
+      // Atualizar estado local
+      setNoticias(prev => prev.map(n => 
+        n.id === noticia.id 
+          ? { ...n, destaque: newDestaqueValue }
+          : newDestaqueValue ? { ...n, destaque: false } : n
+      ))
+
+      showToast(
+        newDestaqueValue ? 'Notícia marcada como destaque!' : 'Destaque removido!', 
+        'success'
+      )
+    } catch (error) {
+      console.error('Erro ao alterar destaque:', error)
+      showToast('Erro ao alterar destaque', 'error')
+    }
+  }
+
+  const handleView = (noticia: Noticia) => {
+    const url = `/noticias/${noticia.slug || noticia.id}`
+    window.open(url, '_blank')
+  }
+
+  const handlePreview = (noticia: Noticia) => {
+    setPreviewNoticia(noticia)
+    setShowPreview(true)
+  }
+
+  const handleToggleStatus = async (noticia: Noticia) => {
+    if (!supabase) {
+      alert('Sistema não está configurado')
+      return
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('noticias')
+        .update({ 
+          isDraft: !noticia.isDraft,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', noticia.id)
+      
+      if (error) throw error
+      
+      await loadNoticias()
+    } catch (error) {
+      console.error('Erro ao alterar status:', error)
+      alert('Erro ao alterar status')
     }
   }
 
@@ -231,32 +366,72 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
     })
   }
 
-  // Mostrar loading enquanto verifica autenticação
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Verificando autenticação...</p>
-        </div>
-      </div>
-    )
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1) // Reset to first page when searching
+  }, [])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCategory, selectedStatus, dateStart, dateEnd])
+
+
+
+  const breadcrumbItems = [
+    { label: 'Admin', href: '/admin' },
+    { label: 'Notícias', href: '/admin/noticias' },
+    { label: 'Lista' }
+  ]
 
   return (
     <AdminLayout title="Gerenciar Notícias">
       <div className="space-y-6">
+        {/* Breadcrumb */}
+        <Breadcrumb items={breadcrumbItems} />
+        
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Notícias</h1>
-          <button
+          <EnhancedButton
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            icon={PlusCircle}
           >
-            <Plus className="h-4 w-4 mr-2" />
             Nova Notícia
-          </button>
+          </EnhancedButton>
         </div>
+
+        {/* Statistics Panel */}
+        {!showForm && <StatsPanel news={noticias} />}
+
+        {/* Search and Filters */}
+        {!showForm && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="space-y-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
+                <div className="flex-1">
+                  <SearchBar onSearch={handleSearch} />
+                </div>
+              </div>
+              
+              <FilterDropdowns
+                categories={categorias}
+                selectedCategory={selectedCategory}
+                selectedStatus={selectedStatus}
+                dateStart={dateStart}
+                dateEnd={dateEnd}
+                onCategoryChange={setSelectedCategory}
+                onStatusChange={setSelectedStatus}
+                onDateStartChange={setDateStart}
+                onDateEndChange={setDateEnd}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Formulário */}
         {showForm && (
@@ -426,97 +601,46 @@ export default function NoticiasPage({ initialNoticias }: NoticiasPageProps) {
           </FormCard>
         )}
 
-        {/* Lista de Notícias */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Lista de Notícias</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Título
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoria
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Destaque
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {noticias.map((noticia) => (
-                  <tr key={noticia.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {noticia.imagem && (
-                          <img
-                            className="h-10 w-10 rounded-lg object-cover mr-4"
-                            src={noticia.imagem}
-                            alt={noticia.titulo}
-                          />
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {noticia.titulo}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {noticia.descricao.substring(0, 50)}...
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {noticia.categoria}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(noticia.data)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {noticia.destaque ? (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          Destaque
-                        </span>
-                      ) : (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                          Normal
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(noticia)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(noticia.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </AdminLayout>
+        {/* Modern Table with all features */}
+        {!showForm && (
+          <>
+            <ModernTable
+              noticias={filteredAndPaginatedNoticias.items}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onToggleFeature={handleToggleFeature}
+              onView={handleView}
+              onToggleStatus={handleToggleStatus}
+              onPreview={handlePreview}
+            />
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={filteredAndPaginatedNoticias.totalPages}
+              totalItems={filteredAndPaginatedNoticias.totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={handlePageChange}
+            />
+          </>
+        )}
+
+        {/* Preview Modal */}
+        <PreviewModal
+          noticia={previewNoticia}
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+        />
+       </div>
+     </AdminLayout>
+  )
+}
+
+export default function NoticiasAdmin({ initialNoticias }: NoticiasPageProps) {
+  return (
+    <ToastProvider>
+      <NoticiasAdminContent initialNoticias={initialNoticias} />
+    </ToastProvider>
   )
 }
 

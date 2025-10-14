@@ -62,7 +62,19 @@ const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean 
       'Saúde': 'bg-pink-500',
       'Educação': 'bg-indigo-500',
       'Tecnologia': 'bg-gray-500',
-      'Meio Ambiente': 'bg-emerald-500'
+      'Meio Ambiente': 'bg-emerald-500',
+      'Entretenimento': 'bg-orange-500',
+      'Segurança': 'bg-red-600',
+      'Turismo': 'bg-sky-400',
+      'Agronegócios': 'bg-amber-700',
+      'Trânsito': 'bg-yellow-600',
+      'Eventos': 'bg-violet-400',
+      'Infraestrutura': 'bg-gray-700',
+      'Assistência Social': 'bg-rose-400',
+      'Justiça': 'bg-blue-800',
+      'Clima': 'bg-cyan-400',
+      'Negócios': 'bg-emerald-600',
+      'Gastronomia': 'bg-orange-600'
     }
     return colors[category] || 'bg-gray-500'
   }, [])
