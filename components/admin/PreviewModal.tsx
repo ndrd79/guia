@@ -3,20 +3,10 @@ import { X, Edit, Globe } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import CategoryBadge from './CategoryBadge'
-
-interface NewsItem {
-  id: string
-  titulo: string
-  descricao: string
-  conteudo: string
-  categoria: string
-  imagem?: string
-  destaque: boolean
-  created_at: string
-}
+import { Noticia } from '../../lib/supabase'
 
 interface PreviewModalProps {
-  news: NewsItem
+  news: Noticia | null
   isOpen: boolean
   onClose: () => void
   onEdit?: () => void
@@ -24,7 +14,7 @@ interface PreviewModalProps {
 }
 
 export default function PreviewModal({ news, isOpen, onClose, onEdit, onPublish }: PreviewModalProps) {
-  if (!isOpen) return null
+  if (!isOpen || !news) return null
 
   const formattedDate = format(new Date(news.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
 
@@ -72,7 +62,7 @@ export default function PreviewModal({ news, isOpen, onClose, onEdit, onPublish 
             <article className="max-w-3xl mx-auto">
               {/* Category and Date */}
               <div className="flex items-center gap-4 mb-4">
-                <CategoryBadge categoria={news.categoria} destaque={news.destaque} />
+                <CategoryBadge category={news.categoria} isDestaque={news.destaque} />
                 <span className="text-sm text-gray-500">{formattedDate}</span>
               </div>
 

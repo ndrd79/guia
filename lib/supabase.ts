@@ -45,6 +45,11 @@ export interface Noticia {
   conteudo: string
   banner_id?: string
   destaque?: boolean
+  workflow_status?: 'draft' | 'review' | 'approved' | 'rejected' | 'published' | 'archived'
+  meta_title?: string
+  meta_description?: string
+  slug?: string
+  tags?: string[]
   created_at: string
   updated_at: string
 }

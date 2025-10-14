@@ -5,7 +5,7 @@ interface ActionButtonsProps {
   onDelete: () => void
   onToggleFeature: () => void
   onView: () => void
-  onPreview: () => void
+  onPreview?: () => void
   isVisible: boolean
   isFeatured?: boolean
 }
@@ -49,13 +49,15 @@ export default function ActionButtons({
         <Star className={`h-4 w-4 ${isFeatured ? 'fill-current' : ''}`} />
       </button>
       
-      <button
-        onClick={onPreview}
-        className="p-1 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded transition-colors duration-200"
-        title="Pré-visualizar notícia"
-      >
-        <Globe className="h-4 w-4" />
-      </button>
+      {onPreview && (
+        <button
+          onClick={onPreview}
+          className="p-1 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded transition-colors duration-200"
+          title="Pré-visualizar notícia"
+        >
+          <Globe className="h-4 w-4" />
+        </button>
+      )}
       
       <button
         onClick={onView}

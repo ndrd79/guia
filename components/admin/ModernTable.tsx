@@ -153,7 +153,7 @@ export default function ModernTable({
                 
                 <td className="px-6 py-4 whitespace-nowrap">
                   <StatusIndicator 
-                    isPublished={!noticia.isDraft}
+                    isPublished={noticia.workflow_status === 'published'}
                     onClick={onToggleStatus ? () => onToggleStatus(noticia) : undefined}
                   />
                 </td>

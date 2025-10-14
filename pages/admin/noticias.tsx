@@ -334,10 +334,11 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
     }
     
     try {
+      const newStatus = noticia.workflow_status === 'published' ? 'draft' : 'published'
       const { error } = await supabase
         .from('noticias')
         .update({ 
-          isDraft: !noticia.isDraft,
+          workflow_status: newStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', noticia.id)
@@ -627,7 +628,7 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
 
         {/* Preview Modal */}
         <PreviewModal
-          noticia={previewNoticia}
+          news={previewNoticia}
           isOpen={showPreview}
           onClose={() => setShowPreview(false)}
         />

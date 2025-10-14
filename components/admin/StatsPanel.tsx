@@ -7,7 +7,7 @@ interface NewsItem {
   id: string
   titulo: string
   categoria: string
-  destaque: boolean
+  destaque?: boolean
   created_at: string
 }
 
@@ -18,7 +18,7 @@ interface StatsPanelProps {
 export default function StatsPanel({ news }: StatsPanelProps) {
   const stats = useMemo(() => {
     const total = news.length
-    const featured = news.filter(item => item.destaque).length
+    const featured = news.filter(item => item.destaque === true).length
     
     // Calculate news published this month
     const now = new Date()
