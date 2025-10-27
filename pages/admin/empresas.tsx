@@ -9,6 +9,7 @@ import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { createServerSupabaseClient, Empresa } from '../../lib/supabase'
 import { supabase } from '../../lib/supabase'
+import { useToastActions } from '../../components/admin/ToastProvider'
 
 interface EmpresasPageProps {
   empresas: Empresa[]
@@ -53,6 +54,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null)
   const [empresasList, setEmpresasList] = useState<Empresa[]>(empresas)
   const [imageUrl, setImageUrl] = useState<string>('')
+  const { success, error } = useToastActions()
 
   const {
     register,
@@ -153,10 +155,10 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
       setEditingEmpresa(null)
       setImageUrl('')
       
-      alert(editingEmpresa ? 'Empresa atualizada com sucesso!' : 'Empresa criada com sucesso!')
-    } catch (error) {
-      console.error('Erro ao salvar empresa:', error)
-      alert('Erro ao salvar empresa. Tente novamente.')
+      success(editingEmpresa ? 'Empresa atualizada com sucesso!' : 'Empresa criada com sucesso!')
+    } catch (err) {
+      console.error('Erro ao salvar empresa:', err)
+      error('Erro ao salvar empresa. Tente novamente.')
     } finally {
       setIsLoading(false)
     }
@@ -170,18 +172,18 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
     if (!confirm('Tem certeza que deseja excluir esta empresa?')) return
 
     try {
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('empresas')
         .delete()
         .eq('id', id)
 
-      if (error) throw error
+      if (deleteError) throw deleteError
 
       setEmpresasList(prev => prev.filter(emp => emp.id !== id))
-      alert('Empresa excluída com sucesso!')
-    } catch (error) {
-      console.error('Erro ao excluir empresa:', error)
-      alert('Erro ao excluir empresa. Tente novamente.')
+      success('Empresa excluída com sucesso!')
+    } catch (err) {
+      console.error('Erro ao excluir empresa:', err)
+      error('Erro ao excluir empresa. Tente novamente.')
     }
   }
 

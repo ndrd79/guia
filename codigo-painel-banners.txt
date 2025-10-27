@@ -681,7 +681,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
    - Notícias - Topo (728x90px)
 
 2. FUNCIONALIDADES:
-   ✅ Cadastro de novos banners
+   ✅ Cadastro de novos banners (apenas imagens estáticas)
    ✅ Edição de banners existentes
    ✅ Upload de imagens
    ✅ Seleção automática de dimensões por posição
@@ -690,6 +690,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
    ✅ Validação de formulários
    ✅ Interface responsiva
    ✅ Autenticação obrigatória
+   ❌ Funcionalidade de vídeo removida (apenas banners estáticos)
 
 3. TECNOLOGIAS UTILIZADAS:
    - Next.js (React)

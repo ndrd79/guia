@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '../../lib/supabase'
+import { log } from '../../lib/logger'
+import { withApiTimeout, AUTH_API_TIMEOUT } from '../../lib/api-timeout'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function authHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' })
   }
@@ -39,10 +41,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error) {
-    console.error('Erro na API de teste de auth:', error)
+    log.error('Erro na API de teste de auth', { error, endpoint: '/api/test-auth' })
     return res.status(500).json({
       error: 'Erro interno do servidor',
       message: 'Ocorreu um erro ao processar a solicitação'
     })
   }
 }
+
+// Exportar handler com timeout
+export default withApiTimeout(authHandler, {
+  timeoutMs: AUTH_API_TIMEOUT,
+  timeoutMessage: 'Timeout na verificação de autenticação'
+})

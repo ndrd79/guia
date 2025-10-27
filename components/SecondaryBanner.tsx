@@ -9,6 +9,7 @@ interface SecondaryBannerProps {
 
 const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isClient, setIsClient] = useState(false);
 
   // 4 cores diferentes para os slides
   const slideColors = [
@@ -17,6 +18,34 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
     'bg-gradient-to-br from-indigo-500 to-indigo-700',
     'bg-gradient-to-br from-yellow-500 to-yellow-700'
   ];
+
+  // Função para normalizar URLs removendo parâmetros desnecessários
+  const normalizeUrl = (url: string): string => {
+    if (!url) return '';
+    
+    try {
+      const urlObj = new URL(url, window.location.origin);
+      // Remove parâmetros específicos que causam problemas de hidratação
+      urlObj.searchParams.delete('ide_webview_request_time');
+      urlObj.searchParams.delete('_t');
+      urlObj.searchParams.delete('timestamp');
+      
+      // Se a URL é relativa ao site atual, retorna apenas o pathname + search + hash
+      if (urlObj.origin === window.location.origin) {
+        return urlObj.pathname + urlObj.search + urlObj.hash;
+      }
+      
+      return urlObj.toString();
+    } catch (error) {
+      // Se não conseguir fazer parse da URL, retorna a URL original limpa
+      return url.split('?')[0];
+    }
+  };
+
+  // Garantir renderização consistente entre servidor e cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Auto-play functionality
   useEffect(() => {
@@ -33,14 +62,27 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
     return banners[slideIndex] || null;
   };
 
+  // Função para obter o href normalizado
+  const getBannerHref = (banner: Banner | null): string => {
+    if (!banner || !banner.link) return '#';
+    
+    // No servidor, retorna uma URL simples para evitar problemas de hidratação
+    if (!isClient) {
+      return banner.link.split('?')[0] || '#';
+    }
+    
+    // No cliente, normaliza a URL
+    return normalizeUrl(banner.link);
+  };
+
   return (
     <section className="py-4 sm:py-6 md:py-8 bg-white">
       <div className="banner-container">
         {/* Container do slide */}
         <div className="banner-responsive banner-secondary relative rounded-none sm:rounded-lg shadow-lg md:shadow-2xl banner-transition">
-          {/* Resto do código igual ao HeroBanner com as mesmas correções responsivas */}
           {[0, 1, 2, 3].map((slideIndex) => {
             const banner = getCurrentBanner(slideIndex);
+            const bannerHref = getBannerHref(banner);
             
             return (
               <div
@@ -49,9 +91,9 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                   slideIndex === currentSlide ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                {/* Aplicar as mesmas correções responsivas do HeroBanner */}
-                {banner && banner.link ? (
-                  <Link href={banner.link} className="block w-full h-full">
+                {/* Renderizar com link apenas se o banner tem link válido */}
+                {banner && banner.link && bannerHref !== '#' ? (
+                  <Link href={bannerHref} className="block w-full h-full">
                     <div className="relative w-full h-full group cursor-pointer">
                       {banner.imagem ? (
                         <>
@@ -72,8 +114,6 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                       ) : (
                         <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                       )}
-                      
-
                     </div>
                   </Link>
                 ) : (
@@ -97,8 +137,6 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                     ) : (
                       <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
                     )}
-                    
-
                   </div>
                 )}
               </div>

@@ -124,7 +124,6 @@ const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean 
             <Link 
               href={`/noticias/${news.id}`} 
               className="text-indigo-600 font-medium hover:text-indigo-800 flex items-center"
-              prefetch={true}
             >
               Leia a matéria completa <i className="fas fa-arrow-right ml-2"></i>
             </Link>
@@ -169,7 +168,6 @@ const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean 
           <Link 
             href={`/noticias/${news.id}`} 
             className="text-indigo-600 hover:text-indigo-800 font-medium"
-            prefetch={true}
           >
             Ler mais
           </Link>
@@ -377,7 +375,6 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
                       <Link 
                         href={`/noticias/${news.id}`} 
                         className="flex items-start space-x-3 group"
-                        prefetch={true}
                       >
                         <div className="flex-shrink-0">
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden">

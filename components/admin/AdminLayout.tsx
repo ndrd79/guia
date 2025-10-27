@@ -9,10 +9,12 @@ import {
   Image, 
   Building2,
   Palette,
+  Users,
   LogOut, 
   Menu, 
   X,
-  ExternalLink 
+  ExternalLink,
+  FolderOpen
 } from 'lucide-react'
 
 interface AdminLayoutProps {
@@ -27,8 +29,10 @@ const menuItems = [
   { href: '/admin/eventos', icon: Calendar, label: 'Eventos' },
   { href: '/admin/feira-produtor', icon: Calendar, label: 'Feira do Produtor' },
   { href: '/admin/banners', icon: Image, label: 'Banners' },
+  { href: '/admin/media', icon: FolderOpen, label: 'Biblioteca de Mídia' },
   { href: '/admin/empresas', icon: Building2, label: 'Empresas' },
   { href: '/admin/temas-sazonais', icon: Palette, label: 'Temas Sazonais' },
+  { href: '/admin/usuarios', icon: Users, label: 'Usuários' },
 ]
 
 export default function AdminLayout({ children, title = 'Painel Administrativo' }: AdminLayoutProps) {

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useToastActions } from '../components/admin/ToastProvider';
 
 const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const { success, error } = useToastActions();
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,10 +16,10 @@ const Footer: React.FC = () => {
       // Aqui você implementaria a lógica de inscrição na newsletter
       // Por enquanto, apenas simula o processo
       await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Inscrição realizada com sucesso!');
+      success('Inscrição realizada com sucesso!');
       setEmail('');
-    } catch (error) {
-      alert('Erro ao realizar inscrição. Tente novamente.');
+    } catch (err) {
+      error('Erro ao realizar inscrição. Tente novamente.');
     } finally {
       setIsSubscribing(false);
     }

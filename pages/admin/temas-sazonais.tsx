@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { supabase } from '../../lib/supabase'
 import { Plus, Edit, Trash2, Save, X, Eye, Palette } from 'lucide-react'
+import { useToastActions } from '../../components/admin/ToastProvider'
 
 interface SeasonalTheme {
   id?: string
@@ -118,6 +119,7 @@ const initialTheme: SeasonalTheme = {
 }
 
 export default function TemasSeasonais() {
+  const { success, error: showError } = useToastActions()
   const [themes, setThemes] = useState<SeasonalTheme[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -148,7 +150,7 @@ export default function TemasSeasonais() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert('Nome é obrigatório')
+      showError('Nome é obrigatório')
       return
     }
 
@@ -198,15 +200,15 @@ export default function TemasSeasonais() {
 
       await fetchThemes()
       handleCancel()
-      alert('Tema salvo com sucesso!')
+      success('Tema salvo com sucesso!')
     } catch (error: any) {
       console.error('Erro ao salvar tema:', error)
       
       // Mostrar erro mais específico
       if (error.message) {
-        alert(`Erro ao salvar tema: ${error.message}`)
+        showError(`Erro ao salvar tema: ${error.message}`)
       } else {
-        alert('Erro desconhecido ao salvar tema. Verifique o console para mais detalhes.')
+        showError('Erro desconhecido ao salvar tema. Verifique o console para mais detalhes.')
       }
     } finally {
       setSaving(false)
@@ -233,7 +235,7 @@ export default function TemasSeasonais() {
       await fetchThemes()
     } catch (error) {
       console.error('Erro ao excluir tema:', error)
-      alert('Erro ao excluir tema')
+      showError('Erro ao excluir tema')
     }
   }
 
@@ -256,7 +258,7 @@ export default function TemasSeasonais() {
       await fetchThemes()
     } catch (error) {
       console.error('Erro ao alterar status do tema:', error)
-      alert('Erro ao alterar status do tema')
+      showError('Erro ao alterar status do tema')
     }
   }
 

@@ -10,6 +10,7 @@ import ImageUploader from '../../components/admin/ImageUploader'
 import { AnalyticsDashboard } from '../../src/components/analytics/AnalyticsDashboard'
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
 import { formatDate } from '../../lib/formatters'
+import { useToastActions } from '../../components/admin/ToastProvider'
 
 interface BannerStats {
   impressoes: number
@@ -389,6 +390,7 @@ const CountdownTimer = ({ banner }: { banner: Banner }) => {
 }
 
 export default function BannersPage({ initialBanners }: BannersPageProps) {
+  const { success: showSuccess, error: showError } = useToastActions()
   const [banners, setBanners] = useState<BannerWithStats[]>(initialBanners)
   const [showForm, setShowForm] = useState(false)
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
@@ -799,9 +801,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       const errorMessage = (error as Error).message
       setError('Erro ao salvar banner: ' + errorMessage)
       
-      // Mostrar alerta apenas para erros críticos
+      // Mostrar toast apenas para erros críticos
       if (errorMessage.includes('permission') || errorMessage.includes('unauthorized')) {
-        alert('Erro de permissão: Você não tem autorização para realizar esta ação.')
+        showError('Erro de permissão: Você não tem autorização para realizar esta ação.')
       }
     } finally {
       setLoading(false)
@@ -1317,6 +1319,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   onChange={(url) => setValue('imagem', url || '')}
                   bucket="banners"
                   folder="images"
+                  showLibraryButton={true}
+                  useNewMediaAPI={true}
                 />
                 {errors.imagem && (
                   <p className="mt-1 text-sm text-red-600">{errors.imagem.message}</p>

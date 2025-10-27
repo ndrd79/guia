@@ -101,14 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Gerar session_id simples (em produção, usar algo mais robusto)
     const sessionId = `${ip}-${Date.now()}`
 
-    // Inserir evento de analytics
-    console.log('Tentando inserir analytics:', {
-      banner_id: bannerId,
-      tipo,
-      ip_address: ip,
-      user_agent: userAgent,
-      session_id: sessionId
-    });
+    // Inserir evento de analytics;
 
     const { data: analyticsData, error: analyticsError } = await supabaseAdmin
       .from('banner_analytics')

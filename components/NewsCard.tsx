@@ -36,12 +36,13 @@ const NewsCard: React.FC<NewsCardProps> = ({
           {imageUrl && (
             <div className="absolute inset-0">
               <Image
-                src={imageUrl}
-                alt={title}
-                fill
-                className="object-cover opacity-30"
-                onError={() => console.error('❌ Erro ao carregar imagem de destaque:', imageUrl)}
-              />
+              src={imageUrl}
+              alt={title}
+              fill
+              className="object-cover opacity-30"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              onError={() => console.error('❌ Erro ao carregar imagem de destaque:', imageUrl)}
+            />
             </div>
           )}
           
@@ -100,6 +101,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
               alt={title}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               onError={() => console.error('❌ Erro ao carregar imagem do card:', imageUrl)}
             />
           </div>

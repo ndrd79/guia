@@ -26,6 +26,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'mlkpnapnijdbskaimquj.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
       },
       {
         protocol: 'http',
@@ -33,12 +38,18 @@ const nextConfig = {
       },
     ],
     formats: ['image/webp', 'image/avif'],
-    // Otimizações de imagem
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    // Otimizações de imagem com configurações mais conservadoras
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Configurações para melhorar a confiabilidade
+    domains: [],
+    unoptimized: false,
+    // Configurações de loader mais específicas
+    loader: 'default',
+    path: '/_next/image',
   },
   // Configurações para melhorar a performance e evitar problemas de hidratação
   poweredByHeader: false,

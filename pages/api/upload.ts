@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import formidable from 'formidable'
 import fs from 'fs'
+import { log } from '../../lib/logger'
+import { withApiTimeout, UPLOAD_API_TIMEOUT } from '../../lib/api-timeout'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -20,7 +22,7 @@ export const config = {
   },
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function uploadHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -47,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const cleanName = file.originalFilename?.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
     const fileName = `${folder ? folder + '/' : ''}${timestamp}-${randomStr}-${cleanName}.${fileExt}`
     
-    console.log('📤 Upload via API:', fileName)
+    log.api('Upload via API', '/api/upload', { fileName, bucket: bucket || 'empresas' })
     
     // Upload usando chave de serviço
     const { data, error } = await supabaseAdmin.storage
@@ -59,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
     if (error) {
-      console.error('❌ Erro no upload:', error)
+      log.error('Erro no upload', { error, fileName, endpoint: '/api/upload' })
       throw error
     }
 
@@ -68,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from(bucket || 'empresas')
       .getPublicUrl(fileName)
 
-    console.log('✅ Upload concluído:', publicUrl)
+    log.api('Upload concluído', '/api/upload', { fileName })
     
     res.status(200).json({ 
       url: publicUrl, 
@@ -77,10 +79,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
     
   } catch (error: any) {
-    console.error('❌ Erro na API de upload:', error)
+    log.error('Erro na API de upload', { error, endpoint: '/api/upload' })
     res.status(500).json({ 
       error: error.message || 'Upload failed',
       success: false 
     })
   }
 }
+
+// Exportar handler com timeout
+export default withApiTimeout(uploadHandler, {
+  timeoutMs: UPLOAD_API_TIMEOUT,
+  timeoutMessage: 'Upload timeout - arquivo muito grande ou conexão lenta'
+})

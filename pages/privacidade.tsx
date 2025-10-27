@@ -1,6 +1,7 @@
 import { NextPage } from 'next';
 import Head from 'next/head';
 import Header from '../components/Header';
+import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 
 const PoliticaPrivacidade: NextPage = () => {
@@ -13,6 +14,7 @@ const PoliticaPrivacidade: NextPage = () => {
       </Head>
 
       <Header />
+      <Nav />
 
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

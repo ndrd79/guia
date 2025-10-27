@@ -121,7 +121,6 @@ export const useAnalytics = (filters: AnalyticsFilters = {}) => {
       return result.data
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao carregar analytics'
-      console.error('Erro no useAnalytics:', err)
       setError(errorMessage)
       throw err
     } finally {

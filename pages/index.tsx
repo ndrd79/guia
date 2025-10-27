@@ -358,11 +358,7 @@ export const getStaticProps: GetStaticProps = async () => {
         .limit(5)
     ]);
 
-    // Log de erros se houver
-    if (noticiasResult.error) console.error('Erro ao buscar notícias:', noticiasResult.error);
-    if (eventosResult.error) console.error('Erro ao buscar eventos:', eventosResult.error);
-    if (empresasResult.error) console.error('Erro ao buscar empresas:', empresasResult.error);
-    if (classificadosResult.error) console.error('Erro ao buscar classificados:', classificadosResult.error);
+    // Erros são tratados silenciosamente em produção
 
     return {
       props: {
@@ -378,7 +374,7 @@ export const getStaticProps: GetStaticProps = async () => {
       revalidate: 300
     };
   } catch (error) {
-    console.error('Erro no getStaticProps:', error);
+    // Erro tratado silenciosamente em produção
     return {
       props: {
         noticias: [],

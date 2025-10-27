@@ -501,6 +501,8 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
                   onChange={(url) => setValue('imagem', url || '')}
                   bucket="noticias"
                   folder="images"
+                  showLibraryButton={true}
+                  useNewMediaAPI={true}
                 />
               </div>
 

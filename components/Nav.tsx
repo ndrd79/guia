@@ -50,7 +50,6 @@ const Nav: React.FC = () => {
               <Link 
                 key={item.href}
                 href={item.href}
-                prefetch={true}
                 className={`${
                   isActive(item.href)
                     ? 'text-indigo-600 font-medium border-b-2 border-indigo-600 pb-1'
@@ -77,7 +76,6 @@ const Nav: React.FC = () => {
             <Link 
               key={item.href}
               href={item.href}
-              prefetch={true}
               className={`block py-2 ${
                 isActive(item.href) ? 'text-indigo-600' : 'text-gray-600'
               }`}

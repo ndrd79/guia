@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, FolderOpen } from 'lucide-react'
+import MediaPicker from './MediaPicker'
 
 interface ImageUploaderProps {
   value?: string
@@ -8,6 +9,8 @@ interface ImageUploaderProps {
   folder?: string
   maxSize?: number // em MB
   accept?: string
+  showLibraryButton?: boolean
+  useNewMediaAPI?: boolean
 }
 
 export default function ImageUploader({
@@ -16,11 +19,14 @@ export default function ImageUploader({
   bucket,
   folder = '',
   maxSize = 5,
-  accept = 'image/*'
+  accept = 'image/*',
+  showLibraryButton = false,
+  useNewMediaAPI = false
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [showMediaPicker, setShowMediaPicker] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,28 +53,46 @@ export default function ImageUploader({
     try {
       console.log('📤 Iniciando upload via API:', file.name)
       
-      // Criar FormData para enviar via API
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('bucket', bucket)
-      formData.append('folder', folder)
-      
-      // Upload via API route
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-      
-      const result = await response.json()
-      
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Erro no upload')
-      }
+      if (useNewMediaAPI) {
+        // Usar a nova API de mídia
+        const formData = new FormData()
+        formData.append('files', file)
+        formData.append('folder', folder)
+        
+        const response = await fetch('/api/admin/media', {
+          method: 'POST',
+          body: formData
+        })
+        
+        const result = await response.json()
+        
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Erro no upload')
+        }
 
-      console.log('✅ Upload concluído via API:', result.url)
-      
-      // Atualizar o valor no formulário
-      onChange(result.url)
+        console.log('✅ Upload concluído via nova API:', result.files[0].url)
+        onChange(result.files[0].url)
+      } else {
+        // Usar a API original
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('bucket', bucket)
+        formData.append('folder', folder)
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+        
+        const result = await response.json()
+        
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Erro no upload')
+        }
+
+        console.log('✅ Upload concluído via API original:', result.url)
+        onChange(result.url)
+      }
       
     } catch (err: any) {
       console.error('❌ Erro no upload:', err)
@@ -81,6 +105,13 @@ export default function ImageUploader({
 
   const handleRemove = () => {
     onChange(null)
+  }
+
+  const handleMediaSelect = (files: any[]) => {
+    if (files.length > 0) {
+      onChange(files[0].url)
+    }
+    setShowMediaPicker(false)
   }
 
   return (
@@ -125,18 +156,32 @@ export default function ImageUploader({
             <p className="text-sm text-gray-600">Fazendo upload...</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             <ImageIcon className="h-12 w-12 text-gray-400 mx-auto" />
-            <div>
+            
+            {/* Botões de ação */}
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {value ? 'Alterar Imagem' : 'Selecionar Imagem'}
+                {value ? 'Alterar Imagem' : 'Fazer Upload'}
               </button>
+              
+              {showLibraryButton && (
+                <button
+                  type="button"
+                  onClick={() => setShowMediaPicker(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Escolher da Biblioteca
+                </button>
+              )}
             </div>
+            
             <p className="text-xs text-gray-500">
               PNG, JPG, GIF até {maxSize}MB
             </p>
@@ -159,6 +204,17 @@ export default function ImageUploader({
         <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
           <strong>URL:</strong> {value.length > 50 ? value.substring(0, 50) + '...' : value}
         </div>
+      )}
+
+      {/* Modal do Media Picker */}
+      {showMediaPicker && (
+        <MediaPicker
+          isOpen={showMediaPicker}
+          onClose={() => setShowMediaPicker(false)}
+          onSelect={handleMediaSelect}
+          maxSelection={1}
+          allowedTypes={['image']}
+        />
       )}
     </div>
   )
