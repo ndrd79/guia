@@ -60,6 +60,21 @@
     width: 100%;
     margin: 0 auto;
     padding: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Correção específica para banner do sidebar */
+  .banner-container.sidebar-banner {
+    position: relative !important;
+    z-index: 1 !important;
+    max-width: 100% !important;
+    overflow: hidden;
+  }
+
+  /* Garantir que banners não tenham posicionamento absoluto ou fixo */
+  .banner-container * {
+    position: relative !important;
   }
 
   /* Breakpoints específicos para banners */
@@ -94,6 +109,8 @@
   .banner-sidebar {
     height: 200px;
     aspect-ratio: 6/5; /* 300x250 padrão */
+    position: relative;
+    overflow: hidden;
   }
 
   .banner-footer {
@@ -110,6 +127,39 @@
     aspect-ratio: 320/100; /* Small banner padrão */
   }
 
+  /* Layout específico para página de notícias */
+  .news-page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .news-page-layout {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+    
+    .news-main-content {
+      flex: 2;
+      min-width: 0;
+    }
+    
+    .news-sidebar {
+      flex: 1;
+      max-width: 350px;
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  /* Garantir que banners no sidebar não sobreponham */
+  .news-sidebar .banner-container {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-bottom: 1.5rem;
+  }
+  
   @media (min-width: 640px) {
     .banner-hero {
       height: 220px;

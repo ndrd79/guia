@@ -440,8 +440,10 @@ export const getStaticProps: GetStaticProps = async () => {
 
     // Mapear categorias com ícones
     const categoryIcons: { [key: string]: string } = {
+      'Restaurante': 'fas fa-utensils',
       'Restaurantes': 'fas fa-utensils',
       'Comércio': 'fas fa-shopping-bag',
+      'Automotivo': 'fas fa-car',
       'Automóveis': 'fas fa-car',
       'Imóveis': 'fas fa-home',
       'Saúde': 'fas fa-briefcase-medical',
@@ -450,8 +452,11 @@ export const getStaticProps: GetStaticProps = async () => {
       'Alimentação': 'fas fa-utensils',
       'Beleza': 'fas fa-cut',
       'Tecnologia': 'fas fa-laptop',
+      'Esporte': 'fas fa-dumbbell',
       'Esportes': 'fas fa-dumbbell',
-      'Moda': 'fas fa-tshirt'
+      'Moda': 'fas fa-tshirt',
+      'Decoração': 'fas fa-couch',
+      'Pet Shop': 'fas fa-paw'
     }
 
     const categories = Array.from(categoryMap.entries()).map(([name, count]) => ({

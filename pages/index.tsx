@@ -13,6 +13,7 @@ import HeroBanner from '../components/HeroBanner';
 import SecondaryBanner from '../components/SecondaryBanner';
 import FooterBanner from '../components/FooterBanner';
 import WeatherSlider from '../components/WeatherSlider';
+import { ContentBanner, MobileBanner } from '../components/BannerContainer';
 import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Banner } from '../lib/supabase';
 
 interface HomePageProps {
@@ -39,12 +40,12 @@ const HomePage: React.FC<HomePageProps> = ({
   const recentNews = noticias.filter(noticia => !noticia.destaque).slice(0, 7);
 
   const categories = [
-    { name: 'Restaurantes', icon: 'fas fa-utensils', href: '/guia?categoria=restaurantes' },
-    { name: 'Hospedagem', icon: 'fas fa-bed', href: '/guia?categoria=hospedagem' },
-    { name: 'Serviços', icon: 'fas fa-tools', href: '/guia?categoria=servicos' },
-    { name: 'Comércio', icon: 'fas fa-shopping-bag', href: '/guia?categoria=comercio' },
-    { name: 'Saúde', icon: 'fas fa-heartbeat', href: '/guia?categoria=saude' },
-    { name: 'Educação', icon: 'fas fa-graduation-cap', href: '/guia?categoria=educacao' }
+    { name: 'Restaurantes', icon: 'fas fa-utensils', href: '/empresas-locais?categoria=Alimentação' },
+    { name: 'Hospedagem', icon: 'fas fa-bed', href: '/empresas-locais?categoria=Hospedagem' },
+    { name: 'Serviços', icon: 'fas fa-tools', href: '/empresas-locais?categoria=Serviços' },
+    { name: 'Comércio', icon: 'fas fa-shopping-bag', href: '/empresas-locais?categoria=Comércio' },
+    { name: 'Saúde', icon: 'fas fa-heartbeat', href: '/empresas-locais?categoria=Saúde' },
+    { name: 'Educação', icon: 'fas fa-graduation-cap', href: '/empresas-locais?categoria=Educação' }
   ];
 
   // Removi a previsão do tempo da lista de serviços
@@ -79,6 +80,9 @@ const HomePage: React.FC<HomePageProps> = ({
 
       <Header />
       <Nav />
+
+      {/* Banner Mobile */}
+      <MobileBanner className="py-4" />
 
       <main>
         {/* Hero Banner - Novo carousel de banners */}
@@ -129,6 +133,11 @@ const HomePage: React.FC<HomePageProps> = ({
             )}
           </div>
         </section>
+
+        {/* Banner Topo do Conteúdo */}
+        <div className="container mx-auto px-4 py-6">
+          <ContentBanner position="content-top" />
+        </div>
 
         {/* Seção Hero */}
         <section className="relative bg-gray-900 text-white">

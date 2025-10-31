@@ -344,6 +344,32 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       };
     }
+
+    // Verificar se a empresa tem plano básico - redirecionar para página de categoria
+    if (empresa.plan_type === 'basic') {
+      return {
+        redirect: {
+          destination: `/guia/categoria/${encodeURIComponent(empresa.category)}`,
+          permanent: false
+        }
+      };
+    }
+
+    // Verificar se o plano premium expirou
+    if (empresa.plan_type === 'premium' && empresa.premium_expires_at) {
+      const expirationDate = new Date(empresa.premium_expires_at);
+      const now = new Date();
+      
+      if (expirationDate < now) {
+        // Plano expirado - redirecionar para página de categoria
+        return {
+          redirect: {
+            destination: `/guia/categoria/${encodeURIComponent(empresa.category)}`,
+            permanent: false
+          }
+        };
+      }
+    }
     
     // Mapear dados da empresa para o formato esperado pelo componente
     const business = {

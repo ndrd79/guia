@@ -41,7 +41,7 @@ const nextConfig = {
     // Otimizações de imagem com configurações mais conservadoras
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 600, // Increased cache TTL to 10 minutes
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     // Configurações para melhorar a confiabilidade
@@ -57,6 +57,16 @@ const nextConfig = {
   generateEtags: false,
   // Otimizações de bundle
   webpack: (config, { dev, isServer }) => {
+    // Configurações específicas para desenvolvimento
+    if (dev) {
+      // Melhorar hot-reload
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+        ignored: ['**/node_modules', '**/.git', '**/.next'],
+      };
+    }
+
     // Otimizações de produção
     if (!dev && !isServer) {
       config.optimization.splitChunks.cacheGroups = {
@@ -68,8 +78,18 @@ const nextConfig = {
         },
       };
     }
+
     return config;
   },
+  // Configurações de desenvolvimento
+  ...(process.env.NODE_ENV === 'development' && {
+    onDemandEntries: {
+      // Período em ms que uma página fica em cache
+      maxInactiveAge: 25 * 1000,
+      // Número de páginas que devem ser mantidas simultaneamente
+      pagesBufferLength: 2,
+    },
+  }),
 }
 
 module.exports = nextConfig

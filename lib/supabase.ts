@@ -100,6 +100,8 @@ export interface Banner {
   updated_at: string
 }
 
+export type PlanType = 'basic' | 'premium'
+
 export interface Empresa {
   id: string
   name: string
@@ -116,6 +118,9 @@ export interface Empresa {
   featured: boolean
   is_new: boolean
   ativo: boolean
+  exibir_em_empresas_locais?: boolean
+  plan_type: PlanType
+  premium_expires_at?: string
   created_at: string
   updated_at: string
 }

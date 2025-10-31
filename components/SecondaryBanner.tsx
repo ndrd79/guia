@@ -23,6 +23,11 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
   const normalizeUrl = (url: string): string => {
     if (!url) return '';
     
+    // No servidor, retorna URL simples para evitar problemas de hidratação
+    if (!isClient) {
+      return url.split('?')[0] || '#';
+    }
+    
     try {
       const urlObj = new URL(url, window.location.origin);
       // Remove parâmetros específicos que causam problemas de hidratação
@@ -47,14 +52,16 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
     setIsClient(true);
   }, []);
 
-  // Auto-play functionality
+  // Auto-play functionality - só executa no cliente
   useEffect(() => {
+    if (!isClient) return;
+    
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 4);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isClient]);
 
   // Pega o banner para o slide atual (se existir)
   const getCurrentBanner = (slideIndex: number) => {

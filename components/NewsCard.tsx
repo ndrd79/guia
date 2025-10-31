@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import OptimizedImage from './OptimizedImage';
 
 interface NewsCardProps {
   id: string;
@@ -35,14 +35,16 @@ const NewsCard: React.FC<NewsCardProps> = ({
           {/* Imagem de fundo para o card de destaque */}
           {imageUrl && (
             <div className="absolute inset-0">
-              <Image
-              src={imageUrl}
-              alt={title}
-              fill
-              className="object-cover opacity-30"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              onError={() => console.error('❌ Erro ao carregar imagem de destaque:', imageUrl)}
-            />
+              <OptimizedImage
+                src={imageUrl}
+                alt={title}
+                fill
+                className="object-cover opacity-30"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={() => console.error('❌ Erro ao carregar imagem de destaque:', imageUrl)}
+                fallbackSrc="/images/news-placeholder.jpg"
+                quality={75}
+              />
             </div>
           )}
           
@@ -96,13 +98,15 @@ const NewsCard: React.FC<NewsCardProps> = ({
         {/* Imagem do card normal */}
         {imageUrl && (
           <div className="relative h-48 w-full">
-            <Image
+            <OptimizedImage
               src={imageUrl}
               alt={title}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               onError={() => console.error('❌ Erro ao carregar imagem do card:', imageUrl)}
+              fallbackSrc="/images/news-placeholder.jpg"
+              quality={75}
             />
           </div>
         )}

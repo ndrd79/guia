@@ -34,29 +34,49 @@ const SeasonalDecorations: React.FC = () => {
   const [decorations, setDecorations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Garantir renderização consistente entre servidor e cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Cache do tema para evitar consultas desnecessárias
   const getCachedTheme = useCallback(() => {
-    const cached = sessionStorage.getItem('seasonalTheme');
-    const cacheTime = sessionStorage.getItem('seasonalThemeTime');
+    if (!isClient) return null;
     
-    if (cached && cacheTime) {
-      const now = Date.now();
-      const cacheAge = now - parseInt(cacheTime);
-      // Cache válido por 5 minutos
-      if (cacheAge < 5 * 60 * 1000) {
-        return JSON.parse(cached);
+    try {
+      const cached = sessionStorage.getItem('seasonalTheme');
+      const cacheTime = sessionStorage.getItem('seasonalThemeTime');
+      
+      if (cached && cacheTime) {
+        const now = Date.now();
+        const cacheAge = now - parseInt(cacheTime);
+        // Cache válido por 5 minutos
+        if (cacheAge < 5 * 60 * 1000) {
+          return JSON.parse(cached);
+        }
       }
+    } catch (error) {
+      console.warn('Erro ao acessar sessionStorage:', error);
     }
     return null;
-  }, []);
+  }, [isClient]);
 
   const setCachedTheme = useCallback((theme: any) => {
-    sessionStorage.setItem('seasonalTheme', JSON.stringify(theme));
-    sessionStorage.setItem('seasonalThemeTime', Date.now().toString());
-  }, []);
+    if (!isClient) return;
+    
+    try {
+      sessionStorage.setItem('seasonalTheme', JSON.stringify(theme));
+      sessionStorage.setItem('seasonalThemeTime', Date.now().toString());
+    } catch (error) {
+      console.warn('Erro ao salvar no sessionStorage:', error);
+    }
+  }, [isClient]);
 
   useEffect(() => {
+    if (!isClient) return;
+    
     // Primeiro tenta usar o cache
     const cachedTheme = getCachedTheme();
     if (cachedTheme) {
@@ -67,7 +87,7 @@ const SeasonalDecorations: React.FC = () => {
     
     // Se não há cache, busca do servidor
     fetchActiveTheme();
-  }, [getCachedTheme]);
+  }, [isClient, getCachedTheme]);
 
   useEffect(() => {
     if (activeTheme?.decoration_type && activeTheme.decoration_type !== 'none') {

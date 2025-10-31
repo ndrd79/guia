@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useToastActions } from '../components/admin/ToastProvider';
+import { FooterBanner } from './BannerContainer';
 
 const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -119,6 +120,11 @@ const Footer: React.FC = () => {
                 </li>
               </ul>
             </div>
+          </div>
+
+          {/* Banners Footer Otimizados */}
+          <div className="border-t border-gray-800 pt-8 pb-6">
+            <FooterBanner className="max-w-6xl mx-auto" />
           </div>
           
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">

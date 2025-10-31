@@ -440,6 +440,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   const watchedImagem = watch('imagem')
   const watchedPosicao = watch('posicao')
+  const watchedLargura = watch('largura')
+  const watchedAltura = watch('altura')
 
   // Funções de carregamento de dados
   const loadBanners = async () => {
@@ -1326,6 +1328,103 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   <p className="mt-1 text-sm text-red-600">{errors.imagem.message}</p>
                 )}
               </div>
+
+              {/* Preview do Banner */}
+              {watchedImagem && watchedLargura && watchedAltura && (
+                <div className="border-t pt-6">
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Eye className="h-5 w-5 mr-2 text-orange-600" />
+                    Preview do Banner
+                  </h4>
+                  
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6">
+                    <div className="flex justify-center">
+                      <div 
+                        className="relative overflow-hidden rounded-lg shadow-sm border border-gray-200 bg-white"
+                        style={{ 
+                          width: Math.min(watchedLargura, 600),
+                          height: Math.min(watchedAltura, 400),
+                          maxWidth: '100%'
+                        }}
+                      >
+                        <img
+                          src={watchedImagem}
+                          alt={watch('nome') || 'Preview do banner'}
+                          className="w-full h-full object-cover"
+                          style={{ 
+                            width: '100%',
+                            height: '100%'
+                          }}
+                        />
+                        
+                        {/* Overlay para banners inativos */}
+                        {!watch('ativo') && (
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                            <span className="text-white text-sm font-medium bg-red-600 px-3 py-1 rounded-full">
+                              Banner Inativo
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Indicador de link */}
+                        {watch('link') && (
+                          <div className="absolute top-2 right-2">
+                            <div className="bg-blue-600 text-white p-1 rounded-full">
+                              <ExternalLink className="w-3 h-3" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Informações do Preview */}
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Dimensões:</span>
+                        <div className="font-medium">{watchedLargura} × {watchedAltura}px</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Posição:</span>
+                        <div className="font-medium">{watchedPosicao || 'Não selecionada'}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Status:</span>
+                        <div className="font-medium">
+                          {watch('ativo') ? (
+                            <span className="text-green-600">Ativo</span>
+                          ) : (
+                            <span className="text-red-600">Inativo</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Link:</span>
+                        <div className="font-medium">
+                          {watch('link') ? (
+                            <span className="text-blue-600">Sim</span>
+                          ) : (
+                            <span className="text-gray-400">Não</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dicas de Otimização */}
+                    <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <h5 className="text-sm font-medium text-blue-900 mb-2">💡 Dicas de Otimização</h5>
+                      <ul className="text-xs text-blue-800 space-y-1">
+                        <li>• Use imagens com boa qualidade e resolução adequada</li>
+                        <li>• Mantenha o tamanho do arquivo abaixo de 500KB para melhor performance</li>
+                        <li>• Teste a legibilidade em diferentes dispositivos</li>
+                        {(watchedLargura <= 320 || watchedAltura <= 100) && (
+                          <li>• Para banners pequenos, use texto grande e poucas palavras</li>
+                        )}
+                        {watch('link') && <li>• Certifique-se de que o link está funcionando corretamente</li>}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="flex items-center">

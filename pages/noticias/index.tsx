@@ -275,9 +275,9 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
       {/* Main News Content */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="news-page-layout">
             {/* Main News Column */}
-            <div className="lg:w-2/3 w-full">
+            <div className="news-main-content">
               {/* Featured News */}
               {isLoading ? (
                 selectedCategory === 'Todas' && currentPage === 1 && <NewsSkeleton isLarge={true} />
@@ -353,12 +353,12 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
             </div>
 
             {/* Sidebar */}
-            <div className="lg:w-1/3 w-full space-y-6">
+            <div className="news-sidebar space-y-6">
               {/* Advertising Space */}
               <div className="w-full">
                 <BannerContainer 
                   position="Sidebar Esquerda"
-                  className="w-full rounded-lg max-h-[250px]"
+                  className="w-full rounded-lg max-h-[250px] sidebar-banner"
                   width={300}
                   height={250}
                 />

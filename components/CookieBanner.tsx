@@ -9,8 +9,17 @@ interface CookieBannerProps {
 export default function CookieBanner({ onAccept, onReject }: CookieBannerProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Garantir renderização consistente entre servidor e cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    // Só executa no cliente após hidratação
+    if (!isClient) return;
+    
     // Verifica se o usuário já deu consentimento
     try {
       const cookieConsent = localStorage.getItem('cookieConsent');
@@ -22,48 +31,65 @@ export default function CookieBanner({ onAccept, onReject }: CookieBannerProps) 
       // Fallback se localStorage não estiver disponível
       console.warn('localStorage não disponível');
     }
-  }, []);
+  }, [isClient]);
 
   const handleAccept = async () => {
+    if (!isClient) return;
+    
     setIsLoading(true);
-    localStorage.setItem('cookieConsent', 'accepted');
-    localStorage.setItem('cookieConsentDate', new Date().toISOString());
-    
-    // Habilita cookies de analytics e funcionalidades
-    localStorage.setItem('analyticsEnabled', 'true');
-    localStorage.setItem('marketingEnabled', 'true');
-    
-    setIsVisible(false);
-    setIsLoading(false);
-    
-    if (onAccept) {
-      onAccept();
+    try {
+      localStorage.setItem('cookieConsent', 'accepted');
+      localStorage.setItem('cookieConsentDate', new Date().toISOString());
+      
+      // Habilita cookies de analytics e funcionalidades
+      localStorage.setItem('analyticsEnabled', 'true');
+      localStorage.setItem('marketingEnabled', 'true');
+      
+      setIsVisible(false);
+      
+      if (onAccept) {
+        onAccept();
+      }
+    } catch (error) {
+      console.warn('Erro ao salvar preferências de cookies:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleReject = async () => {
+    if (!isClient) return;
+    
     setIsLoading(true);
-    localStorage.setItem('cookieConsent', 'rejected');
-    localStorage.setItem('cookieConsentDate', new Date().toISOString());
-    
-    // Desabilita cookies não essenciais
-    localStorage.setItem('analyticsEnabled', 'false');
-    localStorage.setItem('marketingEnabled', 'false');
-    
-    setIsVisible(false);
-    setIsLoading(false);
-    
-    if (onReject) {
-      onReject();
+    try {
+      localStorage.setItem('cookieConsent', 'rejected');
+      localStorage.setItem('cookieConsentDate', new Date().toISOString());
+      
+      // Desabilita cookies não essenciais
+      localStorage.setItem('analyticsEnabled', 'false');
+      localStorage.setItem('marketingEnabled', 'false');
+      
+      setIsVisible(false);
+      
+      if (onReject) {
+        onReject();
+      }
+    } catch (error) {
+      console.warn('Erro ao salvar preferências de cookies:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCustomize = () => {
+    if (!isClient) return;
+    
     // Redireciona para página de preferências de cookies
     window.location.href = '/cookies-preferencias';
   };
 
-  if (!isVisible) {
+  // Não renderiza nada no servidor ou se não estiver visível
+  if (!isClient || !isVisible) {
     return null;
   }
 
