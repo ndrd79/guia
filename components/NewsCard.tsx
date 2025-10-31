@@ -42,7 +42,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
                 className="object-cover opacity-30"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 onError={() => console.error('❌ Erro ao carregar imagem de destaque:', imageUrl)}
-                fallbackSrc="/images/news-placeholder.jpg"
+              fallbackSrc="/images/news-placeholder.svg"
                 quality={75}
               />
             </div>
@@ -105,7 +105,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
               className="object-cover"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               onError={() => console.error('❌ Erro ao carregar imagem do card:', imageUrl)}
-              fallbackSrc="/images/news-placeholder.jpg"
+              fallbackSrc="/images/news-placeholder.svg"
               quality={75}
             />
           </div>

@@ -25,7 +25,7 @@ const BannerAd: React.FC<BannerAdProps> = ({
   title,
   bannerId
 }) => {
-  const { trackClick } = useAnalytics();
+  const { trackBannerClick } = useAnalytics();
 
   const handleClick = () => {
     console.log('🖱️ Banner clicado!', {
@@ -35,9 +35,9 @@ const BannerAd: React.FC<BannerAdProps> = ({
       linkUrl
     });
     
-    if (bannerId) {
+    if (bannerId && linkUrl) {
       console.log('📊 Enviando rastreamento de clique para:', bannerId);
-      trackClick(bannerId, position);
+      trackBannerClick(bannerId, position, linkUrl);
       
       // Feedback visual temporário
       const clickFeedback = document.createElement('div');

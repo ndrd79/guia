@@ -58,21 +58,24 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       console.log(`🔄 Tentando fallback: ${fallbackSrc}`);
       setCurrentSrc(fallbackSrc);
       setHasError(false);
+      setIsLoading(false);
       return;
     }
 
-    // Try retry with original source
-    if (retryCountRef.current < maxRetries && currentSrc === src) {
+    // Try retry with original source (only once to avoid infinite loops)
+    if (retryCountRef.current < 1 && currentSrc === src) {
       retryCountRef.current += 1;
-      console.log(`🔄 Tentativa ${retryCountRef.current}/${maxRetries} para: ${src}`);
+      console.log(`🔄 Tentativa ${retryCountRef.current}/1 para: ${src}`);
       
-      // Force reload by adding timestamp
-      const separator = src.includes('?') ? '&' : '?';
-      setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+      // Use a timeout to avoid immediate retry
+      setTimeout(() => {
+        const separator = src.includes('?') ? '&' : '?';
+        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+      }, 1000);
       return;
     }
 
-    // All attempts failed
+    // All attempts failed - show placeholder immediately
     console.error(`❌ Falha definitiva ao carregar imagem: ${src}`);
     setHasError(true);
     setIsLoading(false);
@@ -119,6 +122,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onLoad: handleImageLoad,
     quality,
     unoptimized,
+    // Add loading strategy to prevent ERR_ABORTED
+    loading: priority ? 'eager' : 'lazy',
     ...(priority && { priority: true }),
     ...(sizes && { sizes }),
     ...(placeholder && { placeholder }),
