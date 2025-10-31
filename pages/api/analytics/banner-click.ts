@@ -32,10 +32,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Incrementar contador de cliques do banner
+    // Primeiro, buscar o valor atual
+    const { data: bannerData } = await supabase
+      .from('banners')
+      .select('clicks')
+      .eq('id', banner_id)
+      .single()
+
+    const currentClicks = bannerData?.clicks || 0
+
+    // Depois, atualizar com o valor incrementado
     await supabase
       .from('banners')
       .update({ 
-        clicks: supabase.raw('clicks + 1'),
+        clicks: currentClicks + 1,
         updated_at: new Date().toISOString()
       })
       .eq('id', banner_id)
@@ -44,3 +54,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error('Erro na API de analytics:', error)
     res.status(500).json({ error: 'Erro interno do servidor' })
+  }
+}
