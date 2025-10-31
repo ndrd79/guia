@@ -123,7 +123,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     quality,
     unoptimized,
     // Add loading strategy to prevent ERR_ABORTED
-    loading: priority ? 'eager' : 'lazy',
+    loading: (priority ? 'eager' : 'lazy') as 'eager' | 'lazy',
     ...(priority && { priority: true }),
     ...(sizes && { sizes }),
     ...(placeholder && { placeholder }),
