@@ -161,7 +161,6 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
               <BannerContainer 
                 position="Banner Principal" 
-                bannerType="sidebar"
                 className="w-full md:w-1/2 rounded-xl" 
               />
             </div>

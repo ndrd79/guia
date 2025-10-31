@@ -516,7 +516,7 @@ export default function EmpresasLocais() {
 
               <div className="flex space-x-1">
                 {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  let page
+                  let page: number
                   if (pagination.totalPages <= 5) {
                     page = i + 1
                   } else if (currentPage <= 3) {

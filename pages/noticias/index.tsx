@@ -359,8 +359,6 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
                 <BannerContainer 
                   position="Sidebar Esquerda"
                   className="w-full rounded-lg max-h-[250px] sidebar-banner"
-                  width={300}
-                  height={250}
                 />
               </div>
 

@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('exibir_em_empresas_locais', true)
       .eq('plan_type', planType)
 
-    const categoriasUnicas = [...new Set(categorias?.map(c => c.category) || [])]
+    const categoriasUnicas = Array.from(new Set(categorias?.map(c => c.category) || []))
       .sort()
 
     // Buscar localizações disponíveis (apenas das empresas visíveis)
@@ -123,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('exibir_em_empresas_locais', true)
       .eq('plan_type', planType)
 
-    const localizacoesUnicas = [...new Set(localizacoes?.map(l => l.location) || [])]
+    const localizacoesUnicas = Array.from(new Set(localizacoes?.map(l => l.location) || []))
       .sort()
 
     // Adicionar informação de status (aberto/fechado) baseado no horário

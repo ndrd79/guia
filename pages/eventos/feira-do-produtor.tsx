@@ -171,7 +171,6 @@ export default function FeiraDoProdutor({ feiraInfo, produtores }: FeiraDoProdut
         <div className="container mx-auto px-4">
           <BannerContainer 
             position="feira-topo"
-            bannerType="inline"
             className="w-full rounded-lg shadow-lg mx-auto max-w-4xl"
           />
         </div>
@@ -380,7 +379,6 @@ export default function FeiraDoProdutor({ feiraInfo, produtores }: FeiraDoProdut
         <div className="container mx-auto px-4">
           <BannerContainer 
             position="feira-meio"
-            bannerType="inline"
             className="w-full rounded-lg shadow-lg mx-auto max-w-4xl"
           />
         </div>

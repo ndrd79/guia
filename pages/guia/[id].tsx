@@ -217,7 +217,6 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
           <div className="container mx-auto px-4">
             <BannerContainer 
               position="Empresa - Topo" 
-              bannerType="inline"
               className="w-full rounded-lg mx-auto max-w-4xl" 
             />
           </div>
@@ -310,7 +309,6 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
           <div className="container mx-auto px-4">
             <BannerContainer 
               position="Empresa - Rodapé" 
-              bannerType="inline"
               className="w-full rounded-lg mx-auto max-w-4xl" 
             />
           </div>

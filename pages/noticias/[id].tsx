@@ -200,7 +200,6 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
               {/* Banner Principal da Sidebar */}
               <BannerContainer 
                 position="Notícia - Sidebar Topo" 
-                bannerType="sidebar"
                 className="w-full rounded-lg"
               />
 
@@ -241,14 +240,12 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
               {/* Banner Publicitário 1 - Após Notícias Relacionadas */}
               <BannerContainer 
                 position="Notícia - Após Relacionadas 1" 
-                bannerType="sidebar"
                 className="w-full rounded-lg"
               />
 
               {/* Banner Publicitário 2 - Após Notícias Relacionadas */}
               <BannerContainer 
                 position="Notícia - Após Relacionadas 2" 
-                bannerType="sidebar"
                 className="w-full rounded-lg"
               />
             </aside>
@@ -260,7 +257,6 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
       <section className="container mx-auto px-4 py-8">
         <BannerContainer 
           position="Notícia - Antes Newsletter" 
-          bannerType="inline"
           className="w-full rounded-lg mx-auto max-w-4xl"
         />
       </section>
