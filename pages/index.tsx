@@ -9,11 +9,9 @@ import NewsCard from '../components/NewsCard';
 import EventCard from '../components/EventCard';
 import BannerContainer from '../components/BannerContainer';
 import BusinessCarousel from '../components/BusinessCarousel';
-import HeroBanner from '../components/HeroBanner';
 import SecondaryBanner from '../components/SecondaryBanner';
 import FooterBanner from '../components/FooterBanner';
 import WeatherSlider from '../components/WeatherSlider';
-import { ContentBanner, MobileBanner } from '../components/BannerContainer';
 import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Banner } from '../lib/supabase';
 
 interface HomePageProps {
@@ -21,7 +19,6 @@ interface HomePageProps {
   eventos: Evento[];
   empresas: Empresa[];
   classificados: Classificado[];
-  banners: Banner[];
   categoriasBanners: Banner[];
   servicosBanners: Banner[];
 }
@@ -31,7 +28,6 @@ const HomePage: React.FC<HomePageProps> = ({
   eventos, 
   empresas, 
   classificados, 
-  banners, 
   categoriasBanners, 
   servicosBanners 
 }) => {
@@ -81,13 +77,7 @@ const HomePage: React.FC<HomePageProps> = ({
       <Header />
       <Nav />
 
-      {/* Banner Mobile */}
-      <MobileBanner className="py-4" />
-
       <main>
-        {/* Hero Banner - Novo carousel de banners */}
-        <HeroBanner banners={banners} />
-
         {/* Seção de Notícias */}
         <section className="py-8 bg-white">
           <div className="container mx-auto px-4">
@@ -134,10 +124,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
         </section>
 
-        {/* Banner Topo do Conteúdo */}
-        <div className="container mx-auto px-4 py-6">
-          <ContentBanner position="content-top" />
-        </div>
+
 
         {/* Seção Hero */}
         <section className="relative bg-gray-900 text-white">
@@ -313,7 +300,6 @@ export const getStaticProps: GetStaticProps = async () => {
       eventosResult,
       empresasResult,
       classificadosResult,
-      bannersResult,
       categoriasBannersResult,
       servicosBannersResult
     ] = await Promise.all([
@@ -348,13 +334,6 @@ export const getStaticProps: GetStaticProps = async () => {
         .from('banners')
         .select('*')
         .eq('ativo', true)
-        .eq('posicao', 'Hero Carousel')
-        .limit(5),
-      
-      supabase
-        .from('banners')
-        .select('*')
-        .eq('ativo', true)
         .eq('posicao', 'Categorias Banner')
         .limit(5),
       
@@ -374,7 +353,6 @@ export const getStaticProps: GetStaticProps = async () => {
         eventos: eventosResult.data || [],
         empresas: empresasResult.data || [],
         classificados: classificadosResult.data || [],
-        banners: bannersResult.data || [],
         categoriasBanners: categoriasBannersResult.data || [],
         servicosBanners: servicosBannersResult.data || []
       },
@@ -389,7 +367,6 @@ export const getStaticProps: GetStaticProps = async () => {
         eventos: [],
         empresas: [],
         classificados: [],
-        banners: [],
         categoriasBanners: [],
         servicosBanners: []
       },

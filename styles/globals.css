@@ -352,6 +352,173 @@
       background-size: 200% 100%;
     }
   }
+
+  /* ===== BANNERS NO MEIO DO CONTEÚDO - DESIGN ELEGANTE ===== */
+  
+  /* Container principal do banner no conteúdo */
+  .content-banner-container {
+    position: relative;
+    margin: 3rem auto;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .content-banner-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Separadores decorativos */
+  .content-banner-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+    border-radius: 0 0 3px 3px;
+  }
+
+  .content-banner-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+    border-radius: 3px 3px 0 0;
+  }
+
+  /* Banner interno */
+  .content-banner-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  .content-banner-image {
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .content-banner-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Label de publicidade */
+  .content-banner-label {
+    position: absolute;
+    bottom: -8px;
+    right: 12px;
+    background: rgba(59, 130, 246, 0.9);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsividade para mobile */
+  @media (max-width: 768px) {
+    .content-banner-container {
+      margin: 2rem auto;
+      padding: 1.5rem 1rem;
+      border-radius: 12px;
+    }
+
+    .content-banner-container::before,
+    .content-banner-container::after {
+      width: 40px;
+      height: 2px;
+    }
+
+    .content-banner-image {
+      border-radius: 8px;
+    }
+
+    .content-banner-label {
+      bottom: -6px;
+      right: 8px;
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      border-radius: 8px;
+    }
+  }
+
+  /* Variação para banners menores */
+  .content-banner-container.small {
+    margin: 2rem auto;
+    padding: 1.5rem;
+    max-width: 400px;
+  }
+
+  /* Variação para banners grandes */
+  .content-banner-container.large {
+    margin: 3.5rem auto;
+    padding: 2.5rem 2rem;
+    max-width: 800px;
+  }
+
+  /* Modo escuro para banners no conteúdo */
+  @media (prefers-color-scheme: dark) {
+    .content-banner-container {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-color: #475569;
+    }
+
+    .content-banner-container::before,
+    .content-banner-container::after {
+      background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+    }
+
+    .content-banner-label {
+      background: rgba(96, 165, 250, 0.9);
+    }
+  }
+
+  /* Animação suave de entrada */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .content-banner-container {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  /* Reduzir animações para usuários sensíveis */
+  @media (prefers-reduced-motion: reduce) {
+    .content-banner-container,
+    .content-banner-image,
+    .content-banner-container:hover {
+      animation: none;
+      transition: none;
+      transform: none;
+    }
+  }
   
   .card-hover {
     transition: all 0.3s ease;

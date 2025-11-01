@@ -42,7 +42,7 @@ const getCategoryColor = (cat: string) => {
   return colors[cat] || 'bg-indigo-600';
 };
 
-// Função para inserir banner no meio do conteúdo
+// Função para inserir banner no meio do conteúdo com design elegante
 const insertBannerInContent = (content: string, banner: Banner | null) => {
   if (!banner) return content;
   
@@ -53,19 +53,26 @@ const insertBannerInContent = (content: string, banner: Banner | null) => {
   if (paragraphs.length >= 2) {
     const middleIndex = Math.floor(paragraphs.length / 2);
     
+    // Determina o tamanho do container baseado nas dimensões do banner
+    const containerSize = banner.largura && banner.largura > 500 ? 'large' : 
+                         banner.largura && banner.largura < 350 ? 'small' : '';
+    
     const bannerHtml = `
-      <div class="my-8 text-center">
-        <div class="inline-block">
-          ${banner.link ? `<a href="${banner.link}" target="_blank" rel="noopener noreferrer">` : ''}
+      <div class="content-banner-container ${containerSize}">
+        <div class="content-banner-inner">
+          ${banner.link ? `<a href="${banner.link}" target="_blank" rel="noopener noreferrer" class="block">` : ''}
             <img 
               src="${banner.imagem}" 
-              alt="${banner.nome}"
-              style="max-width: ${banner.largura || 400}px; height: auto; border-radius: 8px;"
-              class="shadow-lg"
+              alt="${banner.nome || 'Banner publicitário'}"
+              class="content-banner-image"
+              style="max-width: ${banner.largura || 600}px; height: auto;"
+              loading="lazy"
             />
           ${banner.link ? '</a>' : ''}
+          <div class="content-banner-label">
+            <i class="fas fa-ad mr-1"></i>Publicidade
+          </div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">Publicidade</p>
       </div>
     `;
     

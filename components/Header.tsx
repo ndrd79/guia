@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import SearchBar from './SearchBar';
 import { supabase } from '../lib/supabase';
-import { HeaderBanner } from './BannerContainer';
 
 const Header: React.FC = () => {
   const [noticias, setNoticias] = useState<string[]>([]);
@@ -76,10 +75,7 @@ const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* Banner Header Otimizado */}
-            <div className="hidden lg:block mx-4">
-              <HeaderBanner className="max-w-[468px]" />
-            </div>
+
             
             <div className="w-full md:w-1/3">
               <SearchBar />

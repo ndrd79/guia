@@ -6,7 +6,6 @@ import Link from 'next/link'
 import Header from '../components/Header'
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
-import { ContentBanner, MobileBanner } from '../components/BannerContainer'
 
 interface Empresa {
   id: string
@@ -204,9 +203,6 @@ export default function EmpresasLocais() {
       <Header />
       <Nav />
       
-      {/* Banner Mobile */}
-      <MobileBanner className="py-4" />
-      
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -229,11 +225,6 @@ export default function EmpresasLocais() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Banner Topo do Conteúdo */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <ContentBanner position="content-top" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -465,12 +456,47 @@ export default function EmpresasLocais() {
                       </div>
 
                       <div className="mt-6 pt-4 border-t">
-                        <Link
-                          href={`/empresa/${empresa.id}`}
-                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-center block font-medium"
-                        >
-                          Ver Detalhes
-                        </Link>
+                        <div className="flex justify-center space-x-4">
+                          {empresa.phone && (
+                            <a
+                              href={`https://wa.me/55${empresa.phone.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors duration-200"
+                              title="WhatsApp"
+                            >
+                              <i className="fab fa-whatsapp text-lg"></i>
+                            </a>
+                          )}
+                          
+                          <a
+                            href="#"
+                            className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200"
+                            title="Facebook"
+                          >
+                            <i className="fab fa-facebook-f text-lg"></i>
+                          </a>
+                          
+                          <a
+                            href="#"
+                            className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
+                            title="Instagram"
+                          >
+                            <i className="fab fa-instagram text-lg"></i>
+                          </a>
+                          
+                          {empresa.website && (
+                            <a
+                              href={empresa.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center w-10 h-10 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-colors duration-200"
+                              title="Website"
+                            >
+                              <i className="fas fa-globe text-lg"></i>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -479,12 +505,7 @@ export default function EmpresasLocais() {
             </div>
           )}
 
-          {/* Banner Meio do Conteúdo */}
-          {!loading && empresas.length > 6 && (
-            <div className="my-8">
-              <ContentBanner position="content-middle" />
-            </div>
-          )}
+
 
           {!loading && empresas.length === 0 && (
             <div className="text-center py-12">
@@ -558,10 +579,7 @@ export default function EmpresasLocais() {
             </div>
           )}
 
-          {/* Banner Final do Conteúdo */}
-          <div className="mt-8">
-            <ContentBanner position="content-bottom" />
-          </div>
+
         </div>
         
         <Footer />
