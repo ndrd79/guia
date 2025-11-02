@@ -41,12 +41,12 @@ const nextConfig = {
     // Otimizações de imagem com configurações mais conservadoras
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 600, // Increased cache TTL to 10 minutes
+    minimumCacheTTL: 60, // Reduced cache TTL to 1 minute for development
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     // Configurações para melhorar a confiabilidade
     domains: [],
-    unoptimized: false,
+    unoptimized: process.env.NODE_ENV === 'development', // Disable optimization in development
     // Configurações de loader mais específicas
     loader: 'default',
     path: '/_next/image',

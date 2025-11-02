@@ -10,6 +10,7 @@ interface BusinessCarouselProps {
 const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Auto-play functionality
   useEffect(() => {
@@ -42,6 +43,16 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
     setCurrentIndex(currentIndex === businesses.length - 1 ? 0 : currentIndex + 1);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  // Função para tratar erro de imagem
+  const handleImageError = (imageUrl: string) => {
+    setImageErrors(prev => new Set(prev).add(imageUrl));
+  };
+
+  // Verifica se a imagem teve erro
+  const hasImageError = (imageUrl: string) => {
+    return imageErrors.has(imageUrl);
   };
 
   const getVisibleBusinesses = () => {
@@ -110,7 +121,7 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
             className="bg-white rounded-xl shadow-md overflow-hidden card-hover transition-all duration-500 transform hover:scale-105"
           >
             <div className="relative h-48 overflow-hidden">
-              {business.image ? (
+              {business.image && !hasImageError(business.image) ? (
                 <Image
                   src={business.image}
                   alt={business.name}
@@ -120,15 +131,15 @@ const BusinessCarousel: React.FC<BusinessCarouselProps> = ({ businesses }) => {
                   loading="lazy"
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Rj5m4xbDLdpkZfVZGjjVmRZEjkjdGKOjKrKQQQQCCOQQetTnhKhPTvYfEfxjlMcuoLvM5nUl+dVnvJzLM7HqxPQD0AAA9AKAv/9k="
-                  onError={(e) => {
-                    console.error('Erro ao carregar imagem da empresa:', business.image);
-                    // Fallback para imagem padrão
-                    e.currentTarget.src = '/images/placeholder-business.jpg';
-                  }}
+                  onError={() => handleImageError(business.image)}
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <i className="fas fa-building text-gray-400 text-4xl"></i>
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <i className="fas fa-building text-4xl mb-2"></i>
+                    <div className="text-sm font-medium">{business.name}</div>
+                    <div className="text-xs opacity-75">Imagem indisponível</div>
+                  </div>
                 </div>
               )}
               

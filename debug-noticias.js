@@ -13,29 +13,28 @@ console.log('Key:', supabaseKey ? 'Definida' : 'Não definida');
 const supabase = createClient(supabaseUrl, supabaseKey);
 console.log('✅ Cliente Supabase criado');
 
-async function debugBanners() {
-  console.log('📊 Buscando banners...');
+async function debugNoticias() {
+  console.log('📊 Buscando notícias...');
   
   try {
     const { data, error } = await supabase
-      .from('banners')
+      .from('noticias')
       .select('*')
-      .eq('ativo', true)
       .limit(10);
 
     if (error) {
-      console.error('❌ Erro ao buscar banners:', error);
+      console.error('❌ Erro ao buscar notícias:', error);
       return;
     }
 
-    console.log(`✅ Dados recebidos: ${data.length} banners`);
+    console.log(`✅ Dados recebidos: ${data.length} notícias`);
     
     if (data.length > 0) {
-      data.forEach(banner => {
-        console.log(`- ${banner.nome} (${banner.posicao})`);
+      data.forEach(noticia => {
+        console.log(`- ${noticia.titulo} (${noticia.categoria})`);
       });
     } else {
-      console.log('⚠️ Nenhum banner encontrado');
+      console.log('⚠️ Nenhuma notícia encontrada');
     }
 
   } catch (error) {
@@ -43,4 +42,4 @@ async function debugBanners() {
   }
 }
 
-debugBanners();
+debugNoticias();

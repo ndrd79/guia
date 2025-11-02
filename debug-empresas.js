@@ -27,7 +27,7 @@ try {
     
     const { data, error } = await supabase
       .from('empresas')
-      .select('id, nome, categoria')
+      .select('id, name, category')
       .limit(5);
     
     if (error) {
@@ -37,7 +37,7 @@ try {
     
     console.log('✅ Dados recebidos:', data.length, 'empresas');
     data.forEach(empresa => {
-      console.log(`- ${empresa.nome} (${empresa.categoria})`);
+      console.log(`- ${empresa.name} (${empresa.category})`);
     });
   }
   

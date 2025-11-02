@@ -9,6 +9,7 @@ interface FooterBannerProps {
 
 const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // 4 cores diferentes para os slides
   const slideColors = [
@@ -33,6 +34,16 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
     return banners[slideIndex] || null;
   };
 
+  // Função para tratar erro de imagem
+  const handleImageError = (imageUrl: string) => {
+    setImageErrors(prev => new Set(prev).add(imageUrl));
+  };
+
+  // Verifica se a imagem teve erro
+  const hasImageError = (imageUrl: string) => {
+    return imageErrors.has(imageUrl);
+  };
+
   return (
     <section className="py-4 sm:py-6 md:py-8 bg-gray-50">
       <div className="banner-container">
@@ -52,7 +63,7 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                 {banner && banner.link ? (
                   <Link href={banner.link} className="block w-full h-full">
                     <div className="relative w-full h-full group cursor-pointer">
-                      {banner.imagem ? (
+                      {banner.imagem && !hasImageError(banner.imagem) ? (
                         <>
                           <Image
                             src={banner.imagem}
@@ -61,23 +72,23 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                             sizes="100vw"
                             priority={slideIndex === 0}
-                            onError={(e) => {
-                              console.error('Erro ao carregar banner:', banner.imagem);
-                              e.currentTarget.style.display = 'none';
-                            }}
+                            onError={() => handleImageError(banner.imagem)}
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all duration-300"></div>
                         </>
                       ) : (
-                        <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
+                        <div className={`${slideColors[slideIndex]} w-full h-full flex items-center justify-center`}>
+                          <div className="text-white text-center">
+                            <div className="text-2xl font-bold mb-2">{banner?.nome || 'Banner'}</div>
+                            <div className="text-sm opacity-80">Imagem indisponível</div>
+                          </div>
+                        </div>
                       )}
-                      
-
                     </div>
                   </Link>
                 ) : (
                   <div className="relative w-full h-full">
-                    {banner && banner.imagem ? (
+                    {banner && banner.imagem && !hasImageError(banner.imagem) ? (
                       <>
                         <Image
                           src={banner.imagem}
@@ -86,18 +97,18 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                           className="object-cover"
                           sizes="100vw"
                           priority={slideIndex === 0}
-                          onError={(e) => {
-                            console.error('Erro ao carregar banner:', banner.imagem);
-                            e.currentTarget.style.display = 'none';
-                          }}
+                          onError={() => handleImageError(banner.imagem)}
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-30"></div>
                       </>
                     ) : (
-                      <div className={`${slideColors[slideIndex]} w-full h-full`}></div>
+                      <div className={`${slideColors[slideIndex]} w-full h-full flex items-center justify-center`}>
+                        <div className="text-white text-center">
+                          <div className="text-2xl font-bold mb-2">{banner?.nome || 'Banner'}</div>
+                          <div className="text-sm opacity-80">Imagem indisponível</div>
+                        </div>
+                      </div>
                     )}
-                    
-
                   </div>
                 )}
               </div>

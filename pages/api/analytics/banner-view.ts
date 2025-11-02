@@ -18,9 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('banner_analytics')
       .insert({
         banner_id,
-        event_type: 'view',
-        position,
-        timestamp: new Date(timestamp),
+        tipo: 'impressao',
         ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
         user_agent: req.headers['user-agent']
       })
