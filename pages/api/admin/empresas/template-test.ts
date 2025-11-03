@@ -12,13 +12,14 @@ const getExistingCategories = async () => {
   try {
     const { data: empresas } = await supabase
       .from('empresas')
-      .select('categoria')
-      .not('categoria', 'is', null);
+      .select('category')
+      .not('category', 'is', null);
 
     if (!empresas) return ['Alimentação', 'Saúde', 'Serviços', 'Comércio'];
 
     // Extrair categorias únicas
-    const categories = [...new Set(empresas.map(e => e.categoria))];
+    const categoriesSet = new Set(empresas.map(e => e.category));
+    const categories = Array.from(categoriesSet);
     return categories.sort();
   } catch (error) {
     console.error('Erro ao buscar categorias:', error);

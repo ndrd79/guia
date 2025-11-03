@@ -30,13 +30,14 @@ const checkAdminAuth = async (req: NextApiRequest) => {
 const getExistingCategories = async () => {
   const { data: empresas } = await supabase
     .from('empresas')
-    .select('categoria')
-    .not('categoria', 'is', null);
+    .select('category')
+    .not('category', 'is', null);
 
   if (!empresas) return [];
 
   // Extrair categorias únicas
-  const categories = [...new Set(empresas.map(e => e.categoria))];
+  const categoriesSet = new Set(empresas.map(e => e.category));
+  const categories = Array.from(categoriesSet);
   return categories.sort();
 };
 

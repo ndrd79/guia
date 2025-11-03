@@ -128,7 +128,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       completedAt: importBatch.completed_at,
       processingTimeMs: importBatch.processing_time_ms,
       errorDetails: importBatch.error_details,
-      userEmail: importBatch.profiles?.email || 'N/A',
+      userEmail: Array.isArray(importBatch.profiles) && importBatch.profiles.length > 0 
+        ? importBatch.profiles[0].email || 'N/A'
+        : 'N/A',
       successRate: importBatch.total_records > 0 
         ? Math.round((importBatch.successful_records / importBatch.total_records) * 100)
         : 0

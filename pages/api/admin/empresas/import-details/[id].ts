@@ -88,9 +88,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         created_at,
         empresas (
           id,
-          nome,
-          categoria,
-          telefone,
+          name,
+          category,
+          phone,
           ativo
         )
       `)
@@ -140,7 +140,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       completedAt: importBatch.completed_at,
       processingTimeMs: importBatch.processing_time_ms,
       errorDetails: importBatch.error_details,
-      userEmail: importBatch.profiles?.email || 'N/A',
+      userEmail: Array.isArray(importBatch.profiles) && importBatch.profiles.length > 0 
+        ? importBatch.profiles[0].email || 'N/A'
+        : 'N/A',
       successRate: importBatch.total_records > 0 
         ? Math.round((importBatch.successful_records / importBatch.total_records) * 100)
         : 0
@@ -156,12 +158,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       errorMessage: result.error_message,
       warningMessage: result.warning_message,
       createdAt: result.created_at,
-      empresa: result.empresas ? {
-        id: result.empresas.id,
-        nome: result.empresas.nome,
-        categoria: result.empresas.categoria,
-        telefone: result.empresas.telefone,
-        ativo: result.empresas.ativo
+      empresa: Array.isArray(result.empresas) && result.empresas.length > 0 ? {
+        id: result.empresas[0].id,
+        nome: result.empresas[0].name,
+        categoria: result.empresas[0].category,
+        telefone: result.empresas[0].phone,
+        ativo: result.empresas[0].ativo
       } : null
     })) || [];
 

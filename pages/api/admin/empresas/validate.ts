@@ -49,7 +49,8 @@ const checkDuplicatesInDatabase = async (empresas: any[]) => {
 
 // Verificar se categorias são válidas usando lista fixa
 const checkCategoriesValid = (categorias: string[]) => {
-  const uniqueCategories = [...new Set(categorias.map(c => c.trim()))];
+  const categoriesSet = new Set(categorias.map(c => c.trim()));
+  const uniqueCategories = Array.from(categoriesSet);
   return uniqueCategories.filter(categoria => isCategoriaValidaNormalizada(categoria));
 };
 
