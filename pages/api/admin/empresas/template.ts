@@ -67,59 +67,89 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Buscar categorias existentes
     const categories = await getExistingCategories();
 
-    // Dados do template com exemplos
+    // Categorias do formulário noITA
+    const noitaCategories = [
+      'Alimentação', 'Saúde', 'Automotivo', 'Tecnologia', 'Moda', 
+      'Pet Shop', 'Educação', 'Decoração', 'Comércio', 'Beleza', 'Esporte'
+    ];
+
+    // Dados do template baseados no formulário noITA
     const templateData = [
       {
-        nome: 'Exemplo Padaria do João',
-        categoria: categories[0] || 'Alimentação',
-        telefone: '(11) 99999-9999',
-        endereco: 'Rua das Flores, 123 - Centro',
-        descricao: 'Padaria tradicional com pães frescos e produtos artesanais',
-        email: 'contato@padariajao.com.br',
-        website: 'https://www.padariajao.com.br',
-        whatsapp: '(11) 99999-9999',
-        horario_funcionamento: 'Segunda a Sábado: 6h às 20h',
-        imagem: 'https://exemplo.com/imagem-padaria.jpg',
-        facebook: 'https://www.facebook.com/padariajao',
-        instagram: 'https://www.instagram.com/padariajao',
-        linkedin: '',
-        twitter: ''
+        'Carimbo de data/hora': '11/3/2025 17:54:13',
+        nome: 'noITA - Guia Comercial',
+        categoria: 'Comércio',
+        telefone: '3675-8325',
+        Cidade: 'Itaperuçu',
+        endereco: 'Av. Crispim Furquim de Siqueira, 678 - Centro',
+        descricao: 'Guia Comercial da Cidade',
+        whatsapp: '(41) 98502-1640',
+        email: 'falecom@noita.com.br',
+        website: 'www.noita.com.br',
+        'horario_funcionamento (dias)': 'Seg a Sex',
+        'horario_funcionamento (horário)': '9h às 18h',
+        facebook: 'noitamidia',
+        instagram: 'noitamidia',
+        Maps: 'https://maps.app.goo.gl/cJ3AMMDkcuYTYoo88',
+        user: 'noita'
       },
       {
-        nome: 'Exemplo Farmácia Central',
-        categoria: categories[1] || 'Saúde',
-        telefone: '(11) 88888-8888',
+        'Carimbo de data/hora': '11/3/2025 18:00:00',
+        nome: 'Padaria Pão Dourado',
+        categoria: 'Alimentação',
+        telefone: '(41) 3675-1234',
+        Cidade: 'Itaperuçu',
+        endereco: 'Rua das Flores, 123 - Centro',
+        descricao: 'Padaria tradicional com pães frescos e produtos artesanais',
+        whatsapp: '(41) 99876-5432',
+        email: 'contato@paodourado.com.br',
+        website: 'www.paodourado.com.br',
+        'horario_funcionamento (dias)': 'Seg a Sáb',
+        'horario_funcionamento (horário)': '6h às 20h',
+        facebook: 'paodourado',
+        instagram: 'paodourado',
+        Maps: 'https://maps.app.goo.gl/exemplo123',
+        user: 'whitevision'
+      },
+      {
+        'Carimbo de data/hora': '11/3/2025 18:15:00',
+        nome: 'Clínica Saúde Total',
+        categoria: 'Saúde',
+        telefone: '(41) 3675-5678',
+        Cidade: 'Rio Branco do Sul',
         endereco: 'Av. Principal, 456 - Centro',
-        descricao: 'Farmácia completa com medicamentos e produtos de higiene',
-        email: 'farmacia@central.com.br',
-        website: 'https://www.farmaciacentral.com.br',
-        whatsapp: '(11) 88888-8888',
-        horario_funcionamento: 'Segunda a Domingo: 7h às 22h',
-        imagem: 'https://exemplo.com/imagem-farmacia.jpg',
-        facebook: 'https://www.facebook.com/farmaciacentral',
-        instagram: 'https://www.instagram.com/farmaciacentral',
-        linkedin: 'https://www.linkedin.com/company/farmaciacentral',
-        twitter: 'https://www.twitter.com/farmaciacentral'
+        descricao: 'Clínica médica com atendimento especializado',
+        whatsapp: '(41) 99123-4567',
+        email: 'contato@saudetotal.com.br',
+        website: 'www.saudetotal.com.br',
+        'horario_funcionamento (dias)': 'Seg a Sex',
+        'horario_funcionamento (horário)': '8h às 18h',
+        facebook: 'saudetotal',
+        instagram: 'saudetotal',
+        Maps: 'https://maps.app.goo.gl/exemplo456',
+        user: 'noita'
       }
     ];
 
     if (format === 'csv') {
-      // Gerar CSV
+      // Gerar CSV com cabeçalhos do formulário noITA
       const headers = [
+        'Carimbo de data/hora',
         'nome',
         'categoria', 
         'telefone',
+        'Cidade',
         'endereco',
         'descricao',
+        'whatsapp',
         'email',
         'website',
-        'whatsapp',
-        'horario_funcionamento',
-        'imagem',
+        'horario_funcionamento (dias)',
+        'horario_funcionamento (horário)',
         'facebook',
         'instagram',
-        'linkedin',
-        'twitter'
+        'Maps',
+        'user'
       ];
 
       let csvContent = headers.join(',') + '\n';
@@ -134,23 +164,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         csvContent += values.join(',') + '\n';
       });
 
-      // Adicionar comentários no final
-      csvContent += '\n# INSTRUÇÕES:\n';
+      // Adicionar comentários baseados no formulário noITA
+      csvContent += '\n# INSTRUÇÕES BASEADAS NO FORMULÁRIO noITA:\n';
+      csvContent += '# CAMPOS OBRIGATÓRIOS:\n';
       csvContent += '# - Nome: obrigatório, máximo 100 caracteres\n';
-      csvContent += '# - Categoria: obrigatória, use uma categoria existente\n';
-      csvContent += '# - Telefone: obrigatório, formato (11) 99999-9999\n';
+      csvContent += '# - Categoria: obrigatória, escolha uma das categorias disponíveis\n';
+      csvContent += '# - Telefone: obrigatório, aceita 8, 10 ou 11 dígitos (ex: 3675-8325 ou (41) 98502-1640)\n';
       csvContent += '# - Endereço: obrigatório, máximo 200 caracteres\n';
-      csvContent += '# - Descrição: obrigatória, máximo 500 caracteres\n';
+      csvContent += '# - Descrição: obrigatória (pode usar "Pegar bio do Instagram" se aplicável)\n';
+      csvContent += '# - WhatsApp: obrigatório, formato (41) 98502-1640\n';
+      csvContent += '# \n';
+      csvContent += '# CAMPOS OPCIONAIS:\n';
+      csvContent += '# - Cidade: opcional (Itaperuçu, Rio Branco do Sul)\n';
       csvContent += '# - Email: opcional, deve ser um email válido\n';
-      csvContent += '# - Website: opcional, deve ser uma URL válida\n';
-      csvContent += '# - WhatsApp: opcional, formato (11) 99999-9999\n';
-      csvContent += '# - Horário: opcional, máximo 100 caracteres\n';
-      csvContent += '# - Imagem: opcional, deve ser uma URL válida\n';
-      csvContent += '# - Facebook: opcional, URL do perfil/página no Facebook\n';
-      csvContent += '# - Instagram: opcional, URL do perfil no Instagram\n';
-      csvContent += '# - LinkedIn: opcional, URL do perfil/empresa no LinkedIn\n';
-      csvContent += '# - Twitter: opcional, URL do perfil no Twitter\n';
-      csvContent += `# - Categorias existentes: ${categories.join(', ')}\n`;
+      csvContent += '# - Website: opcional, URL válida (com ou sem protocolo)\n';
+      csvContent += '# - Horário funcionamento (dias): opcional (ex: "Seg a Sáb", "Seg a Sex", "Seg a Dom")\n';
+      csvContent += '# - Horário funcionamento (horário): opcional (ex: "8h às 18h", "9h às 18h", "08h às 17h")\n';
+      csvContent += '# - Facebook: opcional, nome do perfil (ex: noitamidia)\n';
+      csvContent += '# - Instagram: opcional, nome do perfil (ex: noitamidia)\n';
+      csvContent += '# - Maps: opcional, link do Google Maps\n';
+      csvContent += '# - User: opcional (noita, whitevision)\n';
+      csvContent += '# \n';
+      csvContent += `# CATEGORIAS DISPONÍVEIS: ${noitaCategories.join(', ')}\n`;
 
       const csvWithBom = '\ufeff' + csvContent; // BOM para UTF-8
       
@@ -177,41 +212,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Definir larguras das colunas
       const columnWidths = [
+        { wch: 20 }, // Carimbo de data/hora
         { wch: 25 }, // nome
         { wch: 15 }, // categoria
         { wch: 15 }, // telefone
+        { wch: 15 }, // Cidade
         { wch: 30 }, // endereco
         { wch: 40 }, // descricao
         { wch: 25 }, // email
         { wch: 25 }, // website
         { wch: 15 }, // whatsapp
-        { wch: 25 }, // horario_funcionamento
-        { wch: 30 }, // imagem
-        { wch: 30 }, // facebook
-        { wch: 30 }, // instagram
-        { wch: 30 }, // linkedin
-        { wch: 30 }  // twitter
+        { wch: 20 }, // horario_funcionamento (dias)
+        { wch: 20 }, // horario_funcionamento (horário)
+        { wch: 15 }, // facebook
+        { wch: 15 }, // instagram
+        { wch: 35 }, // Maps
+        { wch: 15 }  // user
       ];
       worksheet['!cols'] = columnWidths;
 
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Empresas');
 
-      // Aba de instruções
+      // Aba de instruções baseadas no formulário noITA
       const instructions = [
-        { Campo: 'nome', Obrigatório: 'SIM', Formato: 'Texto até 100 caracteres', Exemplo: 'Padaria do João' },
-        { Campo: 'categoria', Obrigatório: 'SIM', Formato: 'Texto', Exemplo: 'Alimentação' },
-        { Campo: 'telefone', Obrigatório: 'SIM', Formato: '(11) 99999-9999', Exemplo: '(11) 99999-9999' },
-        { Campo: 'endereco', Obrigatório: 'SIM', Formato: 'Texto até 200 caracteres', Exemplo: 'Rua das Flores, 123' },
-        { Campo: 'descricao', Obrigatório: 'SIM', Formato: 'Texto até 500 caracteres', Exemplo: 'Padaria tradicional...' },
-        { Campo: 'email', Obrigatório: 'NÃO', Formato: 'Email válido', Exemplo: 'contato@empresa.com' },
-        { Campo: 'website', Obrigatório: 'NÃO', Formato: 'URL válida', Exemplo: 'https://www.empresa.com' },
-        { Campo: 'whatsapp', Obrigatório: 'NÃO', Formato: '(11) 99999-9999', Exemplo: '(11) 99999-9999' },
-        { Campo: 'horario_funcionamento', Obrigatório: 'NÃO', Formato: 'Texto até 100 caracteres', Exemplo: 'Seg a Sáb: 8h às 18h' },
-        { Campo: 'imagem', Obrigatório: 'NÃO', Formato: 'URL válida', Exemplo: 'https://exemplo.com/foto.jpg' },
-        { Campo: 'facebook', Obrigatório: 'NÃO', Formato: 'URL válida', Exemplo: 'https://www.facebook.com/empresa' },
-        { Campo: 'instagram', Obrigatório: 'NÃO', Formato: 'URL válida', Exemplo: 'https://www.instagram.com/empresa' },
-        { Campo: 'linkedin', Obrigatório: 'NÃO', Formato: 'URL válida', Exemplo: 'https://www.linkedin.com/company/empresa' },
-        { Campo: 'twitter', Obrigatório: 'NÃO', Formato: 'URL válida', Exemplo: 'https://www.twitter.com/empresa' }
+        { Campo: 'Carimbo de data/hora', Obrigatório: 'AUTO', Formato: 'DD/MM/AAAA HH:MM:SS', Exemplo: '11/3/2025 17:54:13' },
+        { Campo: 'nome', Obrigatório: 'SIM', Formato: 'Texto até 100 caracteres', Exemplo: 'noITA - Guia Comercial' },
+        { Campo: 'categoria', Obrigatório: 'SIM', Formato: 'Uma das categorias disponíveis', Exemplo: 'Comércio' },
+        { Campo: 'telefone', Obrigatório: 'SIM', Formato: '8, 10 ou 11 dígitos', Exemplo: '3675-8325 ou (41) 98502-1640' },
+        { Campo: 'Cidade', Obrigatório: 'NÃO', Formato: 'Itaperuçu ou Rio Branco do Sul', Exemplo: 'Itaperuçu' },
+        { Campo: 'endereco', Obrigatório: 'SIM', Formato: 'Texto até 200 caracteres', Exemplo: 'Av. Crispim Furquim, 678 - Centro' },
+        { Campo: 'descricao', Obrigatório: 'SIM', Formato: 'Texto ou "Pegar bio do Instagram"', Exemplo: 'Guia Comercial da Cidade' },
+        { Campo: 'whatsapp', Obrigatório: 'SIM', Formato: 'Formato (41) 98502-1640', Exemplo: '(41) 98502-1640' },
+        { Campo: 'email', Obrigatório: 'NÃO', Formato: 'Email válido', Exemplo: 'falecom@noita.com.br' },
+        { Campo: 'website', Obrigatório: 'NÃO', Formato: 'URL válida (com ou sem protocolo)', Exemplo: 'www.noita.com.br' },
+        { Campo: 'horario_funcionamento (dias)', Obrigatório: 'NÃO', Formato: 'Seg a Sáb, Seg a Sex, Seg a Dom', Exemplo: 'Seg a Sex' },
+        { Campo: 'horario_funcionamento (horário)', Obrigatório: 'NÃO', Formato: '8h às 18h, 9h às 18h, 08h às 17h', Exemplo: '9h às 18h' },
+        { Campo: 'facebook', Obrigatório: 'NÃO', Formato: 'Nome do perfil', Exemplo: 'noitamidia' },
+        { Campo: 'instagram', Obrigatório: 'NÃO', Formato: 'Nome do perfil', Exemplo: 'noitamidia' },
+        { Campo: 'Maps', Obrigatório: 'NÃO', Formato: 'Link do Google Maps', Exemplo: 'https://maps.app.goo.gl/cJ3AMMDkcuYTYoo88' },
+        { Campo: 'user', Obrigatório: 'NÃO', Formato: 'noita ou whitevision', Exemplo: 'noita' }
       ];
 
       const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
@@ -223,13 +262,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ];
       XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instruções');
 
-      // Aba de categorias existentes
-      const categoriesData = categories.map(cat => ({ Categoria: cat }));
-      if (categoriesData.length > 0) {
-        const categoriesSheet = XLSX.utils.json_to_sheet(categoriesData);
-        categoriesSheet['!cols'] = [{ wch: 25 }];
-        XLSX.utils.book_append_sheet(workbook, categoriesSheet, 'Categorias Existentes');
-      }
+      // Aba de categorias do formulário noITA
+      const categoriesData = noitaCategories.map(cat => ({ Categoria: cat }));
+      const categoriesSheet = XLSX.utils.json_to_sheet(categoriesData);
+      categoriesSheet['!cols'] = [{ wch: 25 }];
+      XLSX.utils.book_append_sheet(workbook, categoriesSheet, 'Categorias noITA');
 
       // Gerar buffer do Excel
       const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });

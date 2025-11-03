@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { EmpresaImportSchema, normalizePhone } from '../../../../src/schemas/empresa';
+import { EmpresaImportSchema, normalizePhone, normalizeUrl } from '../../../../src/schemas/empresa';
 import { isCategoriaValidaNormalizada } from '../../../../lib/constants/categorias';
 
 const supabase = createClient(
@@ -106,10 +106,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           endereco: empresa.endereco?.trim() || '',
           descricao: empresa.descricao?.trim() || '',
           email: empresa.email?.trim() || '',
-          website: empresa.website?.trim() || '',
+          website: normalizeUrl(empresa.website?.trim() || ''),
           whatsapp: empresa.whatsapp ? normalizePhone(empresa.whatsapp) : '',
           horario_funcionamento: empresa.horario_funcionamento?.trim() || '',
-          imagem: empresa.imagem?.trim() || ''
+          imagem: normalizeUrl(empresa.imagem?.trim() || ''),
+          facebook: normalizeUrl(empresa.facebook?.trim() || ''),
+          instagram: normalizeUrl(empresa.instagram?.trim() || ''),
+          linkedin: normalizeUrl(empresa.linkedin?.trim() || ''),
+          twitter: normalizeUrl(empresa.twitter?.trim() || '')
         };
 
         // Validar com Zod

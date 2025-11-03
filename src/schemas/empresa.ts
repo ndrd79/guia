@@ -4,24 +4,26 @@ import { z } from 'zod';
 export const EmpresaBaseSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
   categoria: z.string().min(1, "Categoria é obrigatória"),
-  telefone: z.string().min(1, "Telefone é obrigatório").regex(
-    /^\(\d{2}\)\s?\d{4,5}-?\d{4}$|^\d{2}\s?\d{4,5}-?\d{4}$|^\d{10,11}$/,
-    "Formato de telefone inválido"
-  ),
+  telefone: z.string().min(1, "Telefone é obrigatório").refine((val) => {
+    if (!val) return false;
+    const cleaned = val.replace(/\D/g, '');
+    return cleaned.length >= 10 && cleaned.length <= 11;
+  }, "Telefone deve ter 10 ou 11 dígitos"),
   endereco: z.string().min(1, "Endereço é obrigatório").max(200, "Endereço deve ter no máximo 200 caracteres"),
   descricao: z.string().min(1, "Descrição é obrigatória").max(500, "Descrição deve ter no máximo 500 caracteres"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-  whatsapp: z.string().regex(
-    /^\(\d{2}\)\s?\d{4,5}-?\d{4}$|^\d{2}\s?\d{4,5}-?\d{4}$|^\d{10,11}$/,
-    "Formato de WhatsApp inválido"
-  ).optional().or(z.literal("")),
-  horario_funcionamento: z.string().max(100, "Horário deve ter no máximo 100 caracteres").optional().or(z.literal("")),
-  imagem: z.string().url("URL de imagem inválida").optional().or(z.literal("")),
-  facebook: z.string().url("URL do Facebook inválida").optional().or(z.literal("")),
-  instagram: z.string().url("URL do Instagram inválida").optional().or(z.literal("")),
-  linkedin: z.string().url("URL do LinkedIn inválida").optional().or(z.literal("")),
-  twitter: z.string().url("URL do Twitter inválida").optional().or(z.literal(""))
+  email: z.string().email("Email inválido").optional().or(z.literal("")).or(z.undefined()),
+  website: z.string().refine((val) => isValidUrl(val), "URL inválida").optional().or(z.literal("")).or(z.undefined()),
+  whatsapp: z.string().refine((val) => {
+    if (!val || val.trim() === '') return true;
+    const cleaned = val.replace(/\D/g, '');
+    return cleaned.length >= 10 && cleaned.length <= 11;
+  }, "WhatsApp deve ter 10 ou 11 dígitos").optional().or(z.literal("")).or(z.undefined()),
+  horario_funcionamento: z.string().max(100, "Horário deve ter no máximo 100 caracteres").optional().or(z.literal("")).or(z.undefined()),
+  imagem: z.string().refine((val) => isValidUrl(val), "URL de imagem inválida").optional().or(z.literal("")).or(z.undefined()),
+  facebook: z.string().refine((val) => isValidUrl(val), "URL do Facebook inválida").optional().or(z.literal("")).or(z.undefined()),
+  instagram: z.string().refine((val) => isValidUrl(val), "URL do Instagram inválida").optional().or(z.literal("")).or(z.undefined()),
+  linkedin: z.string().refine((val) => isValidUrl(val), "URL do LinkedIn inválida").optional().or(z.literal("")).or(z.undefined()),
+  twitter: z.string().refine((val) => isValidUrl(val), "URL do Twitter inválida").optional().or(z.literal("")).or(z.undefined())
 });
 
 // Schema para importação (inclui _rowNumber)
@@ -73,8 +75,9 @@ export const normalizePhone = (phone: string): string => {
 
 // Função utilitária para validar telefone
 export const isValidPhone = (phone: string): boolean => {
-  const phoneRegex = /^\(\d{2}\)\s?\d{4,5}-?\d{4}$|^\d{2}\s?\d{4,5}-?\d{4}$|^\d{10,11}$/;
-  return phoneRegex.test(phone);
+  if (!phone || phone.trim() === '') return false;
+  const cleaned = phone.replace(/\D/g, '');
+  return cleaned.length >= 10 && cleaned.length <= 11;
 };
 
 // Função utilitária para validar email
@@ -86,13 +89,35 @@ export const isValidEmail = (email: string): boolean => {
 
 // Função utilitária para validar URL
 export const isValidUrl = (url: string): boolean => {
-  if (!url) return true; // URL é opcional
+  if (!url || url.trim() === '') return true; // URL é opcional
+  
+  let urlToTest = url.trim();
+  
+  // Se não tem protocolo, adiciona https://
+  if (!urlToTest.startsWith('http://') && !urlToTest.startsWith('https://')) {
+    urlToTest = 'https://' + urlToTest;
+  }
+  
   try {
-    new URL(url);
+    new URL(urlToTest);
     return true;
   } catch {
     return false;
   }
+};
+
+// Função utilitária para normalizar URL
+export const normalizeUrl = (url: string): string => {
+  if (!url || url.trim() === '') return '';
+  
+  let normalizedUrl = url.trim();
+  
+  // Se não tem protocolo, adiciona https://
+  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+    normalizedUrl = 'https://' + normalizedUrl;
+  }
+  
+  return normalizedUrl;
 };
 
 // Constantes para validação
