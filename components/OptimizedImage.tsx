@@ -62,19 +62,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       return;
     }
 
-    // Try retry with original source (only once to avoid infinite loops)
-    if (retryCountRef.current < 1 && currentSrc === src) {
-      retryCountRef.current += 1;
-      console.log(`🔄 Tentativa ${retryCountRef.current}/1 para: ${src}`);
-      
-      // Use a timeout to avoid immediate retry
-      setTimeout(() => {
-        const separator = src.includes('?') ? '&' : '?';
-        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
-      }, 1000);
-      return;
-    }
-
     // All attempts failed - show placeholder immediately
     console.error(`❌ Falha definitiva ao carregar imagem: ${src}`);
     setHasError(true);

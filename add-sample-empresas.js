@@ -134,7 +134,7 @@ const empresasExemplo = [
     email: 'contato@economia.com.br',
     website: null,
     address: 'Rua do Comércio, 789 - Bairro Novo',
-    image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300&q=80',
+    image: '/images/placeholder-empresa-400x300.svg',
     featured: false,
     is_new: false,
     ativo: true,

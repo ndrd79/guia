@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAnalytics } from '../hooks/useAnalytics';
 
@@ -26,6 +26,7 @@ const BannerAd: React.FC<BannerAdProps> = ({
   bannerId
 }) => {
   const { trackBannerClick } = useAnalytics();
+  const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
     console.log('🖱️ Banner clicado!', {
@@ -90,18 +91,22 @@ const BannerAd: React.FC<BannerAdProps> = ({
       console.warn('⚠️ Banner clicado mas sem bannerId!');
     }
   };
-  // Se não há imagem, mostra o placeholder
-  if (!imageUrl) {
+  // Se não há imagem ou houve erro, mostra o placeholder
+  if (!imageUrl || imageError) {
     return (
       <div 
         className={`ad-space banner-responsive ${className}`}
         role="img"
         aria-label="Espaço publicitário disponível"
+        style={{ width: width || 400, height: height || 200 }}
       >
         <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100 rounded-lg">
           <div className="text-center">
             <i className="fas fa-ad text-2xl mb-2"></i>
             <p className="text-xs">Publicidade</p>
+            {imageError && (
+              <p className="text-xs text-red-400 mt-1">Imagem indisponível</p>
+            )}
           </div>
         </div>
       </div>
@@ -119,6 +124,10 @@ const BannerAd: React.FC<BannerAdProps> = ({
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 50vw, 33vw"
           priority={position === 'header-top' || position === 'hero'}
           loading={position === 'header-top' || position === 'hero' ? "eager" : "lazy"}
+          onError={() => {
+            console.warn(`Erro ao carregar imagem do banner: ${imageUrl}`);
+            setImageError(true);
+          }}
         />
       </div>
       {title && (
