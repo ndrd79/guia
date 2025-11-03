@@ -48,16 +48,15 @@ function buildQuery(filters: EmpresaFilters) {
   let query = supabase
     .from('empresas')
     .select(`
-      nome,
-      categoria,
-      telefone,
-      endereco,
-      descricao,
+      name,
+      category,
+      phone,
+      address,
+      description,
       email,
       website,
-      whatsapp,
-      horario_funcionamento,
-      plano,
+      location,
+      plan_type,
       imported_at,
       import_batch_id,
       created_at,
@@ -67,12 +66,12 @@ function buildQuery(filters: EmpresaFilters) {
   // Search filter
   if (filters.search) {
     const searchTerm = `%${filters.search}%`;
-    query = query.or(`nome.ilike.${searchTerm},categoria.ilike.${searchTerm},telefone.ilike.${searchTerm},endereco.ilike.${searchTerm}`);
+    query = query.or(`name.ilike.${searchTerm},category.ilike.${searchTerm},phone.ilike.${searchTerm},address.ilike.${searchTerm}`);
   }
 
   // Category filter
   if (filters.categoria) {
-    query = query.eq('categoria', filters.categoria);
+    query = query.eq('category', filters.categoria);
   }
 
   // Batch filter
@@ -91,16 +90,15 @@ function buildQuery(filters: EmpresaFilters) {
 // Format data for export
 function formatDataForExport(empresas: any[]) {
   return empresas.map(empresa => ({
-    'Nome': empresa.nome,
-    'Categoria': empresa.categoria,
-    'Telefone': empresa.telefone,
-    'Endereço': empresa.endereco,
-    'Descrição': empresa.descricao,
+    'Nome': empresa.name,
+    'Categoria': empresa.category,
+    'Telefone': empresa.phone,
+    'Endereço': empresa.address,
+    'Descrição': empresa.description,
     'Email': empresa.email || '',
     'Website': empresa.website || '',
-    'WhatsApp': empresa.whatsapp || '',
-    'Horário de Funcionamento': empresa.horario_funcionamento || '',
-    'Plano': empresa.plano || '',
+    'Localização': empresa.location || '',
+    'Plano': empresa.plan_type || '',
     'Data de Criação': empresa.created_at ? new Date(empresa.created_at).toLocaleDateString('pt-BR') : '',
     'Data de Atualização': empresa.updated_at ? new Date(empresa.updated_at).toLocaleDateString('pt-BR') : '',
     'Data de Importação': empresa.imported_at ? new Date(empresa.imported_at).toLocaleDateString('pt-BR') : '',

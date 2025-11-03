@@ -1,0 +1,16 @@
+﻿nome,categoria,telefone,endereco,descricao,email,website,whatsapp,horario_funcionamento,imagem
+Exemplo Padaria do João,Alimentação,(11) 99999-9999,"Rua das Flores, 123 - Centro",Padaria tradicional com pães frescos e produtos artesanais,contato@padariajao.com.br,https://www.padariajao.com.br,(11) 99999-9999,Segunda a Sábado: 6h às 20h,https://exemplo.com/imagem-padaria.jpg
+Exemplo Farmácia Central,Saúde,(11) 88888-8888,"Av. Principal, 456 - Centro",Farmácia completa com medicamentos e produtos de higiene,farmacia@central.com.br,https://www.farmaciacentral.com.br,(11) 88888-8888,Segunda a Domingo: 7h às 22h,https://exemplo.com/imagem-farmacia.jpg
+
+# INSTRUÇÕES:
+# - Nome: obrigatório, máximo 100 caracteres
+# - Categoria: obrigatória, use uma categoria existente
+# - Telefone: obrigatório, formato (11) 99999-9999
+# - Endereço: obrigatório, máximo 200 caracteres
+# - Descrição: obrigatória, máximo 500 caracteres
+# - Email: opcional, deve ser um email válido
+# - Website: opcional, deve ser uma URL válida
+# - WhatsApp: opcional, formato (11) 99999-9999
+# - Horário: opcional, máximo 100 caracteres
+# - Imagem: opcional, deve ser uma URL válida
+# - Categorias existentes: Alimentação, Saúde, Serviços, Comércio

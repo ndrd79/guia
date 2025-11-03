@@ -21,26 +21,29 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 interface Empresa {
   id: string;
-  nome: string;
-  categoria: string;
-  telefone: string;
-  endereco: string;
-  descricao: string;
+  name: string;
+  category: string;
+  phone: string;
+  address: string;
+  description: string;
   email?: string;
   website?: string;
-  whatsapp?: string;
-  horario_funcionamento?: string;
-  imagem?: string;
+  location?: string;
+  image?: string;
   imported_at?: string;
   import_batch_id?: string;
   plano?: string;
   created_at: string;
   updated_at: string;
+  ativo?: boolean;
+  featured?: boolean;
+  plan_type?: string;
 }
 
 interface ImportBatch {
@@ -124,9 +127,10 @@ export default function GerenciarEmpresas() {
   // Load import batches for filter
   const loadImportBatches = async () => {
     try {
+      const token = await getAuthToken();
       const response = await fetch('/api/admin/empresas/import-history?limit=100', {
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -147,10 +151,11 @@ export default function GerenciarEmpresas() {
     }
 
     try {
+      const token = await getAuthToken();
       const response = await fetch(`/api/admin/empresas/${empresaId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -177,9 +182,10 @@ export default function GerenciarEmpresas() {
       if (batchFilter) params.append('batch_id', batchFilter);
       if (importedOnlyFilter) params.append('imported_only', 'true');
 
+      const token = await getAuthToken();
       const response = await fetch(`/api/admin/empresas/export?${params}`, {
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -220,13 +226,16 @@ export default function GerenciarEmpresas() {
   }, [searchTerm, categoryFilter, batchFilter, importedOnlyFilter]);
 
   // Get unique categories
-  const categories = [...new Set(empresas.map(e => e.categoria))].sort();
+  const categories = Array.from(new Set(empresas.map(e => e.category))).sort();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const truncateText = (text: string, maxLength: number = 50) => {
+  const truncateText = (text: string | null | undefined, maxLength: number = 50) => {
+    if (!text || typeof text !== 'string') {
+      return '';
+    }
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
@@ -236,13 +245,22 @@ export default function GerenciarEmpresas() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Gerenciar Empresas
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Visualize e gerencie todas as empresas cadastradas no sistema
-              </p>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/admin/empresas')}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar para Empresas
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Gerenciar Empresas
+                </h1>
+                <p className="mt-2 text-gray-600">
+                  Visualize e gerencie todas as empresas cadastradas no sistema
+                </p>
+              </div>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -427,24 +445,24 @@ export default function GerenciarEmpresas() {
                         <td className="px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {empresa.nome}
+                              {empresa.name || 'Nome não informado'}
                             </div>
                             <div className="text-sm text-gray-500 flex items-center mt-1">
                               <MapPin className="h-3 w-3 mr-1" />
-                              {truncateText(empresa.endereco, 40)}
+                              {truncateText(empresa.address, 40) || 'Endereço não informado'}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-                            {empresa.categoria}
+                            {empresa.category || 'Sem categoria'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
                             <div className="flex items-center mb-1">
                               <Phone className="h-3 w-3 mr-1 text-gray-400" />
-                              {empresa.telefone}
+                              {empresa.phone || 'Telefone não informado'}
                             </div>
                             {empresa.email && (
                               <div className="flex items-center">
@@ -561,14 +579,14 @@ export default function GerenciarEmpresas() {
               
               <div className="px-6 py-4 space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900">{selectedEmpresa.nome}</h4>
-                  <p className="text-sm text-gray-600">{selectedEmpresa.categoria}</p>
+                  <h4 className="text-lg font-semibold text-gray-900">{selectedEmpresa.name || 'Nome não informado'}</h4>
+                  <p className="text-sm text-gray-600">{selectedEmpresa.category || 'Sem categoria'}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Telefone</label>
-                    <p className="text-sm text-gray-900">{selectedEmpresa.telefone}</p>
+                    <p className="text-sm text-gray-900">{selectedEmpresa.phone || 'Telefone não informado'}</p>
                   </div>
                   
                   {selectedEmpresa.email && (
@@ -586,31 +604,17 @@ export default function GerenciarEmpresas() {
                       </a>
                     </div>
                   )}
-                  
-                  {selectedEmpresa.whatsapp && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-                      <p className="text-sm text-gray-900">{selectedEmpresa.whatsapp}</p>
-                    </div>
-                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Endereço</label>
-                  <p className="text-sm text-gray-900">{selectedEmpresa.endereco}</p>
+                  <p className="text-sm text-gray-900">{selectedEmpresa.address || 'Endereço não informado'}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Descrição</label>
-                  <p className="text-sm text-gray-900">{selectedEmpresa.descricao}</p>
+                  <p className="text-sm text-gray-900">{selectedEmpresa.description || 'Descrição não informada'}</p>
                 </div>
-
-                {selectedEmpresa.horario_funcionamento && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Horário de Funcionamento</label>
-                    <p className="text-sm text-gray-900">{selectedEmpresa.horario_funcionamento}</p>
-                  </div>
-                )}
 
                 {selectedEmpresa.imported_at && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
