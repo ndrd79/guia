@@ -36,15 +36,41 @@ const checkAdminAuth = async (req: NextApiRequest) => {
 
 // Verificar duplicatas no banco de dados
 const checkDuplicatesInDatabase = async (empresas: any[]) => {
-  const nomes = empresas.map(e => e.nome.toLowerCase().trim());
-  const telefones = empresas.map(e => e.telefone.replace(/\D/g, ''));
+  try {
+    const names = empresas
+      .map((e: any) => (e.nome || '').toLowerCase().trim())
+      .filter((n: string) => n.length > 0);
+    const phones = empresas
+      .map((e: any) => (e.telefone || '').replace(/\D/g, ''))
+      .filter((p: string) => p.length > 0);
 
-  const { data: existingEmpresas } = await supabase
-    .from('empresas')
-    .select('nome, telefone')
-    .or(`nome.ilike.%${nomes.join('%,nome.ilike.%')}%,telefone.in.(${telefones.join(',')})`);
+    if (names.length === 0 && phones.length === 0) {
+      return [] as Array<{ name: string; phone: string }>;
+    }
 
-  return existingEmpresas || [];
+    const orFilters: string[] = [];
+    if (names.length > 0) {
+      orFilters.push(`name.ilike.%${names.join('%,name.ilike.%')}%`);
+    }
+    if (phones.length > 0) {
+      orFilters.push(`phone.in.(${phones.join(',')})`);
+    }
+
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('name, phone')
+      .or(orFilters.join(','));
+
+    if (error) {
+      console.error('[validate] Erro ao verificar duplicatas:', error.message);
+      return [] as Array<{ name: string; phone: string }>;
+    }
+
+    return (data || []) as Array<{ name: string; phone: string }>;
+  } catch (e: any) {
+    console.error('[validate] Falha inesperada ao verificar duplicatas:', e?.message || String(e));
+    return [] as Array<{ name: string; phone: string }>;
+  }
 };
 
 // Verificar se categorias são válidas usando lista fixa
@@ -83,8 +109,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Verificar duplicatas no banco de dados
     const existingEmpresas = await checkDuplicatesInDatabase(empresas);
-    const existingNomes = existingEmpresas.map(e => e.nome.toLowerCase().trim());
-    const existingTelefones = existingEmpresas.map(e => e.telefone.replace(/\D/g, ''));
+    const existingNomes = existingEmpresas.map(e => (e.name || '').toLowerCase().trim());
+    const existingTelefones = existingEmpresas.map(e => (e.phone || '').replace(/\D/g, ''));
 
     // Verificar quais categorias são válidas
     const categorias = empresas.map(e => e.categoria).filter(Boolean);
