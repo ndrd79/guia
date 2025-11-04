@@ -61,10 +61,15 @@ const Nav: React.FC = () => {
             ))}
           </div>
           
-          <div>
-            <Link href="/classificados/novo">
+          <div className="flex space-x-3">
+            <Link href="/servicos">
               <button className="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition flex items-center">
                 <i className="fas fa-plus-circle mr-2"></i> Anunciar
+              </button>
+            </Link>
+            <Link href="/cadastro-empresa">
+              <button className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition flex items-center">
+                <i className="fas fa-building mr-2"></i> Cadastrar Empresa
               </button>
             </Link>
           </div>
@@ -84,6 +89,20 @@ const Nav: React.FC = () => {
               {item.label}
             </Link>
           ))}
+          
+          {/* Botões de ação no menu mobile */}
+          <div className="mt-4 space-y-2">
+            <Link href="/servicos" onClick={closeMobileMenu}>
+              <button className="w-full bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition flex items-center justify-center">
+                <i className="fas fa-plus-circle mr-2"></i> Anunciar
+              </button>
+            </Link>
+            <Link href="/cadastro-empresa" onClick={closeMobileMenu}>
+              <button className="w-full bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition flex items-center justify-center">
+                <i className="fas fa-building mr-2"></i> Cadastrar Empresa
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </nav>

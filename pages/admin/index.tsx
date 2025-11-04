@@ -66,6 +66,27 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
           </a>
         </div>
 
+        {/* Link para Empresas Pendentes */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <span className="text-red-600 text-lg">⏳</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-800">Empresas Pendentes de Aprovação</h3>
+                <p className="text-red-600 text-sm">Empresas aguardando moderação do Google Forms</p>
+              </div>
+            </div>
+            <a 
+              href="/admin/empresas/pendentes" 
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+            >
+              Moderar Agora
+            </a>
+          </div>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <StatCard

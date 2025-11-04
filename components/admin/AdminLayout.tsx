@@ -31,6 +31,7 @@ const menuItems = [
   { href: '/admin/banners', icon: Image, label: 'Banners' },
   { href: '/admin/media', icon: FolderOpen, label: 'Biblioteca de Mídia' },
   { href: '/admin/empresas', icon: Building2, label: 'Empresas' },
+  { href: '/admin/empresas/pendentes', icon: Building2, label: '📋 Empresas Pendentes', isSubItem: true },
   { href: '/admin/temas-sazonais', icon: Palette, label: 'Temas Sazonais' },
   { href: '/admin/usuarios', icon: Users, label: 'Usuários' },
 ]
@@ -76,20 +77,22 @@ export default function AdminLayout({ children, title = 'Painel Administrativo' 
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = router.pathname === item.href
+              const isSubItem = (item as any).isSubItem
               
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`
-                    flex items-center px-3 py-2 mb-1 text-sm font-medium rounded-md transition-colors
+                    flex items-center py-2 mb-1 text-sm font-medium rounded-md transition-colors
+                    ${isSubItem ? 'px-6 ml-3' : 'px-3'}
                     ${isActive 
                       ? 'bg-blue-100 text-blue-700' 
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }
                   `}
                 >
-                  <Icon className="mr-3 h-5 w-5" />
+                  {!isSubItem && <Icon className="mr-3 h-5 w-5" />}
                   {item.label}
                 </Link>
               )
