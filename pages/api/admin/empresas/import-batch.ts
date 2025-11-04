@@ -35,20 +35,33 @@ interface ImportResult {
 // Verificar se usuário é admin
 const checkAdminAuth = async (req: NextApiRequest) => {
   const authHeader = req.headers.authorization;
+  console.log('[import-batch] Authorization header present:', !!authHeader);
   if (!authHeader) return null;
 
   const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) return null;
+  try {
+    console.log('[import-batch] Token preview:', token ? token.slice(0, 10) + '...' + token.slice(-6) : null, 'length:', token?.length || 0);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error) {
+      console.log('[import-batch] supabase.auth.getUser error:', error.message);
+    }
+    if (error || !user) return null;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-  return profile?.role === 'admin' ? user : null;
+    if (profileError) {
+      console.log('[import-batch] profile fetch error:', profileError.message);
+    }
+    console.log('[import-batch] User:', user.id, 'Role:', profile?.role);
+    return profile?.role === 'admin' ? user : null;
+  } catch (e: any) {
+    console.log('[import-batch] Unexpected auth error:', e?.message || String(e));
+    return null;
+  }
 };
 
 // Processar empresas em chunks para evitar timeout
@@ -155,9 +168,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let importBatchId: string | null = null;
 
   try {
+    console.log('[import-batch] Incoming request headers:', {
+      authorization_present: !!req.headers.authorization,
+      content_type: req.headers['content-type'] || null,
+      user_agent: req.headers['user-agent'] || null,
+    });
+
     // Verificar autenticação admin
     const user = await checkAdminAuth(req);
     if (!user) {
+      console.log('[import-batch] Access denied: user is not admin or token invalid');
       return res.status(403).json({ error: 'Acesso negado. Apenas administradores podem importar empresas.' });
     }
 
@@ -172,6 +192,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const startTime = Date.now();
+    console.log('[import-batch] Starting import:', { count: empresas.length, filename });
 
     // Criar registro de importação
     const { data: importBatch, error: batchError } = await supabase
@@ -190,6 +211,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     importBatchId = importBatch.id;
+    console.log('[import-batch] Created batch:', importBatchId);
 
     // Processar empresas em chunks de 25
     const CHUNK_SIZE = 25;
@@ -198,6 +220,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       CHUNK_SIZE,
       (chunk) => processChunk(chunk, importBatchId!)
     );
+
+    console.log('[import-batch] Processed chunks. Total results:', allResults.length);
 
     // Salvar todos os resultados
     await Promise.all(
@@ -208,6 +232,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const successCount = allResults.filter(r => r.success).length;
     const errorCount = allResults.filter(r => !r.success).length;
     const processingTime = Date.now() - startTime;
+    console.log('[import-batch] Summary:', { successCount, errorCount, processingTime });
 
     // Atualizar status do batch
     await supabase
@@ -242,7 +267,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
   } catch (error) {
-    console.error('Erro na importação em lote:', error);
+    console.error('[import-batch] Erro na importação em lote:', error);
 
     // Marcar batch como falhou se foi criado
     if (importBatchId) {
