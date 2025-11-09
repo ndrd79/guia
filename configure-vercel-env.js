@@ -21,14 +21,19 @@ function main() {
 
   console.log(`Configuração Vercel para projeto: ${project}`);
   try {
-    // vercel link (opcional, se necessário)
-    // run('vercel link --project ' + project);
+    // Linkar diretório ao projeto do Vercel (se necessário)
+    try {
+      run(`vercel link --project ${project} --yes`);
+      console.log('Projeto linkado com sucesso.');
+    } catch (e) {
+      console.log('Aviso: não foi possível linkar automaticamente (pode já estar linkado).');
+    }
 
     console.log('Definindo NEXT_PUBLIC_SITE_URL (production)...');
-    run('vercel env add NEXT_PUBLIC_SITE_URL production --yes', siteUrl + '\n');
+    run('vercel env add NEXT_PUBLIC_SITE_URL production', siteUrl + '\n');
 
     console.log('Definindo EMAIL_FROM (production)...');
-    run('vercel env add EMAIL_FROM production --yes', emailFrom + '\n');
+    run('vercel env add EMAIL_FROM production', emailFrom + '\n');
 
     console.log('✅ Variáveis configuradas. Faça redeploy para aplicar.');
   } catch (err) {
