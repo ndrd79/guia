@@ -87,4 +87,3 @@ function log(step, msg) {
     process.exit(1);
   }
 })();
- 
