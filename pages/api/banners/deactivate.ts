@@ -58,14 +58,15 @@ export default async function handler(
       query = query.neq('id', excludeBannerId)
     }
 
-    const { data, error, status } = await query
+    const resp = await query
+    const { data, error, status } = resp as { data: any; error: any; status: number }
 
     if (error) {
       console.error('Erro ao desativar banners:', error)
       return res.status(500).json({ success: false, message: `Erro ao desativar banners: ${error.message}` })
     }
 
-    const affected = Array.isArray(data) ? data.length : (status === 204 ? 0 : undefined)
+    const affected = Array.isArray(data) ? (data as any[]).length : (status === 204 ? 0 : undefined)
     return res.status(200).json({ success: true, message: 'Banners desativados com sucesso', affected })
   } catch (error: any) {
     console.error('Erro na API deactivate banners:', error)

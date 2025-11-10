@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, BarChart3, Search, X, Filter, Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, BarChart3, Search, X, Filter, Calendar, CheckCircle, Clock, AlertTriangle, Monitor, Tablet, Smartphone } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
@@ -416,6 +416,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const [bannerStats, setBannerStats] = useState<Record<string, BannerStats>>({})
   const [loadingStats, setLoadingStats] = useState<{ [key: string]: boolean }>({})
   const [loadingAllStats, setLoadingAllStats] = useState(false)
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   
   // Estados para filtros e busca
   const [filters, setFilters] = useState<FilterState>({
@@ -456,6 +457,21 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedPosicao = watch('posicao')
   const watchedLargura = watch('largura')
   const watchedAltura = watch('altura')
+
+  // Cálculo para preview responsivo e validação de tamanho ideal
+  const posInfo = posicoesBanner.find(p => p.nome === watchedPosicao)
+  const idealWidth = posInfo?.larguraRecomendada || watchedLargura || 0
+  const idealHeight = posInfo?.alturaRecomendada || watchedAltura || 0
+  const deviceWidths: Record<'desktop' | 'tablet' | 'mobile', number> = {
+    desktop: idealWidth || 1170,
+    tablet: 768,
+    mobile: 360,
+  }
+  const displayWidth = Math.min(deviceWidths[previewDevice], idealWidth || deviceWidths[previewDevice])
+  const ratio = idealWidth && idealHeight ? idealHeight / idealWidth : (watchedAltura && watchedLargura ? watchedAltura / watchedLargura : 1)
+  const displayHeight = Math.max(1, Math.round(displayWidth * ratio))
+  const isSizeCorrect = !!(watchedLargura && watchedAltura && idealWidth && idealHeight && watchedLargura === idealWidth && watchedAltura === idealHeight)
+  const ordemValue = (watch('ordem') ?? '') as any
 
   // Funções de carregamento de dados
   const loadBanners = async () => {
@@ -1497,92 +1513,112 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     Preview do Banner
                   </h4>
                   
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6">
-                    <div className="flex justify-center">
-                      <div 
-                        className="relative overflow-hidden rounded-lg shadow-sm border border-gray-200 bg-white"
-                        style={{ 
-                          width: Math.min(watchedLargura, 600),
-                          height: Math.min(watchedAltura, 400),
-                          maxWidth: '100%'
-                        }}
-                      >
-                        <img
-                          src={watchedImagem}
-                          alt={watch('nome') || 'Preview do banner'}
-                          className="w-full h-full object-cover"
-                          style={{ 
-                            width: '100%',
-                            height: '100%'
-                          }}
-                        />
-                        
-                        {/* Overlay para banners inativos */}
-                        {!watch('ativo') && (
-                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                            <span className="text-white text-sm font-medium bg-red-600 px-3 py-1 rounded-full">
-                              Banner Inativo
+                    (
+                      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6">
+                        {/* Header estilo chips */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            {ordemValue !== '' && (
+                              <span className="inline-flex items-center justify-center w-6 h-6 text-sm font-semibold rounded-full bg-gray-200 text-gray-800">
+                                {ordemValue}
+                              </span>
+                            )}
+                            {watchedPosicao && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {watchedPosicao}
+                              </span>
+                            )}
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${isSizeCorrect ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                              {isSizeCorrect ? 'Tamanho Correto' : 'Ajustar Tamanho'}
                             </span>
                           </div>
-                        )}
-                        
-                        {/* Indicador de link */}
-                        {watch('link') && (
-                          <div className="absolute top-2 right-2">
-                            <div className="bg-blue-600 text-white p-1 rounded-full">
-                              <ExternalLink className="w-3 h-3" />
-                            </div>
+                          {/* Seletor de dispositivo */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-600">Visualizar em:</span>
+                            <button type="button" onClick={() => setPreviewDevice('desktop')} aria-label="Desktop" className={`p-1.5 rounded ${previewDevice === 'desktop' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'}`}>
+                              <Monitor className="w-4 h-4" />
+                            </button>
+                            <button type="button" onClick={() => setPreviewDevice('tablet')} aria-label="Tablet" className={`p-1.5 rounded ${previewDevice === 'tablet' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'}`}>
+                              <Tablet className="w-4 h-4" />
+                            </button>
+                            <button type="button" onClick={() => setPreviewDevice('mobile')} aria-label="Mobile" className={`p-1.5 rounded ${previewDevice === 'mobile' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-800'}`}>
+                              <Smartphone className="w-4 h-4" />
+                            </button>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Informações do Preview */}
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Dimensões:</span>
-                        <div className="font-medium">{watchedLargura} × {watchedAltura}px</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Posição:</span>
-                        <div className="font-medium">{watchedPosicao || 'Não selecionada'}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Status:</span>
-                        <div className="font-medium">
-                          {watch('ativo') ? (
-                            <span className="text-green-600">Ativo</span>
-                          ) : (
-                            <span className="text-red-600">Inativo</span>
-                          )}
                         </div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Link:</span>
-                        <div className="font-medium">
-                          {watch('link') ? (
-                            <span className="text-blue-600">Sim</span>
-                          ) : (
-                            <span className="text-gray-400">Não</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Dicas de Otimização */}
-                    <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <h5 className="text-sm font-medium text-blue-900 mb-2">💡 Dicas de Otimização</h5>
-                      <ul className="text-xs text-blue-800 space-y-1">
-                        <li>• Use imagens com boa qualidade e resolução adequada</li>
-                        <li>• Mantenha o tamanho do arquivo abaixo de 500KB para melhor performance</li>
-                        <li>• Teste a legibilidade em diferentes dispositivos</li>
-                        {(watchedLargura <= 320 || watchedAltura <= 100) && (
-                          <li>• Para banners pequenos, use texto grande e poucas palavras</li>
-                        )}
-                        {watch('link') && <li>• Certifique-se de que o link está funcionando corretamente</li>}
-                      </ul>
-                    </div>
-                  </div>
+                        {/* Área de preview com dimensões exibidas */}
+                        <div className="flex justify-center">
+                          <div
+                            className="relative overflow-hidden rounded-lg shadow-sm border border-gray-200 bg-white"
+                            style={{ width: displayWidth, height: displayHeight, maxWidth: '100%' }}
+                          >
+                            <img
+                              src={watchedImagem}
+                              alt={watch('nome') || 'Preview do banner'}
+                              className="w-full h-full object-contain"
+                              style={{ width: '100%', height: '100%' }}
+                            />
+
+                            {/* Overlay para banners inativos */}
+                            {!watch('ativo') && (
+                              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                <span className="text-white text-sm font-medium bg-red-600 px-3 py-1 rounded-full">Banner Inativo</span>
+                              </div>
+                            )}
+
+                            {/* Indicador de link */}
+                            {watch('link') && (
+                              <div className="absolute top-2 right-2">
+                                <div className="bg-blue-600 text-white p-1 rounded-full">
+                                  <ExternalLink className="w-3 h-3" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Informações do Preview no estilo da foto */}
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500">Dimensões:</span>
+                            <div className="font-medium">{watchedLargura} × {watchedAltura}px</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Exibindo:</span>
+                            <div className="font-medium">{displayWidth} × {displayHeight}px</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Tamanho Ideal:</span>
+                            <div className="font-medium">{idealWidth} × {idealHeight}px</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Tipo:</span>
+                            <div className="font-medium">Banner Padrão</div>
+                          </div>
+                        </div>
+
+                        {/* Linha de Link */}
+                        <div className="mt-2 text-sm">
+                          <span className="text-gray-500">Link:</span>{' '}
+                          <span className="font-medium">{watch('link') ? 'Sim' : 'Não'}</span>
+                        </div>
+
+                        {/* Dicas de Otimização */}
+                        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <h5 className="text-sm font-medium text-blue-900 mb-2">💡 Dicas de Otimização</h5>
+                          <ul className="text-xs text-blue-800 space-y-1">
+                            <li>• Use imagens com boa qualidade e resolução adequada</li>
+                            <li>• Mantenha o tamanho do arquivo abaixo de 500KB para melhor performance</li>
+                            <li>• Teste a legibilidade em diferentes dispositivos</li>
+                            {(watchedLargura <= 320 || watchedAltura <= 100) && (
+                              <li>• Para banners pequenos, use texto grande e poucas palavras</li>
+                            )}
+                            {watch('link') && <li>• Certifique-se de que o link está funcionando corretamente</li>}
+                          </ul>
+                        </div>
+                      </div>
+                    )
                 </div>
               )}
 
