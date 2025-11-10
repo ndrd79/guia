@@ -141,17 +141,17 @@ export default function OptimizedBanner({
     
     switch (bannerSize) {
       case 'mobile-banner':
-        return `${baseClasses} w-full max-w-[320px] h-[50px] mx-auto`
+        return `${baseClasses} w-full max-w-[320px] h-auto mx-auto`
       case 'small-rectangle':
-        return `${baseClasses} w-full max-w-[300px] h-[100px] mx-auto`
+        return `${baseClasses} w-full max-w-[300px] h-auto mx-auto`
       case 'square':
-        return `${baseClasses} w-full max-w-[250px] h-[250px] mx-auto`
+        return `${baseClasses} w-full max-w-[250px] h-auto mx-auto`
       case 'rectangle':
-        return `${baseClasses} w-full max-w-[300px] h-[250px] mx-auto`
+        return `${baseClasses} w-full max-w-[300px] h-auto mx-auto`
       case 'leaderboard':
-        return `${baseClasses} w-full max-w-[728px] h-[90px] mx-auto`
+        return `${baseClasses} w-full max-w-[728px] h-auto mx-auto`
       case 'banner':
-        return `${baseClasses} w-full max-w-[468px] h-[60px] mx-auto`
+        return `${baseClasses} w-full max-w-[468px] h-auto mx-auto`
       default:
         return `${baseClasses} w-full mx-auto`
     }
@@ -192,9 +192,10 @@ export default function OptimizedBanner({
       ref={bannerRef}
       className={`${getResponsiveClasses()} ${className}`}
       style={{ 
-        width: isSmallBanner ? '100%' : banner.largura,
-        height: banner.altura,
+        width: '100%',
+        height: 'auto',
         maxWidth: banner.largura,
+        aspectRatio: `${banner.largura}/${banner.altura}`,
         position: 'relative',
         zIndex: 1
       }}

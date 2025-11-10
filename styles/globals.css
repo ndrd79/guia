@@ -314,11 +314,20 @@
     .banner-footer {
       height: auto;
       aspect-ratio: 1170/330;
+      max-height: 220px;
     }
     /* Garante que imagens preencham sem cortar em telas pequenas */
     .banner-responsive img,
     .banner-responsive picture > img {
       object-fit: contain !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    /* Evita estourar largura do viewport */
+    .banner-container,
+    .banner-responsive {
+      max-width: 100vw !important;
+      overflow: hidden;
     }
   }
 

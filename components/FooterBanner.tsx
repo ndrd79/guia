@@ -69,7 +69,7 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                             src={banner.imagem}
                             alt={banner.nome}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="object-contain md:object-cover transition-transform duration-500 group-hover:scale-105"
                             sizes="100vw"
                             priority={slideIndex === 0}
                             onError={() => handleImageError(banner.imagem)}
@@ -94,7 +94,7 @@ const FooterBanner: React.FC<FooterBannerProps> = ({ banners }) => {
                           src={banner.imagem}
                           alt={banner.nome}
                           fill
-                          className="object-cover"
+                          className="object-contain md:object-cover"
                           sizes="100vw"
                           priority={slideIndex === 0}
                           onError={() => handleImageError(banner.imagem)}
