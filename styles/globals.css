@@ -308,6 +308,18 @@
       height: auto;
       aspect-ratio: 320/100;
     }
+    /* Evita corte em banners grandes no mobile */
+    .banner-hero,
+    .banner-secondary,
+    .banner-footer {
+      height: auto;
+      aspect-ratio: 1170/330;
+    }
+    /* Garante que imagens preencham sem cortar em telas pequenas */
+    .banner-responsive img,
+    .banner-responsive picture > img {
+      object-fit: contain !important;
+    }
   }
 
   /* Skeleton loading para banners */

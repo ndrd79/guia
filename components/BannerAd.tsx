@@ -120,7 +120,7 @@ const BannerAd: React.FC<BannerAdProps> = ({
           src={imageUrl}
           alt={altText}
           fill
-          className="object-cover transition-transform duration-500"
+          className="object-contain md:object-cover transition-transform duration-500"
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 50vw, 33vw"
           priority={position === 'header-top' || position === 'hero'}
           loading={position === 'header-top' || position === 'hero' ? "eager" : "lazy"}

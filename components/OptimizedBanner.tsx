@@ -216,7 +216,7 @@ export default function OptimizedBanner({
           priority={priority}
           quality={85}
           sizes={sizes}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain md:object-cover"
           onLoad={handleImageLoad}
           onError={handleImageError}
           placeholder="blur"

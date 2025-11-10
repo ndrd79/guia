@@ -71,7 +71,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                             src={banner.imagem}
                             alt={banner.nome}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="object-contain md:object-cover transition-transform duration-500 group-hover:scale-105"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1170px"
                             priority={slideIndex === 0}
                             loading={slideIndex === 0 ? "eager" : "lazy"}
@@ -101,7 +101,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
                           src={banner.imagem}
                           alt={banner.nome}
                           fill
-                          className="object-cover"
+                          className="object-contain md:object-cover"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1170px"
                           priority={slideIndex === 0}
                           onError={(e) => {
