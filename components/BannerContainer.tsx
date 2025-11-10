@@ -3,20 +3,24 @@ import OptimizedBanner, { useOptimizedBanners } from './OptimizedBanner'
 
 interface BannerContainerProps {
   position: string
+  local?: string
   className?: string
   maxBanners?: number
   priority?: boolean
   layout?: 'horizontal' | 'vertical' | 'grid'
+  debug?: boolean
 }
 
 export default function BannerContainer({
   position,
+  local,
   className = '',
   maxBanners = 1,
   priority = false,
-  layout = 'vertical'
+  layout = 'vertical',
+  debug = false
 }: BannerContainerProps) {
-  const { banners, loading, error } = useOptimizedBanners(position)
+  const { banners, loading, error } = useOptimizedBanners(position, local)
 
   if (loading) {
     return (
@@ -30,7 +34,7 @@ export default function BannerContainer({
     return null
   }
 
-  const displayBanners = banners.slice(0, maxBanners)
+  const displayBanners = maxBanners && maxBanners > 0 ? banners.slice(0, maxBanners) : banners
 
   const getLayoutClasses = () => {
     switch (layout) {
@@ -54,6 +58,15 @@ export default function BannerContainer({
           lazy={!priority || index > 0}
         />
       ))}
+      {debug && (
+        <div className="mt-2 p-2 text-xs rounded border border-blue-300 bg-blue-50">
+          <div className="font-semibold text-blue-800">Debug Banner</div>
+          <div>Posição: {position}</div>
+          <div>Encontrados: {displayBanners.length}</div>
+          <div>IDs: {displayBanners.map(b => b.id).join(', ')}</div>
+          <div>Dimensões: {displayBanners.map(b => `${b.largura}x${b.altura}`).join(' | ')}</div>
+        </div>
+      )}
     </div>
   )
 }

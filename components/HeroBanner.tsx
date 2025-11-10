@@ -18,14 +18,20 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
     'bg-gradient-to-br from-orange-500 to-orange-700'
   ];
 
-  // Auto-play functionality
+  // Auto-play functionality com tempo configurável
   useEffect(() => {
+    if (!banners || banners.length === 0) return;
+    
+    // Pega o tempo de exibição do banner atual ou usa 4 segundos como padrão
+    const currentBanner = banners[currentSlide];
+    const tempoExibicao = currentBanner?.tempo_exibicao || 4;
+    
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % 4);
-    }, 4000);
+      setCurrentSlide((prev) => (prev + 1) % Math.min(4, banners.length));
+    }, tempoExibicao * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentSlide, banners]);
 
   // Pega o banner para o slide atual (se existir)
   const getCurrentBanner = (slideIndex: number) => {
@@ -33,14 +39,21 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ banners }) => {
     return banners[slideIndex] || null;
   };
 
+  // Filtra banners válidos (com imagem ou cor de fundo)
+  const validBanners = banners?.filter(banner => banner?.imagem || banner?.nome) || [];
+  
+  // Não renderiza nada se não houver banners válidos
+  if (validBanners.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-2 sm:py-4 md:py-8 bg-gray-50">
       <div className="banner-container">
         {/* Container do slide - Altura responsiva */}
         <div className="banner-responsive banner-hero relative rounded-none sm:rounded-lg shadow-lg md:shadow-2xl banner-transition">
-          {/* 4 Slides de cores diferentes */}
-          {[0, 1, 2, 3].map((slideIndex) => {
-            const banner = getCurrentBanner(slideIndex);
+          {/* Slides de banners */}
+          {validBanners.slice(0, 4).map((banner, slideIndex) => {
             
             return (
               <div

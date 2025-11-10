@@ -96,6 +96,12 @@ export interface Banner {
   ativo: boolean
   data_inicio?: string | null
   data_fim?: string | null
+  ordem?: number
+  tempo_exibicao?: number
+  local?: 'geral' | 'home' | 'guia_comercial' | 'noticias' | 'eventos' | 'classificados'
+  clicks?: number
+  views?: number
+  impressions?: number
   created_at: string
   updated_at: string
 }

@@ -6,7 +6,8 @@ import { GetStaticProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
-import BannerAd from '../../components/BannerAd'
+// import BannerAd from '../../components/BannerAd'
+import BannerCarousel from '../../components/BannerCarousel'
 import { createServerSupabaseClient, Empresa } from '../../lib/supabase'
 
 interface Business extends Empresa {
@@ -164,10 +165,13 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
             </div>
             
             <div className="md:w-1/2">
-              <BannerAd 
-                position="hero"
-                className="w-full h-32 md:h-48 rounded-xl"
-                title="ESPAÇO PUBLICITÁRIO - DESTAQUE"
+              <BannerCarousel 
+                position="Hero Carousel" 
+                local="guia"
+                interval={6000}
+                autoRotate={true}
+                maxBanners={0}
+                className="rounded-xl"
               />
             </div>
           </div>
@@ -222,12 +226,12 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
               </div>
             </div>
 
-            <BannerAd 
+            <BannerCarousel 
               position="Sidebar Direita"
+              interval={6000}
+              autoRotate={true}
+              maxBanners={0}
               className="w-full max-w-[300px] mx-auto aspect-[1/2] rounded-xl"
-              width={300}
-              height={600}
-              title="PUBLICIDADE"
             />
           </aside>
 

@@ -28,20 +28,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'Erro interno do servidor' })
     }
 
-    // Buscar valor atual de views
+    // Buscar valor atual de impressões (preferível) e views (legado)
     const { data: currentBanner } = await supabase
       .from('banners')
-      .select('views')
+      .select('impressions, views')
       .eq('id', banner_id)
       .single()
 
-    const currentViews = currentBanner?.views || 0
+    const currentImpressions = currentBanner?.impressions ?? currentBanner?.views ?? 0
 
-    // Incrementar contador de visualizações do banner
+    // Incrementar contador de impressões do banner
     await supabase
       .from('banners')
       .update({ 
-        views: currentViews + 1,
+        impressions: currentImpressions + 1,
         updated_at: new Date().toISOString()
       })
       .eq('id', banner_id)

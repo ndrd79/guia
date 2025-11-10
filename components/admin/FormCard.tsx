@@ -1,9 +1,9 @@
-import { ReactNode } from 'react'
+import { ReactNode, FormEvent } from 'react'
 
 interface FormCardProps {
   title: string
   children: ReactNode
-  onSubmit?: () => void
+  onSubmit?: (e: FormEvent<HTMLFormElement>) => void
   isLoading?: boolean
   submitText?: string
   onCancel?: () => void
@@ -26,7 +26,7 @@ export default function FormCard({
       </div>
       <div className="p-6">
         {showForm ? (
-          <form onSubmit={onSubmit} className="w-full">
+          <form onSubmit={onSubmit} noValidate className="w-full">
             <div className="w-full">
               {children}
             </div>

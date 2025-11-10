@@ -86,7 +86,7 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
     <section className="py-4 sm:py-6 md:py-8 bg-white">
       <div className="banner-container">
         {/* Container do slide */}
-        <div className="banner-responsive banner-secondary relative rounded-none sm:rounded-lg shadow-lg md:shadow-2xl banner-transition">
+        <div className="banner-responsive banner-secondary relative rounded-none sm:rounded-lg shadow-lg md:shadow-2xl banner-transition" style={{ overflow: 'visible' }}>
           {[0, 1, 2, 3].map((slideIndex) => {
             const banner = getCurrentBanner(slideIndex);
             const bannerHref = getBannerHref(banner);
@@ -124,7 +124,7 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                     </div>
                   </Link>
                 ) : (
-                  <div className="relative w-full h-full">
+                  <div className="relative w-full h-full" style={{ overflow: 'visible' }}>
                     {banner && banner.imagem ? (
                       <>
                         <Image

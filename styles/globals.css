@@ -72,10 +72,8 @@
     overflow: hidden;
   }
 
-  /* Garantir que banners não tenham posicionamento absoluto ou fixo */
-  .banner-container * {
-    position: relative !important;
-  }
+  /* Não forçar posicionamento em todos os filhos para não quebrar imagens com fill */
+  /* Removido position: relative global nos filhos do banner-container */
 
   /* Breakpoints específicos para banners */
   @media (min-width: 640px) {
@@ -291,7 +289,7 @@
 
   .banner-responsive {
     position: relative;
-    overflow: hidden;
+    overflow: visible; /* permitir que a imagem preencha sem cortar */
   }
 
   /* Garantir que banners sidebar não quebrem o layout */

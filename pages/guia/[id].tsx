@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Header from '../../components/Header';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
-import BannerContainer from '../../components/BannerContainer';
+import BannerCarousel from '../../components/BannerCarousel';
 import { createServerSupabaseClient, Empresa } from '../../lib/supabase';
 
 interface Business {
@@ -212,11 +212,13 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
           </div>
         </section>
 
-        {/* Banner Ad */}
+        {/* Banner - Topo da Empresa (Carrossel estilo Hero) */}
         <section className="py-6">
           <div className="container mx-auto px-4">
-            <BannerContainer 
+            <BannerCarousel 
               position="Empresa - Topo" 
+              interval={6000}
+              autoRotate={true}
               className="w-full rounded-lg mx-auto max-w-4xl" 
             />
           </div>
@@ -304,11 +306,13 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
           </div>
         </section>
 
-        {/* Banner Ad */}
+        {/* Banner - Rodapé da Empresa (Carrossel estilo Hero) */}
         <section className="py-6">
           <div className="container mx-auto px-4">
-            <BannerContainer 
+            <BannerCarousel 
               position="Empresa - Rodapé" 
+              interval={6000}
+              autoRotate={true}
               className="w-full rounded-lg mx-auto max-w-4xl" 
             />
           </div>

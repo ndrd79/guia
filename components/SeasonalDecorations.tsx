@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 interface DecorationProps {
@@ -35,6 +35,7 @@ const SeasonalDecorations: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const fetchedRef = useRef(false);
 
   // Garantir renderização consistente entre servidor e cliente
   useEffect(() => {
@@ -84,6 +85,10 @@ const SeasonalDecorations: React.FC = () => {
       setLoading(false);
       return;
     }
+    
+    // Evitar chamadas duplicadas em modo Strict do React
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     
     // Se não há cache, busca do servidor
     fetchActiveTheme();

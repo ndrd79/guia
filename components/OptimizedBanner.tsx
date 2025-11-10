@@ -257,7 +257,7 @@ export default function OptimizedBanner({
 }
 
 // Hook para carregar banners otimizados
-export function useOptimizedBanners(position: string) {
+export function useOptimizedBanners(position: string, local?: string) {
   const [banners, setBanners] = useState<BannerData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -275,8 +275,13 @@ export function useOptimizedBanners(position: string) {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 8000) // Reduced timeout
         
+        const params = new URLSearchParams({
+          position: position,
+          active: 'true',
+          ...(local ? { local } : {})
+        })
         const response = await fetch(
-          `/api/banners?position=${encodeURIComponent(position)}&active=true`,
+          `/api/banners?${params.toString()}`,
           { 
             signal: controller.signal,
             headers: {
@@ -334,7 +339,7 @@ export function useOptimizedBanners(position: string) {
     return () => {
       isMounted = false
     }
-  }, [position])
+  }, [position, local])
 
   return { banners, loading, error }
 }

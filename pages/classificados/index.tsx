@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
-import BannerAd from '../../components/BannerAd'
+import BannerCarousel from '../../components/BannerCarousel'
 import { formatCurrency } from '../../lib/formatters'
 
 interface Classified {
@@ -236,12 +236,15 @@ export default function Classificados() {
             </div>
           </div>
           
-          {/* Advertising Space */}
-          <BannerAd 
-            position="content"
-            className="w-full h-32 rounded-lg mb-6"
-            title="ESPAÇO PUBLICITÁRIO - CLASSIFICADOS"
-          />
+          {/* Espaço publicitário - usando carrossel igual ao Hero */}
+          <section className="py-2">
+            <BannerCarousel 
+              position="content"
+              interval={6000}
+              autoRotate={true}
+              className="rounded-xl mb-6"
+            />
+          </section>
           
           {/* Results Count */}
           <div className="mb-4">

@@ -7,11 +7,12 @@ import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import NewsCard from '../components/NewsCard';
 import EventCard from '../components/EventCard';
-import BannerContainer from '../components/BannerContainer';
+import BannerCarousel from '../components/BannerCarousel';
 import BusinessCarousel from '../components/BusinessCarousel';
 import SecondaryBanner from '../components/SecondaryBanner';
 import FooterBanner from '../components/FooterBanner';
 import WeatherSlider from '../components/WeatherSlider';
+import HeroBanner from '../components/HeroBanner';
 import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Banner } from '../lib/supabase';
 
 interface HomePageProps {
@@ -21,6 +22,7 @@ interface HomePageProps {
   classificados: Classificado[];
   categoriasBanners: Banner[];
   servicosBanners: Banner[];
+  heroBanners: Banner[];
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
@@ -29,7 +31,8 @@ const HomePage: React.FC<HomePageProps> = ({
   empresas, 
   classificados, 
   categoriasBanners, 
-  servicosBanners 
+  servicosBanners,
+  heroBanners
 }) => {
   // Usar dados reais do banco em vez de dados mockados
   const featuredNews = noticias.find(noticia => noticia.destaque) || noticias[0];
@@ -74,10 +77,24 @@ const HomePage: React.FC<HomePageProps> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <Header />
-      <Nav />
+  <Header />
+  <Nav />
 
-      <main>
+  <main>
+        {/* Carrossel Hero abaixo da navegação (sem bloco de texto) */}
+        <section className="py-4 bg-white">
+          <div className="container mx-auto px-4">
+            <BannerCarousel 
+              position="Hero Carousel" 
+              local="home"
+              interval={6000}
+              autoRotate={true}
+              maxBanners={0}
+              className="rounded-xl"
+            />
+          </div>
+        </section>
+
         {/* Seção de Notícias */}
         <section className="py-8 bg-white">
           <div className="container mx-auto px-4">
@@ -126,36 +143,54 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
 
-        {/* Seção Hero */}
-        <section className="relative bg-gray-900 text-white">
-          <div className="container mx-auto px-4 py-12">
-            <div className="flex flex-col md:flex-row items-center">
-              <div className="md:w-1/2 mb-8 md:mb-0">
-                <h2 className="text-4xl font-bold mb-4">Descubra o melhor de Maria Helena</h2>
-                <p className="text-xl mb-6">Encontre negócios locais, eventos imperdíveis e tudo que sua cidade tem para oferecer.</p>
-                <div className="flex space-x-4">
-                  <Link href="/guia">
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-medium transition">
-                      Explorar Negócios
-                    </button>
+        
+
+        {/* CTA - Explore Itaperuçu */}
+        <section className="py-16 bg-[#0D1321]">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  Descubra o melhor de Maria Helena
+                </h2>
+                <p className="text-gray-200 text-base md:text-lg mb-6">
+                  Encontre negócios locais, eventos imperdíveis e tudo que sua cidade tem para oferecer.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/guia" className="inline-flex items-center px-5 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
+                    Explorar Negócios
                   </Link>
-                  <Link href="/eventos">
-                    <button className="bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white px-6 py-3 rounded-full font-medium transition">
-                      Ver Eventos
-                    </button>
+                  <Link href="/eventos" className="inline-flex items-center px-5 py-3 rounded-full border border-white text-white hover:bg-white hover:text-indigo-900 transition">
+                    Ver Eventos
                   </Link>
                 </div>
               </div>
-              <BannerContainer 
-                position="Banner Principal" 
-                className="w-full md:w-1/2 rounded-xl" 
-              />
+              <div>
+                <div className="bg-white rounded-xl shadow-lg p-2">
+                  <img
+                    src="/images/placeholder-empresa-400x300.svg"
+                    alt="Serviço local em destaque"
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Banner acima das Categorias */}
-        <SecondaryBanner banners={categoriasBanners} />
+        {/* Banner acima das Categorias - usando o mesmo carrossel do Hero */}
+        <section className="py-4 bg-white">
+          <div className="container mx-auto px-4">
+            <BannerCarousel 
+              position="Categorias Banner" 
+              local="home"
+              interval={6000}
+              autoRotate={true}
+              maxBanners={0}
+              className="rounded-xl"
+            />
+          </div>
+        </section>
 
         {/* Seção de Categorias */}
         <section className="py-12 bg-gray-50">
@@ -281,8 +316,19 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
         </section>
 
-        {/* Banner abaixo dos Serviços Úteis */}
-        <FooterBanner banners={servicosBanners} />
+        {/* Banner abaixo dos Serviços Úteis - usando carrossel igual ao Hero */}
+        <section className="py-4 bg-white">
+          <div className="container mx-auto px-4">
+            <BannerCarousel 
+              position="Serviços Banner" 
+              local="home"
+              interval={6000}
+              autoRotate={true}
+              maxBanners={0}
+              className="rounded-xl"
+            />
+          </div>
+        </section>
       </main>
 
       <Footer />
@@ -301,7 +347,8 @@ export const getStaticProps: GetStaticProps = async () => {
       empresasResult,
       classificadosResult,
       categoriasBannersResult,
-      servicosBannersResult
+      servicosBannersResult,
+      heroBannersResult
     ] = await Promise.all([
       supabase
         .from('noticias')
@@ -342,7 +389,16 @@ export const getStaticProps: GetStaticProps = async () => {
         .select('*')
         .eq('ativo', true)
         .eq('posicao', 'Serviços Banner')
-        .limit(5)
+        .limit(5),
+      
+      supabase
+        .from('banners')
+        .select('*')
+        .eq('ativo', true)
+        .eq('posicao', 'Hero Carousel')
+        .order('ordem', { ascending: true })
+        // Sem limite para permitir múltiplos banners no carrossel
+        .limit(1000)
     ]);
 
     // Erros são tratados silenciosamente em produção
@@ -354,7 +410,8 @@ export const getStaticProps: GetStaticProps = async () => {
         empresas: empresasResult.data || [],
         classificados: classificadosResult.data || [],
         categoriasBanners: categoriasBannersResult.data || [],
-        servicosBanners: servicosBannersResult.data || []
+        servicosBanners: servicosBannersResult.data || [],
+        heroBanners: heroBannersResult.data || []
       },
       // ISR: Revalidar a cada 5 minutos
       revalidate: 300
@@ -368,7 +425,8 @@ export const getStaticProps: GetStaticProps = async () => {
         empresas: [],
         classificados: [],
         categoriasBanners: [],
-        servicosBanners: []
+        servicosBanners: [],
+        heroBanners: []
       },
       // Em caso de erro, tentar novamente em 1 minuto
       revalidate: 60

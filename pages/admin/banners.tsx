@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { GetServerSideProps } from 'next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -85,6 +85,18 @@ const bannerSchema = z.object({
     .min(50, 'Altura mínima é 50px')
     .max(1000, 'Altura máxima é 1000px')
     .int('Altura deve ser um número inteiro'),
+  ordem: z.number()
+    .int('Ordem deve ser um número inteiro')
+    .min(0, 'Ordem mínima é 0')
+    .max(9999, 'Ordem máxima é 9999')
+    .optional(),
+  tempo_exibicao: z.number()
+    .int('Tempo deve ser um número inteiro')
+    .min(1, 'Tempo mínimo é 1 segundo')
+    .max(60, 'Tempo máximo é 60 segundos')
+    .default(5),
+  local: z.enum(['geral', 'home', 'guia_comercial', 'noticias', 'eventos', 'classificados'])
+    .default('geral'),
   ativo: z.boolean(),
   data_inicio: z.string()
     .optional()
@@ -114,7 +126,7 @@ interface BannersPageProps {
 const posicoesBanner = [
   {
     nome: 'Hero Carousel',
-    descricao: 'Carrossel principal da página inicial (4 slides de cores)',
+    descricao: 'Carrossel grande no topo da página inicial; ocupa toda a largura e alterna automaticamente. Exemplo: primeiro bloco visível logo abaixo do cabeçalho.',
     tamanhoRecomendado: '1170x330 (Hero Banner)',
     larguraRecomendada: 1170,
     alturaRecomendada: 330,
@@ -122,7 +134,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Categorias Banner',
-    descricao: 'Banner acima da seção "Explore Nossas Categorias"',
+    descricao: 'Faixa acima da seção "Explore Nossas Categorias" na página inicial, antes dos ícones de categorias. Exemplo: logo após o carrossel principal.',
     tamanhoRecomendado: '1170x330 (Hero Banner)',
     larguraRecomendada: 1170,
     alturaRecomendada: 330,
@@ -130,7 +142,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Serviços Banner',
-    descricao: 'Banner abaixo da seção "Serviços Úteis"',
+    descricao: 'Faixa abaixo da seção "Serviços Úteis" na página inicial, separando serviços e próximo conteúdo. Exemplo: bloco imediatamente após os cartões de serviços.',
     tamanhoRecomendado: '1170x330 (Hero Banner)',
     larguraRecomendada: 1170,
     alturaRecomendada: 330,
@@ -139,7 +151,7 @@ const posicoesBanner = [
 
   {
     nome: 'Header Inferior', 
-    descricao: 'Abaixo do menu principal',
+    descricao: 'Faixa horizontal logo abaixo do menu principal (topo da página). Visível em todas as páginas.',
     tamanhoRecomendado: '970x90 (Super Banner)',
     larguraRecomendada: 970,
     alturaRecomendada: 90,
@@ -147,7 +159,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Banner Principal',
-    descricao: 'Banner principal da página inicial (lado direito do hero)',
+    descricao: 'Banner destacado à direita do carrossel principal na página inicial. Exemplo: bloco lateral direito do topo.',
     tamanhoRecomendado: '400x300 (Retângulo)',
     larguraRecomendada: 400,
     alturaRecomendada: 300,
@@ -155,7 +167,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Empresas Destaque - Topo',
-    descricao: 'Acima da seção de empresas em destaque',
+    descricao: 'Faixa posicionada acima da seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
     tamanhoRecomendado: '970x250 (Billboard)',
     larguraRecomendada: 970,
     alturaRecomendada: 250,
@@ -163,7 +175,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Empresas Destaque - Rodapé 1',
-    descricao: 'Primeira posição após empresas em destaque',
+    descricao: 'Primeira faixa logo após a seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
     tamanhoRecomendado: '300x250 (Retângulo Médio)',
     larguraRecomendada: 300,
     alturaRecomendada: 250,
@@ -171,7 +183,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Empresas Destaque - Rodapé 2',
-    descricao: 'Segunda posição após empresas em destaque',
+    descricao: 'Segunda faixa após a seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
     tamanhoRecomendado: '300x250 (Retângulo Médio)',
     larguraRecomendada: 300,
     alturaRecomendada: 250,
@@ -179,7 +191,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Eventos - Rodapé',
-    descricao: 'Após a seção de eventos',
+    descricao: 'Faixa logo após a seção de eventos. Visível na página inicial e na página de Eventos.',
     tamanhoRecomendado: '728x90 (Leaderboard)',
     larguraRecomendada: 728,
     alturaRecomendada: 90,
@@ -187,7 +199,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Sidebar Direita',
-    descricao: 'Barra lateral direita',
+    descricao: 'Banner na barra lateral direita, ao lado do conteúdo principal. Páginas: Notícias, Eventos e Classificados.',
     tamanhoRecomendado: '300x600 (Arranha-céu)',
     larguraRecomendada: 300,
     alturaRecomendada: 600,
@@ -195,7 +207,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Sidebar Esquerda',
-    descricao: 'Barra lateral esquerda',
+    descricao: 'Banner na barra lateral esquerda, ao lado do conteúdo principal. Páginas: Notícias, Eventos e Classificados.',
     tamanhoRecomendado: '300x600 (Arranha-céu)',
     larguraRecomendada: 300,
     alturaRecomendada: 600,
@@ -203,7 +215,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Entre Conteúdo',
-    descricao: 'No meio do conteúdo das páginas',
+    descricao: 'Banner inserido entre blocos de conteúdo, dentro do corpo das páginas. Ideal para breaks de leitura.',
     tamanhoRecomendado: '336x280 (Retângulo Grande)',
     larguraRecomendada: 336,
     alturaRecomendada: 280,
@@ -211,7 +223,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Footer',
-    descricao: 'Rodapé do site',
+    descricao: 'Faixa posicionada no rodapé do site, antes dos links finais. Visível em todas as páginas.',
     tamanhoRecomendado: '728x90 (Leaderboard)',
     larguraRecomendada: 728,
     alturaRecomendada: 90,
@@ -219,7 +231,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Popup',
-    descricao: 'Modal/popup sobreposto',
+    descricao: 'Janela modal sobreposta ao conteúdo. Pode aparecer sobre qualquer página, ideal para campanhas pontuais.',
     tamanhoRecomendado: '300x250 (Retângulo Médio)',
     larguraRecomendada: 300,
     alturaRecomendada: 250,
@@ -227,7 +239,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Mobile Banner',
-    descricao: 'Banner otimizado para dispositivos móveis',
+    descricao: 'Faixa otimizada para dispositivos móveis. Exibido em telas pequenas, geralmente no topo ou entre blocos.',
     tamanhoRecomendado: '320x50 (Mobile Banner)',
     larguraRecomendada: 320,
     alturaRecomendada: 50,
@@ -235,7 +247,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Empresas Destaque - Rodapé 3',
-    descricao: 'Terceira posição após empresas em destaque',
+    descricao: 'Terceira faixa após a seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
     tamanhoRecomendado: '300x250 (Retângulo Médio)',
     larguraRecomendada: 300,
     alturaRecomendada: 250,
@@ -243,7 +255,7 @@ const posicoesBanner = [
   },
   {
     nome: 'Notícias - Topo',
-    descricao: 'Acima da listagem de notícias',
+    descricao: 'Faixa acima da listagem de notícias na página de Notícias. Exemplo: aparece antes dos cards de notícia.',
     tamanhoRecomendado: '728x90 (Leaderboard)',
     larguraRecomendada: 728,
     alturaRecomendada: 90,
@@ -390,6 +402,7 @@ const CountdownTimer = ({ banner }: { banner: Banner }) => {
 }
 
 export default function BannersPage({ initialBanners }: BannersPageProps) {
+  const loadedOnceRef = useRef(false)
   const { success: showSuccess, error: showError } = useToastActions()
   const [banners, setBanners] = useState<BannerWithStats[]>(initialBanners)
   const [showForm, setShowForm] = useState(false)
@@ -427,15 +440,16 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     formState: { errors },
   } = useForm<BannerForm>({
     resolver: zodResolver(bannerSchema),
-    defaultValues: {
-      nome: '',
-      posicao: '',
-      imagem: '',
-      link: '',
-      largura: 400,
-      altura: 200,
-      ativo: true,
-    },
+  defaultValues: {
+    nome: '',
+    posicao: '',
+    imagem: '',
+    link: '',
+    largura: 400,
+    altura: 200,
+    ordem: 0,
+    ativo: true,
+  },
   })
 
   const watchedImagem = watch('imagem')
@@ -456,28 +470,54 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     setError(null)
     
     try {
+      // Verificar autenticação: em ambiente admin, evite consultas cliente sem sessão
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) {
+        console.warn('⚠️ Usuário não autenticado no admin. Mantendo dados SSR, sem consultar novamente.')
+        return
+      }
+
+      // Ordenação principal por 'created_at' (mais recentes primeiro) e secundária por 'ordem'
       const { data, error } = await supabase
         .from('banners')
         .select('*')
         .order('created_at', { ascending: false })
-      
+        .order('ordem', { ascending: true })
+
       if (error) {
-        console.error('❌ Erro ao carregar banners:', error)
-        setError('Erro ao carregar banners: ' + error.message)
+        const errMsg = (error as any)?.message || (error as any)?.error_description || String(error)
+        console.warn('⚠️ Erro ao ordenar por "ordem". Aplicando fallback.', errMsg)
+
+        // Fallback: tentar apenas ordenar por created_at
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('banners')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (fallbackError) {
+          const fbMsg = (fallbackError as any)?.message || (fallbackError as any)?.error_description || String(fallbackError)
+          console.error('❌ Erro ao carregar banners (fallback):', fbMsg)
+          setError('Erro ao carregar banners: ' + fbMsg)
+          return
+        }
+
+        console.log('✅ Banners carregados (fallback):', fallbackData?.length || 0)
+        setBanners(fallbackData || [])
         return
       }
-      
+
       console.log('✅ Banners carregados:', data?.length || 0)
       setBanners(data || [])
     } catch (error) {
       console.error('❌ Erro na função loadBanners:', error)
-      setError('Erro inesperado ao carregar banners')
+      const msg = (error as any)?.message || (error as any)?.error_description || (typeof error === 'object' ? JSON.stringify(error) : String(error))
+      setError('Erro inesperado ao carregar banners: ' + msg)
     } finally {
       setLoadingList(false)
     }
   }
 
-  const loadBannerStats = async () => {
+  const loadBannerStats = async (signal?: AbortSignal) => {
     console.log('📊 Carregando estatísticas dos banners...')
     setLoadingAllStats(true)
     
@@ -494,7 +534,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal
       })
       
       if (!response.ok) {
@@ -503,23 +544,47 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       }
       
       const data = await response.json()
-      
-      if (data.success && data.data?.banners) {
-        const statsMap: Record<string, BannerStats> = {}
-        
-        data.data.banners.forEach((banner: any) => {
-          statsMap[banner.id] = {
-            impressoes: banner.impressoes || 0,
-            cliques: banner.cliques || 0,
-            ctr: banner.ctr || 0
+
+      const statsMap: Record<string, BannerStats> = {}
+
+      // Suporte ao formato atual do endpoint: { success, data: BannerStatsResumido[] }
+      if (data?.success && Array.isArray(data?.data)) {
+        data.data.forEach((stat: any) => {
+          const bannerId = stat.bannerId || stat.id
+          if (!bannerId) return
+          statsMap[bannerId] = {
+            impressoes: stat.impressoes || 0,
+            cliques: stat.cliques || 0,
+            ctr: stat.ctr || 0
           }
         })
-        
+      }
+
+      // Suporte a formato alternativo: { banners: [...] }
+      if (!Object.keys(statsMap).length && Array.isArray(data?.banners)) {
+        data.banners.forEach((stat: any) => {
+          const bannerId = stat.bannerId || stat.id
+          if (!bannerId) return
+          statsMap[bannerId] = {
+            impressoes: stat.impressoes || 0,
+            cliques: stat.cliques || 0,
+            ctr: stat.ctr || 0
+          }
+        })
+      }
+
+      if (Object.keys(statsMap).length) {
         setBannerStats(statsMap)
         console.log('✅ Estatísticas carregadas para', Object.keys(statsMap).length, 'banners')
+      } else {
+        console.log('ℹ️ Nenhuma estatística disponível no endpoint')
       }
-    } catch (error) {
-      console.warn('⚠️ Erro ao carregar estatísticas:', error)
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        console.log('⏹️ Requisição de estatísticas abortada (navegação/desmontagem)')
+      } else {
+        console.warn('⚠️ Erro ao carregar estatísticas:', error)
+      }
       // Não mostrar erro para o usuário, apenas log
     } finally {
       setLoadingAllStats(false)
@@ -528,9 +593,15 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
   // Carregar banners e estatísticas quando o componente for montado
   useEffect(() => {
+    if (loadedOnceRef.current) return
+    loadedOnceRef.current = true
     console.log('🔄 Carregando banners...')
+    const controller = new AbortController()
     loadBanners()
-    loadBannerStats()
+    loadBannerStats(controller.signal)
+    return () => {
+      controller.abort()
+    }
   }, [])
 
   // Carregar filtros do localStorage após montagem
@@ -661,11 +732,72 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
            filters.schedule !== 'all'
   }, [filters])
 
-  // Obter posições únicas dos banners
+  // Obter posições disponíveis: união das posições configuradas com as existentes nos dados
   const availablePositions = useMemo(() => {
-    const positions = Array.from(new Set(banners.map(banner => banner.posicao)))
-    return positions.sort()
+    const configured = posicoesBanner.map(p => p.nome)
+    const fromData = Array.from(new Set(banners.map(banner => banner.posicao)))
+    const all = Array.from(new Set([...configured, ...fromData]))
+    return all.sort((a, b) => a.localeCompare(b))
   }, [banners])
+
+  const validateBannerPosition = async (data: BannerForm): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/banners/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          posicao: data.posicao,
+          // Removido do frontend: validação por local na interface
+          bannerId: editingBanner?.id,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.valid) {
+        const conflicts = Array.isArray(result.conflictingBanners) ? result.conflictingBanners : []
+        const hasLimitMsg = typeof result.message === 'string' && result.message.includes('Limite máximo')
+
+        const details = conflicts.length > 0
+          ? `\nConflitos (${conflicts.length}):\n` + conflicts.map((c: any) => `- ${c.nome}`).join('\n')
+          : ''
+
+        const confirmText = hasLimitMsg
+          ? `${result.message}\nDeseja desativar banners conflitantes para continuar?`
+          : `${result.message || 'Conflito de posição'}${details}\n\nDeseja desativar banners conflitantes para continuar?`
+
+        const proceed = confirm(confirmText)
+        if (!proceed) return false
+
+        // Desativar banners conflitantes via endpoint admin (service role)
+        const deactivateResp = await fetch('/api/banners/deactivate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            posicao: data.posicao, 
+            excludeBannerId: editingBanner?.id || undefined
+          })
+        })
+        const deactivateJson = await deactivateResp.json()
+        if (!deactivateResp.ok || !deactivateJson.success) {
+          console.error('❌ Erro ao desativar banners existentes:', deactivateJson)
+          alert(deactivateJson.message || 'Falha ao desativar banners existentes')
+          return false
+        }
+
+        alert('Banners conflitantes desativados com sucesso. Prosseguindo com o salvamento.')
+        return true
+      }
+
+      return true
+    } catch (error) {
+      console.error('❌ Erro ao validar posição:', error)
+      // Se houver erro na validação, permite salvar (fallback)
+      return true
+    }
+  }
 
   const onSubmit = async (data: BannerForm) => {
     console.log('💾 Salvando banner:', data)
@@ -680,28 +812,22 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     try {
       // Validações de segurança adicionais
       
-      // 1. Verificar se a imagem existe no bucket
+      // 1. Verificar se a imagem está no bucket público e acessível
       if (data.imagem) {
         try {
           const imageUrl = new URL(data.imagem)
-          const pathParts = imageUrl.pathname.split('/')
-          const bucketIndex = pathParts.findIndex(part => part === 'banners')
-          
-          if (bucketIndex === -1) {
-            throw new Error('Imagem deve estar no bucket "banners"')
+          const urlPath = imageUrl.pathname || ''
+
+          // Garantir que é uma URL pública do Supabase Storage para o bucket banners
+          const isPublicBannerUrl = urlPath.includes('/storage/v1/object/public/banners/') || urlPath.split('/').includes('banners')
+          if (!isPublicBannerUrl) {
+            throw new Error('Imagem deve estar no bucket público "banners" do Supabase')
           }
-          
-          const imagePath = pathParts.slice(bucketIndex + 1).join('/')
-          
-          // Verificar se o arquivo existe
-          const { data: fileData, error: fileError } = await supabase.storage
-            .from('banners')
-            .list(imagePath.split('/').slice(0, -1).join('/') || '', {
-              search: imagePath.split('/').pop()
-            })
-          
-          if (fileError || !fileData?.length) {
-            throw new Error('Arquivo de imagem não encontrado no storage')
+
+          // Verificar acessibilidade via HEAD na URL pública
+          const headResp = await fetch(data.imagem, { method: 'HEAD', cache: 'no-store' })
+          if (!headResp.ok) {
+            throw new Error(`Imagem inacessível (status ${headResp.status}). Verifique se o bucket está público.`)
           }
         } catch (error) {
           console.error('❌ Erro na validação da imagem:', error)
@@ -710,42 +836,13 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         }
       }
       
-      // 2. Verificar se já existe um banner ativo na mesma posição (apenas para novos banners)
-      if (!editingBanner) {
-        const { data: existingBanners, error: checkError } = await supabase
-          .from('banners')
-          .select('id, nome')
-          .eq('posicao', data.posicao)
-          .eq('ativo', true)
-        
-        if (checkError) {
-          console.error('❌ Erro ao verificar banners existentes:', checkError)
-          throw checkError
-        }
-        
-        if (existingBanners && existingBanners.length > 0) {
-          const confirmReplace = confirm(
-            `Já existe um banner ativo na posição "${data.posicao}" (${existingBanners[0].nome}). ` +
-            'Deseja continuar? O banner existente será desativado automaticamente.'
-          )
-          
-          if (!confirmReplace) {
-            return
-          }
-          
-          // Desativar banners existentes na mesma posição
-          const { error: deactivateError } = await supabase
-            .from('banners')
-            .update({ ativo: false, updated_at: new Date().toISOString() })
-            .eq('posicao', data.posicao)
-            .eq('ativo', true)
-          
-          if (deactivateError) {
-            console.error('❌ Erro ao desativar banners existentes:', deactivateError)
-            throw deactivateError
-          }
-        }
+      // 2. Validar se pode salvar nesta posição/local
+      const isValid = await validateBannerPosition(data)
+      if (!isValid) {
+        return
       }
+      
+      // 3. A checagem e desativação de conflitos agora é feita em validateBannerPosition
       
       // 3. Sanitizar dados antes de salvar
       const sanitizedData = {
@@ -755,6 +852,9 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         // Garantir que dimensões sejam números inteiros
         largura: Math.round(data.largura),
         altura: Math.round(data.altura),
+        ordem: typeof data.ordem === 'number' ? Math.round(data.ordem) : 0,
+        // Não enviar 'local' do formulário visual
+        local: undefined,
         // Converter datas para ISO string ou null
         data_inicio: data.data_inicio ? new Date(data.data_inicio).toISOString() : null,
         data_fim: data.data_fim ? new Date(data.data_fim).toISOString() : null,
@@ -829,6 +929,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       link: banner.link || '',
       largura: banner.largura || 400,
       altura: banner.altura || 200,
+      ordem: banner.ordem ?? 0,
       ativo: banner.ativo,
       data_inicio: formatDateForInput(banner.data_inicio ?? null),
       data_fim: formatDateForInput(banner.data_fim ?? null),
@@ -1254,6 +1355,41 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ordem de Exibição
+                  </label>
+                  <input
+                    {...register('ordem', { valueAsNumber: true })}
+                    type="number"
+                    min="0"
+                    max="9999"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="0"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Menor número aparece primeiro na posição.</p>
+                </div>
+
+                
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tempo de Exibição (segundos)
+                  </label>
+                  <input
+                    {...register('tempo_exibicao', { valueAsNumber: true })}
+                    type="number"
+                    min="1"
+                    max="60"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="5"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Tempo que o banner ficará visível antes de trocar (1-60 segundos).</p>
+                  {errors.tempo_exibicao && (
+                    <p className="mt-1 text-sm text-red-600">{errors.tempo_exibicao.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Largura (px) *
                     {watchedPosicao && (
                       <span className="text-xs text-blue-600 ml-2">
@@ -1296,6 +1432,30 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   )}
                 </div>
 
+                {/* Botões rápidos de dimensões */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Botões Rápidos
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                      onClick={() => { setValue('largura', 640); setValue('altura', 200); }}
+                    >Aplicar 640×200 (Guia)</button>
+                    <button
+                      type="button"
+                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                      onClick={() => { setValue('largura', 585); setValue('altura', 330); }}
+                    >Aplicar 585×330 (Padrão)</button>
+                    <button
+                      type="button"
+                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                      onClick={() => { setValue('largura', 300); setValue('altura', 600); }}
+                    >Aplicar 300×600 (Sidebar)</button>
+                  </div>
+                </div>
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Link (opcional)
@@ -1322,7 +1482,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   bucket="banners"
                   folder="images"
                   showLibraryButton={true}
-                  useNewMediaAPI={true}
+                  useNewMediaAPI={false}
                 />
                 {errors.imagem && (
                   <p className="mt-1 text-sm text-red-600">{errors.imagem.message}</p>
@@ -1614,7 +1774,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {loadingStats ? (
+                            {loadingAllStats ? (
                               <div className="flex items-center space-x-2">
                                 <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-400"></div>
                                 <span className="text-xs text-gray-500">Carregando...</span>
@@ -1862,19 +2022,33 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
     const supabase = createServerSupabaseClient(ctx)
     
-    // Buscar banners
-    const { data: banners, error: bannersError } = await supabase
+    // Buscar banners com ordenação principal por 'created_at' desc e secundária por 'ordem'
+    let initialBanners: Banner[] = []
+
+    const { data: orderedByOrdem, error: ordemError } = await supabase
       .from('banners')
       .select('*')
       .order('created_at', { ascending: false })
+      .order('ordem', { ascending: true })
 
-    if (bannersError) {
-      console.error('Erro ao buscar banners:', bannersError)
+    if (ordemError) {
+      console.warn('SSR: falha ao ordenar por "ordem". Aplicando fallback.', ordemError)
+      const { data: orderedByCreatedAt, error: createdAtError } = await supabase
+        .from('banners')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (createdAtError) {
+        console.error('SSR: erro ao buscar banners (fallback):', createdAtError)
+      }
+      initialBanners = orderedByCreatedAt || []
+    } else {
+      initialBanners = orderedByOrdem || []
     }
 
     return {
       props: {
-        initialBanners: banners || [],
+        initialBanners,
       },
     }
   } catch (error) {

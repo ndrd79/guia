@@ -7,39 +7,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { banner_id, position, url, timestamp } = req.body
+    const { banner_id, position, link_url } = req.body
 
     if (!banner_id || !position) {
       return res.status(400).json({ error: 'banner_id e position são obrigatórios' })
     }
 
-    // Registrar clique no banco
-    const { error } = await supabase
+    // Registrar clique no banco (tabela de analytics)
+    const { error: insertError } = await supabase
       .from('banner_analytics')
       .insert({
         banner_id,
         tipo: 'clique',
-        ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+        posicao: position,
+        link_url: typeof link_url === 'string' ? link_url : null,
+        ip_address: req.headers['x-forwarded-for'] || (req.socket as any)?.remoteAddress,
         user_agent: req.headers['user-agent']
       })
 
-    if (error) {
-      console.error('Erro ao registrar clique:', error)
+    if (insertError) {
+      console.error('Erro ao registrar clique:', insertError)
       return res.status(500).json({ error: 'Erro interno do servidor' })
     }
 
-    // Incrementar contador de cliques do banner
-    // Primeiro, buscar o valor atual
-    const { data: bannerData } = await supabase
+    // Buscar valor atual de cliques
+    const { data: currentBanner, error: selectError } = await supabase
       .from('banners')
       .select('clicks')
       .eq('id', banner_id)
       .single()
 
-    const currentClicks = bannerData?.clicks || 0
+    if (selectError) {
+      console.error('Erro ao buscar cliques atuais:', selectError)
+      return res.status(500).json({ error: 'Erro interno do servidor' })
+    }
 
-    // Depois, atualizar com o valor incrementado
-    await supabase
+    const currentClicks = currentBanner?.clicks ?? 0
+
+    // Incrementar contador de cliques do banner
+    const { error: updateError } = await supabase
       .from('banners')
       .update({ 
         clicks: currentClicks + 1,
@@ -47,9 +53,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
       .eq('id', banner_id)
 
+    if (updateError) {
+      console.error('Erro ao atualizar cliques do banner:', updateError)
+      return res.status(500).json({ error: 'Erro interno do servidor' })
+    }
+
     res.status(200).json({ success: true })
   } catch (error) {
-    console.error('Erro na API de analytics:', error)
+    console.error('Erro na API de analytics de clique:', error)
     res.status(500).json({ error: 'Erro interno do servidor' })
   }
 }
