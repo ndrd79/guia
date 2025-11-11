@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -67,6 +68,7 @@ const ITEMS_PER_PAGE = 10
 
 function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   const { showToast } = useToastActions()
+  const router = useRouter()
   const [noticias, setNoticias] = useState<Noticia[]>(initialNoticias)
   const [showForm, setShowForm] = useState(false)
   const [editingNoticia, setEditingNoticia] = useState<Noticia | null>(null)
@@ -83,6 +85,34 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   const [showPreview, setShowPreview] = useState(false)
   
   const { banners } = useBanners()
+
+  // Guarda de autenticação client-side
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          showToast('Faça login para acessar o painel de notícias.', 'error')
+          router.replace('/admin/login')
+          return
+        }
+        // Verificar perfil admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+        if (!profile || profile.role !== 'admin') {
+          showToast('Acesso restrito a administradores.', 'error')
+          router.replace('/admin/login?error=unauthorized')
+        }
+      } catch (e) {
+        // Em caso de erro de sessão, redirecionar para login
+        router.replace('/admin/login')
+      }
+    }
+    checkAuth()
+  }, [router, showToast])
 
   // Filter and paginate noticias
   const filteredAndPaginatedNoticias = useMemo(() => {
@@ -175,65 +205,48 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   }
 
   const onSubmit = async (data: NoticiaFormData) => {
-    if (!supabase) {
-      showToast('Sistema não está configurado', 'error')
-      return
-    }
-    
     setLoading(true)
-    
     try {
-      // Se a notícia está sendo marcada como destaque, desmarcar todas as outras
-      if (data.destaque) {
-        const { error: updateError } = await supabase
-          .from('noticias')
-          .update({ destaque: false })
-          .neq('id', editingNoticia?.id || 'new')
-        
-        if (updateError) {
-          console.error('Erro ao desmarcar outras notícias em destaque:', updateError)
-        }
+      // Obter token da sessão para autenticação da API admin
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        showToast('Sessão expirada. Faça login novamente.', 'error')
+        router.replace('/admin/login')
+        return
       }
-      
-      // Preparar dados, removendo campos vazios que devem ser null
-      const preparedData = {
+
+      const payload = {
         ...data,
         banner_id: data.banner_id || null,
         imagem: data.imagem || null,
         destaque: data.destaque || false,
       }
-      
-      if (editingNoticia) {
-        // Atualizar notícia existente
-        const { error } = await supabase
-          .from('noticias')
-          .update({
-            ...preparedData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingNoticia.id)
-        
-        if (error) throw error
-        showToast('Notícia atualizada com sucesso!', 'success')
-      } else {
-        // Criar nova notícia
-        const { error } = await supabase
-          .from('noticias')
-          .insert([{
-            ...preparedData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }])
-        
-        if (error) throw error
-        showToast('Notícia criada com sucesso!', 'success')
+
+      const endpoint = '/api/admin/noticias'
+      const method = editingNoticia ? 'PUT' : 'POST'
+      const body = editingNoticia ? { id: editingNoticia.id, ...payload } : payload
+
+      const resp = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!resp.ok) {
+        const json = await resp.json().catch(() => ({ error: resp.statusText }))
+        throw new Error(json.error || `Erro ${resp.status}`)
       }
-      
+
+      showToast(editingNoticia ? 'Notícia atualizada com sucesso!' : 'Notícia criada com sucesso!', 'success')
       await loadNoticias()
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar notícia:', error)
-      showToast('Erro ao salvar notícia', 'error')
+      const message = error?.message || 'Erro ao salvar notícia'
+      showToast(message, 'error')
     } finally {
       setLoading(false)
     }
@@ -256,24 +269,32 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta notícia?')) return
-    if (!supabase) {
-      showToast('Sistema não está configurado', 'error')
-      return
-    }
-    
     try {
-      const { error } = await supabase
-        .from('noticias')
-        .delete()
-        .eq('id', id)
-      
-      if (error) throw error
-      
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        showToast('Sessão expirada. Faça login novamente.', 'error')
+        router.replace('/admin/login')
+        return
+      }
+
+      const resp = await fetch(`/api/admin/noticias?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      })
+
+      if (!resp.ok) {
+        const json = await resp.json().catch(() => ({ error: resp.statusText }))
+        throw new Error(json.error || `Erro ${resp.status}`)
+      }
+
       await loadNoticias()
       showToast('Notícia excluída com sucesso!', 'success')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao excluir notícia:', error)
-      showToast('Erro ao excluir notícia', 'error')
+      const message = error?.message || 'Erro ao excluir notícia'
+      showToast(message, 'error')
     }
   }
 
@@ -652,6 +673,32 @@ export default function NoticiasAdmin({ initialNoticias }: NoticiasPageProps) {
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
     const supabase = createServerSupabaseClient(ctx)
+
+    // Verificar sessão e papel admin no SSR
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || profile.role !== 'admin') {
+      return {
+        redirect: {
+          destination: '/admin/login?error=unauthorized',
+          permanent: false,
+        },
+      }
+    }
 
     // Buscar notícias
     const { data: noticias } = await supabase
