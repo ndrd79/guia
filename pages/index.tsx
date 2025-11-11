@@ -35,8 +35,14 @@ const HomePage: React.FC<HomePageProps> = ({
   heroBanners
 }) => {
   // Usar dados reais do banco em vez de dados mockados
-  const featuredNews = noticias.find(noticia => noticia.destaque) || noticias[0];
-  const recentNews = noticias.filter(noticia => !noticia.destaque).slice(0, 7);
+  const featuredNews = noticias.find(n => n.destaque) ?? noticias[0];
+  const recentNews = (featuredNews 
+    ? noticias.filter(n => n.id !== featuredNews.id)
+    : noticias
+  ).slice(0, 7);
+  // Uma notícia ao lado do destaque e as demais abaixo
+  const companionNews = recentNews[0];
+  const gridNews = recentNews.slice(1);
 
   const categories = [
     { name: 'Restaurantes', icon: 'fas fa-utensils', href: '/empresas-locais?categoria=Alimentação' },
@@ -96,42 +102,72 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Seção de Notícias */}
-        <section className="py-8 bg-white">
+        <section className="py-12 bg-gradient-to-b from-white to-gray-50">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold">Notícias</h2>
-              <Link href="/noticias" className="text-indigo-600 hover:text-indigo-800 font-medium">
-                Ver todas <i className="fas fa-arrow-right ml-1"></i>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">Notícias</h2>
+                <p className="text-gray-600 mt-1 text-sm md:text-base">Acompanhe as últimas atualizações da cidade</p>
+              </div>
+              <Link href="/noticias" className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
+                Ver todas <i className="fas fa-arrow-right ml-2 text-xs"></i>
               </Link>
             </div>
             
             {noticias.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {featuredNews && (
-                  <div className="md:col-span-2">
-                    <NewsCard 
-                      id={featuredNews.id}
-                      title={featuredNews.titulo}
-                      excerpt={featuredNews.descricao}
-                      imageUrl={featuredNews.imagem}
-                      category={featuredNews.categoria}
-                      publishedAt={new Date(featuredNews.data).toLocaleDateString('pt-BR')}
-                      featured={true}
-                    />
+              <div className="space-y-8">
+                {/* Linha com destaque (2/3) e uma notícia ao lado (1/3) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+                  <div className="md:col-span-2 rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5">
+                    {featuredNews && (
+                      <NewsCard 
+                        id={featuredNews.id}
+                        title={featuredNews.titulo}
+                        excerpt={featuredNews.descricao}
+                        imageUrl={featuredNews.imagem}
+                        category={featuredNews.categoria}
+                        publishedAt={new Date(featuredNews.data).toLocaleDateString('pt-BR')}
+                        featured={true}
+                        className="shadow-xl"
+                      />
+                    )}
                   </div>
-                )}
-                {recentNews.map((news) => (
-                  <NewsCard 
-                    key={news.id}
-                    id={news.id}
-                    title={news.titulo}
-                    excerpt={news.descricao}
-                    imageUrl={news.imagem}
-                    category={news.categoria}
-                    publishedAt={new Date(news.data).toLocaleDateString('pt-BR')}
-                    featured={false}
-                  />
-                ))}
+                  {companionNews && (
+                    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5 flex">
+                      <NewsCard 
+                        key={companionNews.id}
+                        id={companionNews.id}
+                        title={companionNews.titulo}
+                        excerpt={companionNews.descricao}
+                        imageUrl={companionNews.imagem}
+                        category={companionNews.categoria}
+                        publishedAt={new Date(companionNews.data).toLocaleDateString('pt-BR')}
+                        featured={false}
+                        tall={true}
+                        className="border border-gray-100"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Grid das outras 6 notícias abaixo */}
+                <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {gridNews.map((news) => (
+                      <NewsCard 
+                        key={news.id}
+                        id={news.id}
+                        title={news.titulo}
+                        excerpt={news.descricao}
+                        imageUrl={news.imagem}
+                        category={news.categoria}
+                        publishedAt={new Date(news.data).toLocaleDateString('pt-BR')}
+                        featured={false}
+                        className="border border-gray-100"
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
@@ -354,7 +390,7 @@ export const getStaticProps: GetStaticProps = async () => {
         .from('noticias')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10),
+        .limit(20),
       
       supabase
         .from('eventos')
