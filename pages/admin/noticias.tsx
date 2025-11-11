@@ -39,6 +39,8 @@ interface NoticiasPageProps {
 }
 
 const categorias = [
+  'Cidade',
+  'Policial',
   'Política',
   'Economia',
   'Esportes',

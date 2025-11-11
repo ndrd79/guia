@@ -402,10 +402,11 @@ export const getStaticProps: GetStaticProps = async () => {
       supabase
         .from('empresas')
         .select('*')
-        .eq('featured', true)
         .eq('ativo', true)
+        .or('featured.eq.true,plan_type.eq.premium')
+        .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(8),
+        .limit(24),
       
       supabase
         .from('classificados')
@@ -439,11 +440,33 @@ export const getStaticProps: GetStaticProps = async () => {
 
     // Erros são tratados silenciosamente em produção
 
+    // Processar empresas: incluir destacadas e premium não expiradas; limitar a 8
+    const empresasRaw = empresasResult.data || []
+    const empresasFiltradas = empresasRaw
+      .filter((e: any) => {
+        const isFeatured = e.featured === true
+        const isPremiumActive = e.plan_type === 'premium' && (
+          !e.premium_expires_at || new Date(e.premium_expires_at) > new Date()
+        )
+        return isFeatured || isPremiumActive
+      })
+      .sort((a: any, b: any) => {
+        // Ordenar: featured primeiro, depois premium ativo, depois data
+        if (a.featured && !b.featured) return -1
+        if (!a.featured && b.featured) return 1
+        const aPremiumActive = a.plan_type === 'premium' && (!a.premium_expires_at || new Date(a.premium_expires_at) > new Date())
+        const bPremiumActive = b.plan_type === 'premium' && (!b.premium_expires_at || new Date(b.premium_expires_at) > new Date())
+        if (aPremiumActive && !bPremiumActive) return -1
+        if (!aPremiumActive && bPremiumActive) return 1
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+      .slice(0, 8)
+
     return {
       props: {
         noticias: noticiasResult.data || [],
         eventos: eventosResult.data || [],
-        empresas: empresasResult.data || [],
+        empresas: empresasFiltradas,
         classificados: classificadosResult.data || [],
         categoriasBanners: categoriasBannersResult.data || [],
         servicosBanners: servicosBannersResult.data || [],

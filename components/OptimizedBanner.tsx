@@ -215,8 +215,8 @@ export default function OptimizedBanner({
           width={banner.largura}
           height={banner.altura}
           priority={priority}
-          quality={85}
-          sizes={sizes}
+          quality={92}
+          sizes={`${banner.largura}px`}
           className="w-full h-full object-contain md:object-cover"
           onLoad={handleImageLoad}
           onError={handleImageError}

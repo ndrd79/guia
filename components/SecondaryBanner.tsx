@@ -108,8 +108,9 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                             src={banner.imagem}
                             alt={banner.nome}
                             fill
-                            className="object-contain md:object-cover transition-transform duration-500 group-hover:scale-105"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1170px"
+                            className="object-contain transition-transform duration-500 group-hover:scale-105"
+                            sizes="100vw"
+                            quality={92}
                             priority={slideIndex === 0}
                             onError={(e) => {
                               console.error('Erro ao carregar banner:', banner.imagem);
@@ -131,8 +132,9 @@ const SecondaryBanner: React.FC<SecondaryBannerProps> = ({ banners }) => {
                           src={banner.imagem}
                           alt={banner.nome}
                           fill
-                          className="object-contain md:object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1170px"
+                          className="object-contain"
+                          sizes="100vw"
+                          quality={92}
                           priority={slideIndex === 0}
                           onError={(e) => {
                             console.error('Erro ao carregar banner:', banner.imagem);
