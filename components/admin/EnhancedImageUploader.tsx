@@ -140,7 +140,8 @@ export default function EnhancedImageUploader({
       const formData = new FormData();
       formData.append('files', uploadFile.file);
       formData.append('folder_path', selectedFolder);
-      formData.append('uploaded_by', 'admin'); // TODO: pegar do contexto de auth
+      // Se houver contexto de auth, passe o UUID do usuário
+      // formData.append('uploaded_by', currentUserId);
 
       const xhr = new XMLHttpRequest();
 

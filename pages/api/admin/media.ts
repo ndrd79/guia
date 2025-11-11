@@ -4,6 +4,12 @@ import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import os from 'os';
+// Validação simples de UUID v4
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isValidUuid(value: string): boolean {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,9 +65,9 @@ function generateUniqueFilename(originalName: string): string {
 }
 
 // Função para otimizar imagem
-async function optimizeImage(filePath: string, filename: string): Promise<{
-  thumbnailUrl?: string;
-  optimizedUrl?: string;
+async function optimizeImage(filePath: string, filename: string, bucketName: string): Promise<{
+  thumbnail_url?: string;
+  optimized_url?: string;
   width?: number;
   height?: number;
 }> {
@@ -91,14 +97,14 @@ async function optimizeImage(filePath: string, filename: string): Promise<{
     const optimizedBuffer = fs.readFileSync(optimizedPath);
 
     const { data: thumbnailUpload } = await supabase.storage
-      .from('media-library')
+      .from(bucketName)
       .upload(`thumbnails/${thumbnailFilename}`, thumbnailBuffer, {
         contentType: 'image/jpeg',
         upsert: true
       });
 
     const { data: optimizedUpload } = await supabase.storage
-      .from('media-library')
+      .from(bucketName)
       .upload(`optimized/${optimizedFilename}`, optimizedBuffer, {
         contentType: 'image/webp',
         upsert: true
@@ -108,17 +114,17 @@ async function optimizeImage(filePath: string, filename: string): Promise<{
     fs.unlinkSync(thumbnailPath);
     fs.unlinkSync(optimizedPath);
 
-    const { data: { publicUrl: thumbnailUrl } } = supabase.storage
-      .from('media-library')
+    const { data: { publicUrl: thumbnailPublicUrl } } = supabase.storage
+      .from(bucketName)
       .getPublicUrl(`thumbnails/${thumbnailFilename}`);
 
-    const { data: { publicUrl: optimizedUrl } } = supabase.storage
-      .from('media-library')
+    const { data: { publicUrl: optimizedPublicUrl } } = supabase.storage
+      .from(bucketName)
       .getPublicUrl(`optimized/${optimizedFilename}`);
 
     return {
-      thumbnailUrl,
-      optimizedUrl,
+      thumbnail_url: thumbnailPublicUrl,
+      optimized_url: optimizedPublicUrl,
       width: metadata.width,
       height: metadata.height
     };
@@ -160,7 +166,8 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     type = '',
     folder = '/',
     sortBy = 'created_at',
-    sortOrder = 'desc'
+    sortOrder = 'desc',
+    bucket = 'noticias'
   } = req.query;
 
   const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
@@ -207,19 +214,25 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
 // POST - Upload múltiplo de arquivos
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+  // Usar diretório temporário compatível com Windows/Linux
+  const tmpDir = os.tmpdir();
+
   const form = formidable({
     multiples: true,
     maxFileSize: 50 * 1024 * 1024, // 50MB
-    uploadDir: '/tmp',
+    uploadDir: tmpDir,
     keepExtensions: true
   });
 
   const [fields, files] = await form.parse(req);
   const uploadedFiles: MediaFile[] = [];
+  const errorMessages: string[] = [];
 
   const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean);
   const folderPath = (fields.folder_path?.[0] as string) || '/';
+  const bucketName = (fields.bucket?.[0] as string) || 'noticias';
   const uploadedBy = (fields.uploaded_by?.[0] as string) || '';
+  const uploadedBySafe = uploadedBy && isValidUuid(uploadedBy) ? uploadedBy : null;
 
   for (const file of fileArray) {
     if (!file) continue;
@@ -231,7 +244,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       // Upload para Supabase Storage
       const fileBuffer = fs.readFileSync(file.filepath);
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('media-library')
+        .from(bucketName)
         .upload(`files/${uniqueFilename}`, fileBuffer, {
           contentType: file.mimetype || 'application/octet-stream',
           upsert: true
@@ -239,17 +252,18 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
       if (uploadError) {
         console.error('Erro no upload:', uploadError);
+        errorMessages.push(`upload: ${uploadError.message}`);
         continue;
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('media-library')
+        .from(bucketName)
         .getPublicUrl(`files/${uniqueFilename}`);
 
       // Otimizar imagem se for o caso
       let optimizationData = {};
       if (fileType === 'image') {
-        optimizationData = await optimizeImage(file.filepath, uniqueFilename);
+        optimizationData = await optimizeImage(file.filepath, uniqueFilename, bucketName);
       }
 
       // Salvar no banco de dados
@@ -264,7 +278,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
           mime_type: file.mimetype || 'application/octet-stream',
           file_type: fileType,
           folder_path: folderPath,
-          uploaded_by: uploadedBy,
+          uploaded_by: uploadedBySafe,
           ...optimizationData
         })
         .select()
@@ -272,6 +286,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
       if (dbError) {
         console.error('Erro ao salvar no banco:', dbError);
+        errorMessages.push(`database: ${dbError.message}`);
         continue;
       }
 
@@ -284,9 +299,18 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     }
   }
 
+  if (uploadedFiles.length === 0) {
+    return res.status(400).json({
+      error: errorMessages.length ? errorMessages.join('; ') : 'Falha no upload: nenhum arquivo processado',
+      success: false
+    });
+  }
+
   return res.status(201).json({
     message: `${uploadedFiles.length} arquivo(s) enviado(s) com sucesso`,
-    data: uploadedFiles
+    data: uploadedFiles,
+    success: true,
+    files: uploadedFiles.map(f => ({ url: f.file_url, ...f }))
   });
 }
 
@@ -318,7 +342,8 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
 
 // DELETE - Deletar arquivo de mídia
 async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
+  const { id, bucket } = req.query;
+  const bucketName = (bucket as string) || 'noticias';
 
   // Buscar dados do arquivo
   const { data: mediaFile, error: fetchError } = await supabase
@@ -333,21 +358,21 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
 
   // Deletar do storage
   await supabase.storage
-    .from('media-library')
+    .from(bucketName)
     .remove([mediaFile.file_path]);
 
   // Deletar thumbnails e versões otimizadas se existirem
   if (mediaFile.thumbnail_url) {
     const thumbnailPath = mediaFile.thumbnail_url.split('/').pop();
     await supabase.storage
-      .from('media-library')
+      .from(bucketName)
       .remove([`thumbnails/${thumbnailPath}`]);
   }
 
   if (mediaFile.optimized_url) {
     const optimizedPath = mediaFile.optimized_url.split('/').pop();
     await supabase.storage
-      .from('media-library')
+      .from(bucketName)
       .remove([`optimized/${optimizedPath}`]);
   }
 

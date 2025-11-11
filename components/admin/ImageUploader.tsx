@@ -57,21 +57,36 @@ export default function ImageUploader({
         // Usar a nova API de mídia
         const formData = new FormData()
         formData.append('files', file)
-        formData.append('folder', folder)
-        
+        // A nova API espera 'folder_path' ao invés de 'folder'
+        formData.append('folder_path', folder || '/')
+        // Fornece bucket alvo quando disponível
+        if (bucket) {
+          formData.append('bucket', bucket)
+        }
+        // Opcional: identificar quem está fazendo upload
+        // Se houver contexto de auth, passe o UUID do usuário
+        // formData.append('uploaded_by', currentUserId)
+
         const response = await fetch('/api/admin/media', {
           method: 'POST',
           body: formData
         })
-        
+
         const result = await response.json()
-        
-        if (!response.ok || !result.success) {
-          throw new Error(result.error || 'Erro no upload')
+
+        if (!response.ok) {
+          throw new Error(result.error || `Erro no upload (${response.status})`)
         }
 
-        console.log('✅ Upload concluído via nova API:', result.files[0].url)
-        onChange(result.files[0].url)
+        // Suporta múltiplos formatos: {data:[{file_url}]}, {files:[{url}]}
+        const uploaded = Array.isArray(result.data) ? result.data[0] : null
+        const url = uploaded?.file_url || (Array.isArray(result.files) ? result.files[0]?.url : null)
+        if (!url) {
+          throw new Error('Resposta de upload inválida')
+        }
+
+        console.log('✅ Upload concluído via nova API:', url)
+        onChange(url)
       } else {
         // Usar a API original
         const formData = new FormData()
