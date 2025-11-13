@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '../../../lib/logger'
 
 // Usar cliente com service role para contornar RLS nas verificações administrativas
 const supabaseAdmin = createClient(
@@ -63,17 +64,54 @@ export default async function handler(
       })
     }
 
-    console.info('[VALIDATE] Validação permissiva para múltiplos banners', { posicao, local, bannerId })
+    logger.api('Validação de posição de banner', '/api/banners/validate', { posicao, local, bannerId })
 
-    // A validação agora é permissiva: permite múltiplos banners por posição e local.
-    // Mantemos a estrutura da resposta para compatibilidade.
-    return res.status(200).json({
-      valid: true,
-      message: 'Posição disponível (múltiplos banners permitidos)'
-    })
+    const { data: slot } = await supabaseAdmin
+      .from('banner_slots')
+      .select('*')
+      .or(`name.eq.${posicao},slug.eq.${posicao}`)
+      .eq('is_active', true)
+      .single()
+
+    const now = new Date().toISOString()
+    let query = supabaseAdmin
+      .from('banners')
+      .select('id,nome,ativo,local')
+      .eq('posicao', posicao)
+      .eq('ativo', true)
+      .or(`data_inicio.is.null,data_inicio.lte.${now}`)
+      .or(`data_fim.is.null,data_fim.gte.${now}`)
+
+    if (local && local !== 'geral') {
+      query = query.or(`local.eq.${local},local.eq.geral,local.is.null`)
+    }
+    if (bannerId) {
+      query = query.neq('id', bannerId)
+    }
+
+    const { data: activeBanners, error } = await query
+
+    if (error) {
+      logger.error('Erro ao verificar banners ativos', { error: error.message })
+      return res.status(500).json({ valid: false, message: 'Falha ao validar posição' })
+    }
+
+    const count = activeBanners?.length || 0
+    const maxAllowed = slot?.max_banners ?? Infinity
+
+    if (count >= maxAllowed) {
+      return res.status(200).json({
+        valid: false,
+        message: `Limite máximo atingido para esta posição (${maxAllowed}).`,
+        conflictingBanners: (activeBanners || []).map(b => ({ id: b.id, nome: b.nome, ativo: true, local: b.local ?? null })),
+        count
+      })
+    }
+
+    return res.status(200).json({ valid: true, message: 'Posição disponível' })
 
   } catch (error) {
-    console.error('Erro na validação:', error)
+    logger.error('Erro na validação de banners', { error: error instanceof Error ? error.message : String(error) })
     return res.status(500).json({ 
       valid: false, 
       message: 'Erro interno do servidor' 

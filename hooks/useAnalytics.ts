@@ -9,69 +9,55 @@ interface AnalyticsEvent {
 }
 
 export function useAnalytics() {
-  // Track banner view
-  const trackBannerView = useCallback(async (bannerId: string, position: string) => {
+  const sendBeaconJson = (url: string, payload: any) => {
     try {
-      const event: AnalyticsEvent = {
-        event: 'banner_view',
-        banner_id: bannerId,
-        position,
-        timestamp: Date.now()
+      if (typeof navigator !== 'undefined' && (navigator as any).sendBeacon) {
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+        ;(navigator as any).sendBeacon(url, blob)
+        return
       }
-
-      // Enviar para API de analytics
-      await fetch('/api/analytics/banner-view', {
+      fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(event)
-      })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {})
+    } catch {}
+  }
 
-      // Google Analytics (se disponível)
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'banner_view', {
-          banner_id: bannerId,
-          position: position,
-          custom_parameter: 'banner_tracking'
-        })
-      }
-    } catch (error) {
-      console.warn('Erro ao rastrear visualização do banner:', error)
+  const trackBannerView = useCallback((bannerId: string, position: string) => {
+    const event: AnalyticsEvent = {
+      event: 'banner_view',
+      banner_id: bannerId,
+      position,
+      timestamp: Date.now()
+    }
+    sendBeaconJson('/api/analytics/banner-view', event)
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'banner_view', {
+        banner_id: bannerId,
+        position: position,
+        custom_parameter: 'banner_tracking'
+      })
     }
   }, [])
 
-  // Track banner click
-  const trackBannerClick = useCallback(async (bannerId: string, position: string, url: string) => {
-    try {
-      const event: AnalyticsEvent = {
-        event: 'banner_click',
+  const trackBannerClick = useCallback((bannerId: string, position: string, url: string) => {
+    const event: AnalyticsEvent = {
+      event: 'banner_click',
+      banner_id: bannerId,
+      position,
+      url,
+      timestamp: Date.now()
+    }
+    sendBeaconJson('/api/analytics/banner-click', event)
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'banner_click', {
         banner_id: bannerId,
-        position,
-        url,
-        timestamp: Date.now()
-      }
-
-      // Enviar para API de analytics
-      await fetch('/api/analytics/banner-click', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(event)
+        position: position,
+        destination_url: url,
+        custom_parameter: 'banner_tracking'
       })
-
-      // Google Analytics (se disponível)
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'banner_click', {
-          banner_id: bannerId,
-          position: position,
-          destination_url: url,
-          custom_parameter: 'banner_tracking'
-        })
-      }
-    } catch (error) {
-      console.warn('Erro ao rastrear clique do banner:', error)
     }
   }, [])
 

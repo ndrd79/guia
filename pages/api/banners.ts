@@ -1,20 +1,25 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '../../lib/supabase'
+import { logger } from '../../lib/logger'
 
 // Mapeamento de posições para compatibilidade
 const positionMapping: Record<string, string> = {
-  'header': 'Header Inferior',
-  'footer': 'Footer',
-  'mobile': 'Mobile Banner',
+  header: 'Header Inferior',
+  footer: 'Footer',
+  mobile: 'Mobile Banner',
   'content-top': 'Entre Conteúdo',
   'content-middle': 'Entre Conteúdo',
   'content-bottom': 'Entre Conteúdo',
-  'sidebar': 'Sidebar Direita',
-  'hero': 'Hero Carousel',
+  sidebar: 'Sidebar Direita',
+  hero: 'Hero Carousel',
   // Sinônimos para evitar erro de escolha na UI/Admin
-  'Hero Banner': 'Hero Carousel',
-  'Hero': 'Hero Carousel',
-  'content': 'Entre Conteúdo'
+  'hero banner': 'Hero Carousel',
+  hero_banner: 'Hero Carousel',
+  content: 'Entre Conteúdo',
+  // CTA
+  cta: 'CTA Banner',
+  'cta banner': 'CTA Banner',
+  cta_banner: 'CTA Banner'
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -24,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { position, active, local } = req.query
+    logger.api('Listagem de banners', '/api/banners', { position, active, local })
 
     let query = supabase
       .from('banners')
@@ -31,8 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Se uma posição foi especificada, aplicar filtro
     if (position && typeof position === 'string') {
-      // Usar o mapeamento se a posição existir, senão usar a posição original
-      const mappedPosition = positionMapping[position] || position
+      const posLower = position.toLowerCase().trim()
+      const mappedPosition = positionMapping[posLower] || position
       query = query.eq('posicao', mappedPosition)
     }
 
@@ -60,13 +66,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { data, error } = await query
 
     if (error) {
-      console.error('Erro ao buscar banners:', error)
+      logger.error('Erro ao buscar banners', { error: error.message })
       return res.status(500).json({ 
         success: false, 
         error: 'Erro interno do servidor',
         details: error.message 
       })
     }
+
+    const latestUpdatedAt = (data || []).reduce<string | null>((acc, item: any) => {
+      const ts = item?.updated_at || item?.created_at || null
+      if (!ts) return acc
+      return !acc || ts > acc ? ts : acc
+    }, null)
+    const etag = `banners-${String(position || 'all')}-${String(local || 'all')}-${String(active || 'any')}-${latestUpdatedAt || (data?.length || 0)}`
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300')
+    res.setHeader('ETag', etag)
 
     return res.status(200).json({
       success: true,
@@ -75,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error) {
-    console.error('Erro na API de banners:', error)
+    logger.error('Erro na API de banners', { error: error instanceof Error ? error.message : String(error) })
     return res.status(500).json({ 
       success: false, 
       error: 'Erro interno do servidor',

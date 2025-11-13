@@ -150,6 +150,15 @@ const posicoesBanner = [
   },
 
   {
+    nome: 'CTA Banner',
+    descricao: 'Faixa retangular na coluna direita do bloco escuro (abaixo de Notícias e acima do Banner Categorias).',
+    tamanhoRecomendado: '585x360 (Retângulo amplo)',
+    larguraRecomendada: 585,
+    alturaRecomendada: 360,
+    paginas: ['Página Inicial']
+  },
+
+  {
     nome: 'Header Inferior', 
     descricao: 'Faixa horizontal logo abaixo do menu principal (topo da página). Visível em todas as páginas.',
     tamanhoRecomendado: '970x90 (Super Banner)',
@@ -457,6 +466,16 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedPosicao = watch('posicao')
   const watchedLargura = watch('largura')
   const watchedAltura = watch('altura')
+  const [posicaoOpen, setPosicaoOpen] = useState(false)
+  const [posicaoQuery, setPosicaoQuery] = useState('')
+  const [validateLoading, setValidateLoading] = useState(false)
+  const [validateError, setValidateError] = useState<string | null>(null)
+  const [validateResult, setValidateResult] = useState<{
+    valid: boolean
+    message?: string
+    conflictingBanners?: Array<{ id: string; nome: string; ativo: boolean; local?: string | null }>
+    count?: number
+  } | null>(null)
 
   // Cálculo para preview responsivo e validação de tamanho ideal
   const posInfo = posicoesBanner.find(p => p.nome === watchedPosicao)
@@ -665,6 +684,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       setValue('largura', posicao.larguraRecomendada)
       setValue('altura', posicao.alturaRecomendada)
     }
+    triggerValidate(posicaoNome)
   }
 
   // Funções de filtro
@@ -681,6 +701,25 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
       schedule: 'all'
     })
   }, [])
+
+  const triggerValidate = async (posicaoNome: string) => {
+    try {
+      setValidateLoading(true)
+      setValidateError(null)
+      setValidateResult(null)
+      const resp = await fetch('/api/banners/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ posicao: posicaoNome, bannerId: editingBanner?.id })
+      })
+      const json = await resp.json()
+      setValidateResult(json)
+    } catch (e: any) {
+      setValidateError(e?.message || 'Falha ao validar posição')
+    } finally {
+      setValidateLoading(false)
+    }
+  }
 
   // Função para filtrar banners
   const filteredBanners = useMemo(() => {
@@ -774,37 +813,11 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
 
       if (!result.valid) {
         const conflicts = Array.isArray(result.conflictingBanners) ? result.conflictingBanners : []
-        const hasLimitMsg = typeof result.message === 'string' && result.message.includes('Limite máximo')
-
-        const details = conflicts.length > 0
-          ? `\nConflitos (${conflicts.length}):\n` + conflicts.map((c: any) => `- ${c.nome}`).join('\n')
-          : ''
-
-        const confirmText = hasLimitMsg
-          ? `${result.message}\nDeseja desativar banners conflitantes para continuar?`
-          : `${result.message || 'Conflito de posição'}${details}\n\nDeseja desativar banners conflitantes para continuar?`
-
-        const proceed = confirm(confirmText)
-        if (!proceed) return false
-
-        // Desativar banners conflitantes via endpoint admin (service role)
-        const deactivateResp = await fetch('/api/banners/deactivate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            posicao: data.posicao, 
-            excludeBannerId: editingBanner?.id || undefined
-          })
-        })
-        const deactivateJson = await deactivateResp.json()
-        if (!deactivateResp.ok || !deactivateJson.success) {
-          console.error('❌ Erro ao desativar banners existentes:', deactivateJson)
-          alert(deactivateJson.message || 'Falha ao desativar banners existentes')
-          return false
-        }
-
-        alert('Banners conflitantes desativados com sucesso. Prosseguindo com o salvamento.')
-        return true
+        const list = conflicts.length ? ` Conflitos: ${conflicts.map((c: any) => c.nome).join(', ')}` : ''
+        const msg = result.message || 'Conflito de posição. Use o botão "Desativar conflitos" para liberar a posição.'
+        setError(`Erro ao validar posição: ${msg}.${list}`)
+        showError('Posição com conflitos. Use "Desativar conflitos" e tente novamente.')
+        return false
       }
 
       return true
@@ -893,21 +906,22 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         }
         console.log('✅ Banner atualizado com sucesso')
       } else {
-        console.log('➕ Criando novo banner')
-        // Criar novo banner
-        const { error } = await supabase
-          .from('banners')
-          .insert([{
-            ...sanitizedData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }])
-        
-        if (error) {
-          console.error('❌ Erro ao criar banner:', error)
-          throw error
+        console.log('➕ Criando novo banner via rota admin')
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token || ''
+        const resp = await fetch('/api/admin/banners', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(sanitizedData)
+        })
+        const json = await resp.json()
+        if (!resp.ok || !json?.success) {
+          throw new Error(json?.message || `Falha ao criar banner (status ${resp.status})`)
         }
-        console.log('✅ Banner criado com sucesso')
+        console.log('✅ Banner criado com sucesso, id:', json.id)
       }
       
       console.log('🔄 Recarregando lista de banners...')
@@ -1331,43 +1345,138 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                 </div>
                 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Posição no Site *
-                  </label>
-                  <select
-                    value={watchedPosicao || ''}
-                    onChange={(e) => {
-                      setValue('posicao', e.target.value)
-                      handlePosicaoChange(e.target.value)
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  >
-                    <option value="">Selecione onde o banner será exibido</option>
-                    {posicoesBanner.map((posicao) => (
-                      <option key={posicao.nome} value={posicao.nome}>
-                        {posicao.nome} - {posicao.tamanhoRecomendado} | {posicao.paginas.join(', ')}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Posição no Site *</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={posicaoQuery}
+                      onChange={(e) => setPosicaoQuery(e.target.value)}
+                      onFocus={() => setPosicaoOpen(true)}
+                      placeholder={watchedPosicao || 'Digite para buscar posição...'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    {posicaoOpen && (
+                      <div className="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-gray-200 bg-white shadow">
+                        {(() => {
+                          const filtro = (posicaoQuery || '').toLowerCase()
+                          const deriveLoc = (nome: string) => {
+                            if (nome.toLowerCase().includes('header')) return 'Header'
+                            if (nome.toLowerCase().includes('sidebar')) return 'Sidebar'
+                            if (nome.toLowerCase().includes('footer')) return 'Footer'
+                            if (nome.toLowerCase().includes('conteúdo') || nome.toLowerCase().includes('conteudo')) return 'Conteúdo'
+                            if (nome.toLowerCase().includes('popup')) return 'Popup'
+                            return 'Outros'
+                          }
+                          const grupos: Record<string, typeof posicoesBanner> = {}
+                          posicoesBanner
+                            .filter(p => p.nome.toLowerCase().includes(filtro))
+                            .forEach(p => {
+                              const g = deriveLoc(p.nome)
+                              grupos[g] = grupos[g] ? [...grupos[g], p] : [p]
+                            })
+                          const keys = Object.keys(grupos)
+                          if (keys.length === 0) {
+                            return <div className="px-3 py-2 text-sm text-gray-500">Nenhuma posição encontrada</div>
+                          }
+                          return (
+                            <div>
+                              {keys.map(k => (
+                                <div key={k}>
+                                  <div className="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-50">{k}</div>
+                                  {grupos[k].map(item => (
+                                    <button
+                                      key={item.nome}
+                                      type="button"
+                                      onClick={() => {
+                                        setValue('posicao', item.nome)
+                                        handlePosicaoChange(item.nome)
+                                        setPosicaoQuery('')
+                                        setPosicaoOpen(false)
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${watchedPosicao === item.nome ? 'bg-orange-100' : ''}`}
+                                    >
+                                      <span className="font-medium text-gray-900">{item.nome}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    )}
+                  </div>
                   {errors.posicao && (
                     <p className="mt-1 text-sm text-red-600">{errors.posicao.message}</p>
                   )}
-                  {watchedPosicao && (
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                      {(() => {
-                        const posicaoSelecionada = posicoesBanner.find(p => p.nome === watchedPosicao)
-                        return posicaoSelecionada ? (
-                          <div>
-                            <p className="text-sm font-medium text-blue-800">{posicaoSelecionada.nome}</p>
-                            <p className="text-sm text-blue-600">{posicaoSelecionada.descricao}</p>
-                            <p className="text-sm text-blue-600">📏 Tamanho recomendado: {posicaoSelecionada.tamanhoRecomendado}</p>
-                            <p className="text-sm text-blue-600">📍 Páginas: {posicaoSelecionada.paginas.join(', ')}</p>
+                {watchedPosicao && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    {(() => {
+                      const posicaoSelecionada = posicoesBanner.find(p => p.nome === watchedPosicao)
+                      return posicaoSelecionada ? (
+                        <div>
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{posicaoSelecionada.tamanhoRecomendado}</span>
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{posicaoSelecionada.paginas.join(', ')}</span>
                           </div>
-                        ) : null
-                      })()} 
-                    </div>
-                  )}
-                </div>
+                          <div className="text-sm text-blue-800 font-medium">{posicaoSelecionada.nome}</div>
+                          <div className="text-sm text-blue-600">{posicaoSelecionada.descricao}</div>
+                          <div className="mt-3">
+                            <div className="text-xs text-blue-900 font-semibold mb-1">Status da posição</div>
+                            {validateLoading ? (
+                              <div className="flex items-center text-sm text-blue-700"><div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-2"></div>Validando...</div>
+                            ) : validateError ? (
+                              <div className="text-sm text-red-700">{validateError}</div>
+                            ) : validateResult ? (
+                              <div className="space-y-2">
+                                <div className={`text-sm ${validateResult.valid ? 'text-green-700' : 'text-orange-700'}`}>{validateResult.message || (validateResult.valid ? 'Posição disponível' : 'Conflitos detectados')}</div>
+                                {typeof validateResult.count === 'number' && (
+                                  <div className="text-xs text-gray-700">Banners ativos nessa posição: <span className="font-semibold">{validateResult.count}</span></div>
+                                )}
+                                {Array.isArray(validateResult.conflictingBanners) && validateResult.conflictingBanners.length > 0 && (
+                                  <div className="text-xs text-gray-700">
+                                    Conflitos:
+                                    <ul className="list-disc list-inside">
+                                      {validateResult.conflictingBanners.map(cb => (
+                                        <li key={cb.id}>{cb.nome}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {!validateResult.valid && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try {
+                                        const resp = await fetch('/api/banners/deactivate', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ posicao: watchedPosicao, local: 'geral', excludeBannerId: editingBanner?.id || undefined })
+                                        })
+                                        const json = await resp.json()
+                                        if (!resp.ok || !json.success) {
+                                          alert(json.message || 'Falha ao desativar banners conflitantes')
+                                          return
+                                        }
+                                        alert('Banners conflitantes desativados com sucesso.')
+                                        // Revalidar
+                                        await triggerValidate(watchedPosicao)
+                                      } catch (e: any) {
+                                        alert('Erro ao desativar: ' + (e?.message || 'desconhecido'))
+                                      }
+                                    }}
+                                    className="mt-2 inline-flex items-center px-3 py-1.5 rounded bg-orange-600 text-white text-xs hover:bg-orange-700"
+                                  >Desativar conflitos</button>
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null
+                    })()}
+                  </div>
+                )}
+              </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

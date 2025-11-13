@@ -30,6 +30,8 @@ export default function BannerCarousel({
 }: BannerCarouselProps) {
   const [banners, setBanners] = useState<BannerData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [prevIndex, setPrevIndex] = useState<number | null>(null)
+  const [animating, setAnimating] = useState(false)
   const timerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -57,33 +59,60 @@ export default function BannerCarousel({
     return () => controller.abort()
   }, [position, local, maxBanners])
 
+  const goToIndex = (i: number) => {
+    if (i === currentIndex) return
+    setPrevIndex(currentIndex)
+    setCurrentIndex(i)
+    setAnimating(true)
+    window.setTimeout(() => {
+      setAnimating(false)
+      setPrevIndex(null)
+    }, Math.max(300, Math.min(1200, interval * 0.4)))
+  }
+
   useEffect(() => {
     if (!autoRotate || banners.length <= 1) return
     if (timerRef.current) {
       window.clearInterval(timerRef.current)
     }
     timerRef.current = window.setInterval(() => {
-      setCurrentIndex((idx) => (idx + 1) % banners.length)
+      const next = (currentIndex + 1) % banners.length
+      goToIndex(next)
     }, Math.max(2000, interval))
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current)
     }
-  }, [autoRotate, interval, banners.length])
+  }, [autoRotate, interval, banners.length, currentIndex])
 
   const currentBanner = useMemo(() => banners[currentIndex], [banners, currentIndex])
+  const previousBanner = useMemo(() => (prevIndex !== null ? banners[prevIndex] : null), [banners, prevIndex])
 
   if (!banners.length) return null
 
+  const targetHeight = (currentBanner?.altura as number | undefined) || 360
+
   return (
-    <div className={`banner-carousel relative overflow-hidden ${className}`}>
-      <div className="relative w-full">
+    <div className={`banner-carousel relative overflow-hidden ${className}`} style={{ height: targetHeight }}>
+      <div className="absolute inset-0">
+        {previousBanner && (
+          <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${animating ? 'opacity-0' : 'opacity-0'}`}>
+            <OptimizedBanner 
+              banner={previousBanner as any}
+              position={position}
+              priority={false}
+              lazy={false}
+            />
+          </div>
+        )}
         {currentBanner && (
-          <OptimizedBanner 
-            banner={currentBanner as any}
-            position={position}
-            priority={true}
-            lazy={false}
-          />
+          <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${animating ? 'opacity-100' : 'opacity-100'}`}>
+            <OptimizedBanner 
+              banner={currentBanner as any}
+              position={position}
+              priority={true}
+              lazy={false}
+            />
+          </div>
         )}
       </div>
 
@@ -94,7 +123,7 @@ export default function BannerCarousel({
               key={b.id}
               aria-label={`Slide ${i + 1}`}
               className={`h-2 w-2 rounded-full ${i === currentIndex ? 'bg-white' : 'bg-white/50'}`}
-              onClick={() => setCurrentIndex(i)}
+              onClick={() => goToIndex(i)}
             />
           ))}
         </div>

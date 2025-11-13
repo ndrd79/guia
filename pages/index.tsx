@@ -13,6 +13,7 @@ import SecondaryBanner from '../components/SecondaryBanner';
 import FooterBanner from '../components/FooterBanner';
 import WeatherSlider from '../components/WeatherSlider';
 import HeroBanner from '../components/HeroBanner';
+import BannerContainer from '../components/BannerContainer';
 import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Banner } from '../lib/supabase';
 
 interface HomePageProps {
@@ -202,13 +203,14 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
               </div>
               <div>
-                <div className="bg-white rounded-xl shadow-lg p-2">
-                  <img
-                    src="/images/placeholder-empresa-400x300.svg"
-                    alt="Serviço local em destaque"
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                </div>
+                <BannerCarousel
+                  position="CTA Banner"
+                  local="home"
+                  interval={5000}
+                  autoRotate={true}
+                  maxBanners={0}
+                  className="rounded-lg p-0 shadow-none max-h-[360px] bg-transparent"
+                />
               </div>
             </div>
           </div>

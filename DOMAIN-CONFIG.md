@@ -24,6 +24,7 @@ Em Supabase → Authentication → URL Configuration:
 
 ## Email
 - Configure SMTP: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `ADMIN_EMAILS`, `EMAIL_FROM`.
+- Redirecionamento de contato: defina `CONTACT_FORWARD_TO` com um ou mais emails válidos (separados por vírgula). Ex.: `CONTACT_FORWARD_TO=support@portalmariahelena.com.br,comercial@portalmariahelena.com.br`.
 - Configure SPF/DKIM/DMARC no DNS para entregabilidade.
 
 ## Redirects

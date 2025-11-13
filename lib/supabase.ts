@@ -1,19 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, createBrowserClient } from '@supabase/ssr'
 import { GetServerSidePropsContext } from 'next'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Cliente principal do Supabase com configuração de persistência
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
-  }
-})
+// Cliente principal do Supabase (browser) usando cookies via SSR
+// Isso permite que o middleware no servidor reconheça a sessão do usuário
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
 // Cliente para uso no servidor (SSR)
 export function createServerSupabaseClient(ctx?: GetServerSidePropsContext) {

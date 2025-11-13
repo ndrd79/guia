@@ -354,3 +354,84 @@ export const testEmailConfiguration = async (): Promise<boolean> => {
     return false;
   }
 };
+
+// =============================
+// Contato - Redirecionamento
+// =============================
+export interface ContactMessage {
+  name: string;
+  email?: string;
+  subject?: string;
+  phone?: string;
+  message: string;
+}
+
+export const sendContactMessage = async (data: ContactMessage): Promise<boolean> => {
+  try {
+    const transporter = createTransporter();
+
+    if (!transporter) {
+      console.warn('Transporter de email não configurado. Contato não será enviado.');
+      return false;
+    }
+
+    // Destinatários: CONTACT_FORWARD_TO tem prioridade; fallback para ADMIN_EMAILS
+    const forwardTargets = (process.env.CONTACT_FORWARD_TO || process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map(e => e.trim())
+      .filter(Boolean);
+
+    if (forwardTargets.length === 0) {
+      console.warn('Nenhum destinatário configurado para contato (CONTACT_FORWARD_TO/ADMIN_EMAILS)');
+      return false;
+    }
+
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@portalmariahelena.com.br';
+    const subject = `📬 Contato: ${data.subject || 'Sem assunto'} - ${data.name}`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 16px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 8px 8px 0 0;">
+          <h2 style="margin: 0;">📬 Nova mensagem de contato</h2>
+          <p style="margin: 4px 0 0 0;">Portal Maria Helena</p>
+        </div>
+        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+          <div style="background: #fff; border-left: 4px solid #667eea; padding: 12px; border-radius: 6px;">
+            <p><strong>Nome:</strong> ${data.name}</p>
+            ${data.email ? `<p><strong>Email:</strong> ${data.email}</p>` : ''}
+            ${data.phone ? `<p><strong>Telefone:</strong> ${data.phone}</p>` : ''}
+            ${data.subject ? `<p><strong>Assunto:</strong> ${data.subject}</p>` : ''}
+          </div>
+          <div style="margin-top: 16px;">
+            <p style="margin: 0 0 8px 0;"><strong>Mensagem:</strong></p>
+            <div style="white-space: pre-wrap; background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 6px;">${data.message}</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 16px; color: #666; font-size: 12px;">
+          <p style="margin: 0;">Este é um email automático do Portal Maria Helena. Não responda.</p>
+        </div>
+      </div>
+    `;
+
+    const text = `Nova mensagem de contato\n\nNome: ${data.name}\n${data.email ? `Email: ${data.email}\n` : ''}${data.phone ? `Telefone: ${data.phone}\n` : ''}${data.subject ? `Assunto: ${data.subject}\n` : ''}\nMensagem:\n${data.message}`;
+
+    const mailOptions = {
+      from: {
+        name: 'Portal Maria Helena',
+        address: fromAddress,
+      },
+      to: forwardTargets,
+      replyTo: data.email || undefined,
+      subject,
+      html,
+      text,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Contato encaminhado:', result.messageId);
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao encaminhar contato:', error);
+    return false;
+  }
+};

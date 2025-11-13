@@ -24,17 +24,41 @@ const ContatoPage = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      phone: '',
-      message: '',
-      privacy: false
-    });
+    try {
+      const resp = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          phone: formData.phone,
+          message: formData.message,
+        }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        const msg = (data && data.error) ? data.error : 'Falha ao enviar contato';
+        alert(msg);
+        return;
+      }
+
+      alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        phone: '',
+        message: '',
+        privacy: false
+      });
+    } catch (err) {
+      console.error('Erro ao enviar contato:', err);
+      alert('Erro inesperado ao enviar sua mensagem. Tente novamente.');
+    }
   };
 
   const toggleFAQ = (index: number) => {

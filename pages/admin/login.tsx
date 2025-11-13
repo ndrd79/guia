@@ -3,8 +3,8 @@ import { useRouter } from 'next/router'
 import { supabase } from '../../lib/supabase'
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('admin@portal.com')
-  const [password, setPassword] = useState('123456')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [debugInfo, setDebugInfo] = useState('')
@@ -89,39 +89,45 @@ export default function AdminLogin() {
       setDebugInfo('Login bem-sucedido! Redirecionando...')
       
       // Verificar se a sessão foi salva corretamente
-      const { data: sessionData } = await supabase.auth.getSession()
-      
+      let { data: sessionData } = await supabase.auth.getSession()
+      if (!sessionData.session && data.session) {
+        // Fallback: persistir sessão manualmente
+        const { data: setSessionData, error: setSessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        })
+        if (setSessionError) {
+          setError('Erro ao salvar sessão. Tente novamente.')
+          setDebugInfo('Falha ao persistir sessão via fallback: ' + setSessionError.message)
+          return
+        }
+        sessionData = { session: setSessionData.session }
+      }
+
       if (!sessionData.session) {
         setError('Erro ao salvar sessão. Tente novamente.')
-        setDebugInfo('Erro: Sessão não foi salva')
+        setDebugInfo('Erro: Sessão não foi salva (sem tokens disponíveis)')
         return
       }
       
-      // Verificar se o perfil admin existe
-       try {
-         const { data: profile, error: profileError } = await supabase
-           .from('profiles')
-           .select('role')
-           .eq('id', data.user.id)
-           .single()
-         
-         if (profileError || !profile) {
-           const { error: insertError } = await supabase
-             .from('profiles')
-             .insert({
-               id: data.user.id,
-               email: data.user.email,
-               role: 'admin'
-             })
-         } else if (profile.role !== 'admin') {
-           await supabase
-             .from('profiles')
-             .update({ role: 'admin' })
-             .eq('id', data.user.id)
-         }
-       } catch (profileErr) {
-         // Erro tratado silenciosamente
-       }
+      // Verificar apenas se o perfil admin existe (sem elevar privilégios)
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profileError || !profile || profile.role !== 'admin') {
+          setError('Acesso restrito a administradores. Solicite habilitação ao suporte.')
+          setDebugInfo('Perfil sem role admin')
+          return
+        }
+      } catch (profileErr) {
+        setError('Erro ao validar permissões de acesso.')
+        setDebugInfo(`Erro perfil: ${String(profileErr)}`)
+        return
+      }
        
        // Redirecionamento via página intermediária
        setDebugInfo('Login bem-sucedido! Redirecionando...')
@@ -129,11 +135,8 @@ export default function AdminLogin() {
        // Usar página de redirecionamento intermediária para garantir autenticação
        const redirectTo = router.query.redirect as string || '/admin'
        const redirectUrl = `/admin/redirect?redirect=${encodeURIComponent(redirectTo)}`
-       
-       // Aguardar um pouco e redirecionar
-       setTimeout(() => {
-         window.location.href = redirectUrl
-       }, 1000)
+       // Navegar usando o router para evitar aborts
+       router.replace(redirectUrl)
 
     } catch (err: any) {
       const errorMessage = err.message || 'Erro inesperado ao fazer login'
@@ -171,6 +174,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               disabled={loading}
@@ -185,6 +189,7 @@ export default function AdminLogin() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               disabled={loading}

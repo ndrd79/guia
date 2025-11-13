@@ -18,17 +18,13 @@ export default function AdminRedirect() {
         
         if (error) {
           setStatus('Erro na autenticação. Redirecionando para login...')
-          setTimeout(() => {
-            router.push('/admin/login')
-          }, 2000)
+          router.replace('/admin/login')
           return
         }
         
         if (!session) {
           setStatus('Sessão não encontrada. Redirecionando para login...')
-          setTimeout(() => {
-            router.push('/admin/login')
-          }, 2000)
+          router.replace('/admin/login')
           return
         }
         
@@ -43,26 +39,19 @@ export default function AdminRedirect() {
         
         if (profileError || !profile || profile.role !== 'admin') {
           setStatus('Acesso negado. Redirecionando para login...')
-          setTimeout(() => {
-            router.push('/admin/login?error=unauthorized')
-          }, 2000)
+          router.replace('/admin/login?error=unauthorized')
           return
         }
         
         setStatus('Autenticação confirmada! Redirecionando para dashboard...')
         
         // Redirecionar para o destino final
-        const redirectTo = router.query.redirect as string || '/admin'
-        
-        setTimeout(() => {
-          window.location.href = redirectTo
-        }, 1000)
+        const redirectTo = (router.query.redirect as string) || '/admin'
+        router.replace(redirectTo)
         
       } catch (error) {
         setStatus('Erro inesperado. Redirecionando para login...')
-        setTimeout(() => {
-          router.push('/admin/login')
-        }, 2000)
+        router.replace('/admin/login')
       }
     }
 
