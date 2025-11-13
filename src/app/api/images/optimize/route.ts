@@ -1,5 +1,6 @@
 import sharp from 'sharp';
 import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs'
 
 interface CropOptions {
   width: number;
@@ -9,7 +10,7 @@ interface CropOptions {
   fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside';
 }
 
-export async function cropImage(
+async function cropImage(
   imageBuffer: Buffer,
   options: CropOptions
 ): Promise<Buffer> {
@@ -114,19 +115,4 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Função para gerar URL de imagem otimizada
-export function getOptimizedImageUrl(
-  originalUrl: string,
-  options: Partial<CropOptions>
-): string {
-  const params = new URLSearchParams({
-    url: originalUrl,
-    width: (options.width || 400).toString(),
-    height: (options.height || 200).toString(),
-    quality: (options.quality || 80).toString(),
-    format: options.format || 'webp',
-    fit: options.fit || 'cover',
-  });
-
-  return `/api/images/optimize?${params.toString()}`;
-}
+// helper removido: use src/lib/images.getOptimizedImageUrl no client

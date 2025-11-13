@@ -37,6 +37,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'banner_id e position são obrigatórios' })
     }
 
+    // Validar origem e aplicar rate limit antes de registrar
+    if (!isAllowedOrigin(req)) {
+      return res.status(403).json({ error: 'origin não permitida' })
+    }
+
+    const ipRaw = String(req.headers['x-forwarded-for'] || (req.socket as any)?.remoteAddress || '')
+    const ipKey = ipRaw.split(',')[0].trim() || 'unknown'
+    if (!rateLimit(`bc:${ipKey}:${banner_id}`)) {
+      return res.status(429).json({ error: 'rate limit' })
+    }
+
     // Registrar clique no banco (tabela de analytics)
     const { error: insertError } = await supabase
       .from('banner_analytics')
@@ -88,12 +99,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Erro interno do servidor' })
   }
 }
-    if (!isAllowedOrigin(req)) {
-      return res.status(403).json({ error: 'origin não permitida' })
-    }
-
-    const ipRaw = String(req.headers['x-forwarded-for'] || (req.socket as any)?.remoteAddress || '')
-    const ipKey = ipRaw.split(',')[0].trim() || 'unknown'
-    if (!rateLimit(`bc:${ipKey}:${banner_id}`)) {
-      return res.status(429).json({ error: 'rate limit' })
-    }
