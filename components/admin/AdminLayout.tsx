@@ -100,22 +100,29 @@ export default function AdminLayout({ children, title = 'Painel Administrativo' 
           </div>
           
           <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="px-3">
-              <Link
-                href="/"
-                className="flex items-center w-full px-3 py-2 mb-2 text-sm font-medium text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-              >
-                <ExternalLink className="mr-3 h-5 w-5" />
-                Voltar ao Site
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Sair
-              </button>
-            </div>
+          <div className="px-3">
+            <Link
+              href="/"
+              className="flex items-center w-full px-3 py-2 mb-2 text-sm font-medium text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+            >
+              <ExternalLink className="mr-3 h-5 w-5" />
+              Voltar ao Site
+            </Link>
+            <Link
+              href="/noticias"
+              className="flex items-center w-full px-3 py-2 mb-2 text-sm font-medium text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+            >
+              <ExternalLink className="mr-3 h-5 w-5" />
+              Ver Notícias (pública)
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              Sair
+            </button>
+          </div>
           </div>
         </nav>
       </div>
