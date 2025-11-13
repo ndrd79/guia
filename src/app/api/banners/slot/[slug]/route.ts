@@ -108,11 +108,13 @@ export async function GET(
         image_url: banner.image_url,
         link_url: banner.link_url,
         priority: banner.priority,
-        company: banner.companies ? {
-          id: banner.companies.id,
-          name: banner.companies.name,
-          logo_url: banner.companies.logo_url
-        } : null
+        company: banner.companies && Array.isArray(banner.companies) && banner.companies.length > 0
+          ? {
+              id: banner.companies[0].id,
+              name: banner.companies[0].name,
+              logo_url: banner.companies[0].logo_url
+            }
+          : null
       })) || []
     };
 
