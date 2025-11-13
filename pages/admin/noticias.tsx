@@ -593,6 +593,56 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
                 {errors.conteudo && (
                   <p className="mt-1 text-sm text-red-600">{errors.conteudo.message}</p>
                 )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+                    onClick={async () => {
+                      try {
+                        const resp = await fetch('/api/news/auto-format', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ title: watchedTitulo, content: watchedConteudo, category: watch('categoria') })
+                        })
+                        const json = await resp.json()
+                        if (!resp.ok) throw new Error(json?.error || 'Falha ao autoformatar')
+                        const r = json.result
+                        if (r?.dek) setValue('descricao', r.dek)
+                        if (r?.html) setValue('conteudo', r.html)
+                        showToast('Conteúdo autoformatado', 'success')
+                      } catch (e: any) {
+                        showToast(e?.message || 'Erro ao autoformatar', 'error')
+                      }
+                    }}
+                  >
+                    Autoformatar
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700"
+                    onClick={async () => {
+                      try {
+                        const resp = await fetch('/api/news/paraphrase', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ title: watchedTitulo, content: watchedConteudo, category: watch('categoria') })
+                        })
+                        const json = await resp.json()
+                        if (!resp.ok) throw new Error(json?.error || 'Falha ao reescrever')
+                        const p = json.paraphrased
+                        const f = json.formatted
+                        if (p?.title) setValue('titulo', p.title)
+                        if (f?.dek) setValue('descricao', f.dek)
+                        if (f?.html) setValue('conteudo', f.html)
+                        showToast('Texto reescrito e formatado', 'success')
+                      } catch (e: any) {
+                        showToast(e?.message || 'Erro ao reescrever', 'error')
+                      }
+                    }}
+                  >
+                    Reescrever e formatar
+                  </button>
+                </div>
               </div>
               
               {/* Componente de IA para reescrita */}
@@ -673,34 +723,10 @@ export default function NoticiasAdmin({ initialNoticias }: NoticiasPageProps) {
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
     const supabase = createServerSupabaseClient(ctx)
-
-    // Verificar sessão e papel admin no SSR
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return {
-        redirect: {
-          destination: '/admin/login',
-          permanent: false,
-        },
-      }
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'admin') {
-      return {
-        redirect: {
-          destination: '/admin/login?error=unauthorized',
-          permanent: false,
-        },
-      }
-    }
-
-    // Buscar notícias
+    // Nota: evitar redirecionamento SSR aqui para não causar "bounce" para login
+    // quando a sessão do Supabase não está disponível via cookies no servidor.
+    // A verificação de autenticação será feita no client-side ao montar a página.
+    // Buscar notícias (leitura pública permitida pelas políticas RLS)
     const { data: noticias } = await supabase
       .from('noticias')
       .select('*')
