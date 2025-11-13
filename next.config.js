@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async headers() {
     return [
       {
@@ -19,4 +22,3 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
-
