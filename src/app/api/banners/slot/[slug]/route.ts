@@ -227,7 +227,7 @@ export async function POST(
       const { error: updateError } = await supabase
         .from('banners')
         .update({ 
-          click_count: supabase.sql('click_count + 1'),
+          click_count: banner.click_count + 1,
           updated_at: new Date().toISOString()
         })
         .eq('id', banner_id);
