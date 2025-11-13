@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS public.banner_templates
+  ENABLE ROW LEVEL SECURITY;
