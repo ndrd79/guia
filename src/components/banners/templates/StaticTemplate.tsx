@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import Image from 'next/image';
-import { TemplateProps } from '../BannerTemplateRegistry';
+import { TemplateProps } from '@/lib/banners/BannerTemplateRegistry';
 
 export function StaticTemplate({ banners, config, onBannerClick, deviceType }: TemplateProps) {
   const {

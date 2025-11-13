@@ -21,6 +21,7 @@ export interface BannerData {
   id: string;
   title: string;
   image_url: string;
+  image_url_mobile?: string;
   link_url: string;
   target_blank: boolean;
   priority: number;

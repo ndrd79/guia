@@ -83,7 +83,7 @@ class BannerCache {
   clearSlot(slotSlug: string): void {
     const keysToDelete: string[] = [];
     
-    for (const key of this.cache.keys()) {
+    for (const key of Array.from(this.cache.keys())) {
       if (key.startsWith(`banner:${slotSlug}:`)) {
         keysToDelete.push(key);
       }

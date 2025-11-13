@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { TemplateProps } from '../BannerTemplateRegistry';
+import { TemplateProps } from '@/lib/banners/BannerTemplateRegistry';
 
 export function CustomTemplate({ banners, config, onBannerClick, deviceType }: TemplateProps) {
   const {

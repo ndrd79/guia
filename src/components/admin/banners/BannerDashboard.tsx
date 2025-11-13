@@ -26,6 +26,7 @@ interface BannerSlot {
   show_on_mobile: boolean;
   show_on_desktop: boolean;
   analytics_enabled: boolean;
+  default_config: any;
   created_at: string;
   updated_at: string;
 }
@@ -320,7 +321,7 @@ export function BannerDashboard({
       {/* Wizard Modal */}
       {showWizard && (
         <BannerPositionWizard
-          slot={selectedSlot}
+          slot={selectedSlot || undefined}
           templates={templates}
           onClose={handleWizardClose}
           clone={wizardClone}

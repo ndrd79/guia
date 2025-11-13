@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
-import { TemplateProps } from '../BannerTemplateRegistry';
+import { TemplateProps } from '@/lib/banners/BannerTemplateRegistry';
 
 export function VideoTemplate({ banners, config, onBannerClick, deviceType }: TemplateProps) {
   const videoRef = useRef<HTMLVideoElement>(null);

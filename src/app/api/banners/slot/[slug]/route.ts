@@ -184,7 +184,7 @@ export async function POST(
     // Buscar informações do banner
     const { data: banner, error: bannerError } = await supabase
       .from('banners')
-      .select('id, title, company_id')
+      .select('id, title, company_id, click_count')
       .eq('id', banner_id)
       .single();
 

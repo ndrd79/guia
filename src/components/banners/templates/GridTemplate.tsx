@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import Image from 'next/image';
-import { TemplateProps } from '../BannerTemplateRegistry';
+import { TemplateProps } from '@/lib/banners/BannerTemplateRegistry';
 
 export function GridTemplate({ banners, config, onBannerClick, deviceType }: TemplateProps) {
   const {
@@ -32,7 +32,7 @@ export function GridTemplate({ banners, config, onBannerClick, deviceType }: Tem
         maxWidth: '100%'
       }}
     >
-      {banners.map((banner, index) => (
+      {banners.map((banner: any, index: number) => (
         <div
           key={banner.id}
           className="relative group overflow-hidden rounded-lg bg-gray-100"

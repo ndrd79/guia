@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { TemplateProps } from '../BannerTemplateRegistry';
+import { TemplateProps } from '@/lib/banners/BannerTemplateRegistry';
 
 export function CarouselTemplate({ banners, config, onBannerClick, deviceType }: TemplateProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -119,7 +119,7 @@ export function CarouselTemplate({ banners, config, onBannerClick, deviceType }:
       {/* Indicators */}
       {showIndicators && banners.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-          {banners.map((_, index) => (
+          {banners.map((_: any, index: number) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}

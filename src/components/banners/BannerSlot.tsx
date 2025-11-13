@@ -41,6 +41,7 @@ interface SlotConfig {
   analytics_enabled: boolean;
   show_on_mobile: boolean;
   show_on_desktop: boolean;
+  pages: string[];
 }
 
 export function BannerSlot({ slotSlug, currentPage = 'home', className = '', onBannerClick }: BannerSlotProps) {

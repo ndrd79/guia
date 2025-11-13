@@ -65,11 +65,10 @@ export function BannerAnalytics({ slots }: BannerAnalyticsProps) {
         .select(`
           date:timestamp::date,
           event_type,
-          count()
+          count
         `)
         .gte('timestamp', startDate.toISOString())
         .in('event_type', ['impression', 'click'])
-        .group('date, event_type')
         .order('date', { ascending: true });
 
       if (selectedSlot !== 'all') {
@@ -84,7 +83,7 @@ export function BannerAnalytics({ slots }: BannerAnalyticsProps) {
       const processedData: AnalyticsData[] = [];
       const dateMap = new Map<string, { impressions: number; clicks: number }>();
 
-      dailyData?.forEach(row => {
+      dailyData?.forEach((row: any) => {
         const date = row.date as string;
         if (!dateMap.has(date)) {
           dateMap.set(date, { impressions: 0, clicks: 0 });
@@ -115,11 +114,10 @@ export function BannerAnalytics({ slots }: BannerAnalyticsProps) {
         .select(`
           slot_id,
           event_type,
-          count()
+          count
         `)
         .gte('timestamp', startDate.toISOString())
         .in('event_type', ['impression', 'click'])
-        .group('slot_id, event_type')
         .order('slot_id');
 
       const { data: slotData, error: slotError } = await slotQuery;
@@ -129,7 +127,7 @@ export function BannerAnalytics({ slots }: BannerAnalyticsProps) {
       // Processar dados por slot
       const slotMap = new Map<string, { impressions: number; clicks: number }>();
 
-      slotData?.forEach(row => {
+      slotData?.forEach((row: any) => {
         const slotId = row.slot_id as string;
         if (!slotMap.has(slotId)) {
           slotMap.set(slotId, { impressions: 0, clicks: 0 });
