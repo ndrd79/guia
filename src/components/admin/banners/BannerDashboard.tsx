@@ -37,9 +37,25 @@ interface BannerTemplate {
   description: string | null;
 }
 
-export function BannerDashboard() {
-  const [slots, setSlots] = useState<BannerSlot[]>([]);
-  const [templates, setTemplates] = useState<BannerTemplate[]>([]);
+interface BannerDashboardProps {
+  slots?: BannerSlot[];
+  templates?: BannerTemplate[];
+  onSlotUpdate?: (updatedSlot: BannerSlot) => Promise<void>;
+  onSlotCreate?: (
+    newSlot: Omit<BannerSlot, 'id' | 'created_at' | 'updated_at'>
+  ) => Promise<void>;
+  onRefresh?: () => Promise<void>;
+}
+
+export function BannerDashboard({
+  slots: slotsProp,
+  templates: templatesProp,
+  onSlotUpdate,
+  onSlotCreate,
+  onRefresh,
+}: BannerDashboardProps = {}) {
+  const [slots, setSlots] = useState<BannerSlot[]>(slotsProp || []);
+  const [templates, setTemplates] = useState<BannerTemplate[]>(templatesProp || []);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<BannerSlot | null>(null);
@@ -48,10 +64,12 @@ export function BannerDashboard() {
 
   const supabase = createClientComponentClient<Database>();
 
-  // Buscar dados
+  // Buscar dados apenas se não vierem via props
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!slotsProp || !templatesProp) {
+      fetchData();
+    }
+  }, [slotsProp, templatesProp]);
 
   const fetchData = async () => {
     try {
@@ -83,7 +101,14 @@ export function BannerDashboard() {
     }
   };
 
-  const handleCreateSlot = () => {
+  const handleCreateSlot = async () => {
+    // Se consumidor fornece callback, apenas abre wizard; persistência fica externa
+    if (onSlotCreate) {
+      setSelectedSlot(null);
+      setShowWizard(true);
+      setWizardClone(false);
+      return;
+    }
     setSelectedSlot(null);
     setShowWizard(true);
     setWizardClone(false);
@@ -104,7 +129,11 @@ export function BannerDashboard() {
   const handleWizardClose = () => {
     setShowWizard(false);
     setSelectedSlot(null);
-    fetchData(); // Recarregar dados
+    if (onRefresh) {
+      onRefresh();
+    } else {
+      fetchData(); // Recarregar dados
+    }
   };
 
   const handleToggleSlot = async (slotId: string, currentStatus: boolean) => {
@@ -122,10 +151,12 @@ export function BannerDashboard() {
       // Invalidar cache para este slot
       await invalidateBannerCache(slot.slug);
 
-      // Atualizar estado local
-      setSlots(prev => prev.map(slot => 
-        slot.id === slotId ? { ...slot, is_active: !currentStatus } : slot
-      ));
+      // Atualizar estado local ou notificar consumidor
+      const updated = { ...slot, is_active: !currentStatus };
+      setSlots(prev => prev.map(s => (s.id === slotId ? updated : s)));
+      if (onSlotUpdate) {
+        await onSlotUpdate(updated);
+      }
 
     } catch (error) {
       console.error('Erro ao alternar status:', error);
