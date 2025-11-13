@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 interface CropOptions {
   width: number;
