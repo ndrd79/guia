@@ -7,6 +7,15 @@ import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerContainer from '../../components/BannerContainer'
+import BannerCarousel from '../../components/BannerCarousel'
+import PopularNewsSidebar from '../../components/sidebar/PopularNewsSidebar'
+import LatestNewsSidebar from '../../components/sidebar/LatestNewsSidebar'
+import UpcomingEventsSidebar from '../../components/sidebar/UpcomingEventsSidebar'
+import RecentClassifiedsSidebar from '../../components/sidebar/RecentClassifiedsSidebar'
+import FeaturedBusinessesSidebar from '../../components/sidebar/FeaturedBusinessesSidebar'
+import NewsletterSidebar from '../../components/sidebar/NewsletterSidebar'
+import CategoriesSidebar from '../../components/sidebar/CategoriesSidebar'
+import FeaturedBusinessesCarousel from '../../components/sidebar/FeaturedBusinessesCarousel'
 import { formatDate } from '../../lib/formatters'
 import { createServerSupabaseClient, Noticia } from '../../lib/supabase'
 
@@ -14,6 +23,9 @@ interface NewsPageProps {
   noticias: Noticia[]
   categorias: string[]
   totalNoticias: number
+  events?: { id: string; titulo: string; data?: string | null; local?: string | null }[]
+  classifieds?: { id: string; titulo: string; preco?: number | null; categoria?: string | null; imagem?: string | null }[]
+  businesses?: { id: string; nome: string; categoria?: string | null; logo?: string | null }[]
 }
 
 // Componente de skeleton para loading
@@ -177,7 +189,7 @@ const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean 
   )
 }
 
-export default function Noticias({ noticias, categorias, totalNoticias }: NewsPageProps) {
+export default function Noticias({ noticias, categorias, totalNoticias, events, classifieds, businesses }: NewsPageProps) {
   const [selectedCategory, setSelectedCategory] = useState('Todas')
   const [currentPage, setCurrentPage] = useState(1)
   const [email, setEmail] = useState('')
@@ -272,6 +284,19 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
         </div>
       </section>
 
+      <section className="py-8 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <BannerCarousel
+            position="hero"
+            local="noticias-top"
+            interval={5000}
+            autoRotate={true}
+            maxBanners={4}
+            className="mx-auto"
+          />
+        </div>
+      </section>
+
       {/* Main News Content */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -310,6 +335,8 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
                   <p className="text-gray-500 text-lg">Nenhuma notícia encontrada para esta categoria.</p>
                 </div>
               )}
+
+              {/* Removido banner de conteúdo do meio conforme solicitação */}
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -354,102 +381,56 @@ export default function Noticias({ noticias, categorias, totalNoticias }: NewsPa
 
             {/* Sidebar */}
             <div className="news-sidebar space-y-6">
-              {/* Advertising Space */}
-              <div className="w-full">
-                <BannerContainer 
-                  position="Sidebar Esquerda"
-                  className="w-full rounded-lg max-h-[250px] sidebar-banner"
+              <PopularNewsSidebar items={popularNews as any} />
+
+              <div className="w-full hidden lg:block">
+                <BannerCarousel
+                  position="sidebar"
+                  local="noticias-sidebar-1"
+                  interval={6000}
+                  autoRotate={true}
+                  maxBanners={5}
+                  className="rounded-lg"
                 />
               </div>
 
-              {/* Popular News */}
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <i className="fas fa-fire text-orange-500 mr-2"></i> Notícias Populares
-                </h3>
-                <ul className="space-y-4">
-                  {popularNews.map((news) => (
-                    <li key={news.id}>
-                      <Link 
-                        href={`/noticias/${news.id}`} 
-                        className="flex items-start space-x-3 group"
-                      >
-                        <div className="flex-shrink-0">
-                          <div className="relative w-16 h-16 rounded-xl overflow-hidden">
-                            {news.imagem ? (
-                              <Image 
-                                src={news.imagem} 
-                                alt={news.titulo} 
-                                fill
-                                className="object-cover"
-                                loading="lazy"
-                                sizes="64px"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-200 border-2 border-dashed rounded-xl flex items-center justify-center">
-                                <i className="fas fa-newspaper text-gray-400"></i>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-bold group-hover:text-indigo-600 line-clamp-2">{news.titulo}</h4>
-                          <div className="text-sm text-gray-500">
-                            {new Date(news.data || news.created_at).toLocaleDateString('pt-BR')}
-                          </div>
-                        </div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <FeaturedBusinessesCarousel items={(businesses as any) || []} />
 
-              {/* Categories */}
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <i className="fas fa-folder-open text-indigo-600 mr-2"></i> Categorias
-                </h3>
-                <ul className="space-y-2">
-                  {['Todas', ...categorias].map(category => {
-                    const count = category === 'Todas' 
-                      ? totalNoticias 
-                      : noticias.filter(news => news.categoria.toLowerCase() === category.toLowerCase()).length
-                    return (
-                      <li key={category}>
-                        <button 
-                          className={`w-full flex justify-between items-center py-2 border-b border-gray-100 hover:text-indigo-600 text-left transition ${
-                            selectedCategory === category ? 'text-indigo-600 font-semibold' : ''
-                          }`}
-                          onClick={() => handleCategoryFilter(category)}
-                        >
-                          <span>{category}</span>
-                          <span className="bg-gray-200 text-gray-800 px-2 rounded-full text-xs">{count}</span>
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
+              <CategoriesSidebar
+                items={[
+                  { name: 'Todas', count: totalNoticias },
+                  ...categorias.map((c) => ({ name: c, count: noticias.filter(n => n.categoria?.toLowerCase() === c.toLowerCase()).length }))
+                ]}
+                onSelect={(name) => handleCategoryFilter(name)}
+              />
 
-              {/* Newsletter */}
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-md p-6 text-white">
-                <h3 className="text-xl font-bold mb-2">Receba nossas notícias</h3>
-                <p className="mb-4">Cadastre-se e receba as principais notícias de Maria Helena diretamente no seu e-mail.</p>
-                <div className="flex">
-                  <input 
-                    type="email" 
-                    placeholder="Seu e-mail" 
-                    className="flex-grow py-2 px-4 rounded-l-lg text-gray-800 focus:outline-none"
-                    value={email}
-                    onChange={handleEmailChange}
-                  />
-                  <button className="bg-indigo-900 hover:bg-indigo-800 py-2 px-4 rounded-r-lg font-medium transition">
-                    <i className="fas fa-paper-plane"></i>
-                  </button>
-                </div>
+              <NewsletterSidebar />
+
+              <div className="w-full hidden lg:block">
+                <BannerCarousel
+                  position="sidebar"
+                  local="noticias-sidebar-2"
+                  interval={5000}
+                  autoRotate={true}
+                  maxBanners={5}
+                  className="rounded-lg"
+                />
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="py-8 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <BannerCarousel
+            position="hero"
+            local="noticias-bottom"
+            interval={5000}
+            autoRotate={true}
+            maxBanners={1}
+            className="mx-auto"
+          />
         </div>
       </section>
 
@@ -488,13 +469,23 @@ export const getStaticProps: GetStaticProps = async () => {
       .filter(Boolean)
       .sort()
 
+    const nowIso = new Date().toISOString()
+    const [{ data: events }, { data: classifieds }, { data: businesses }] = await Promise.all([
+      supabase.from('eventos').select('id,titulo,data,local').gte('data', nowIso).order('data').limit(3),
+      supabase.from('classificados').select('id,titulo,preco,categoria,imagem').order('created_at', { ascending: false }).limit(3),
+      supabase.from('empresas').select('id,nome,categoria,logo').order('created_at', { ascending: false }).limit(3)
+    ])
+
     return {
       props: {
         noticias: noticiasData,
         categorias,
-        totalNoticias: noticiasData.length
+        totalNoticias: noticiasData.length,
+        events: events || [],
+        classifieds: classifieds || [],
+        businesses: businesses || []
       },
-      revalidate: 600 // Revalidar a cada 10 minutos
+      revalidate: 600
     }
   } catch (error) {
     console.error('Erro ao conectar com Supabase:', error)

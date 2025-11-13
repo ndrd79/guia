@@ -7,13 +7,29 @@ import Header from '../../components/Header';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import BannerContainer from '../../components/BannerContainer';
+import BannerCarousel from '../../components/BannerCarousel';
+import PopularNewsSidebar from '../../components/sidebar/PopularNewsSidebar';
+import LatestNewsSidebar from '../../components/sidebar/LatestNewsSidebar';
+import UpcomingEventsSidebar from '../../components/sidebar/UpcomingEventsSidebar';
+import RecentClassifiedsSidebar from '../../components/sidebar/RecentClassifiedsSidebar';
+import FeaturedBusinessesSidebar from '../../components/sidebar/FeaturedBusinessesSidebar';
+import NewsletterSidebar from '../../components/sidebar/NewsletterSidebar';
+import FeaturedBusinessesCarousel from '../../components/sidebar/FeaturedBusinessesCarousel';
 import { formatDate } from '../../lib/formatters';
+import { autoFormatNews } from '../../lib/text/autoFormatNews';
 import { createServerSupabaseClient, Noticia, Banner } from '../../lib/supabase';
 
 interface NewsPageProps {
   news: Noticia | null;
   relatedNews: Noticia[];
   banner: Banner | null;
+  popular?: { id: string; titulo: string; imagem?: string | null; created_at?: string | null }[];
+  latest?: { id: string; titulo: string; imagem?: string | null; created_at?: string | null }[];
+  events?: { id: string; titulo: string; data?: string | null; local?: string | null }[];
+  classifieds?: { id: string; titulo: string; preco?: number | null; categoria?: string | null; imagem?: string | null }[];
+  businesses?: { id: string; nome: string; categoria?: string | null; logo?: string | null }[];
+  formattedHtml?: string;
+  formattedDek?: string;
 }
 
 const getCategoryColor = (cat: string) => {
@@ -42,50 +58,9 @@ const getCategoryColor = (cat: string) => {
   return colors[cat] || 'bg-indigo-600';
 };
 
-// Função para inserir banner no meio do conteúdo com design elegante
-const insertBannerInContent = (content: string, banner: Banner | null) => {
-  if (!banner) return content;
-  
-  // Divide o conteúdo em parágrafos
-  const paragraphs = content.split('</p>');
-  
-  // Se há pelo menos 2 parágrafos, insere o banner no meio
-  if (paragraphs.length >= 2) {
-    const middleIndex = Math.floor(paragraphs.length / 2);
-    
-    // Determina o tamanho do container baseado nas dimensões do banner
-    const containerSize = banner.largura && banner.largura > 500 ? 'large' : 
-                         banner.largura && banner.largura < 350 ? 'small' : '';
-    
-    const bannerHtml = `
-      <div class="content-banner-container ${containerSize}">
-        <div class="content-banner-inner">
-          ${banner.link ? `<a href="${banner.link}" target="_blank" rel="noopener noreferrer" class="block">` : ''}
-            <img 
-              src="${banner.imagem}" 
-              alt="${banner.nome || 'Banner publicitário'}"
-              class="content-banner-image"
-              style="max-width: ${banner.largura || 600}px; height: auto;"
-              loading="lazy"
-            />
-          ${banner.link ? '</a>' : ''}
-          <div class="content-banner-label">
-            <i class="fas fa-ad mr-1"></i>Publicidade
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Insere o banner no meio do conteúdo
-    paragraphs.splice(middleIndex, 0, bannerHtml);
-    
-    return paragraphs.join('</p>');
-  }
-  
-  return content;
-};
+ 
 
-export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
+export default function NewsPage({ news, relatedNews, banner, popular, latest, events, classifieds, businesses, formattedHtml, formattedDek }: NewsPageProps) {
   if (!news) {
     return (
       <>
@@ -106,8 +81,8 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
     );
   }
 
-  // Processa o conteúdo com banner inserido
-  const contentWithBanner = insertBannerInContent(news.conteudo, banner);
+  const topLocal = `noticia-${news.id}-top`;
+  const bottomLocal = `noticia-${news.id}-bottom`;
 
   return (
     <>
@@ -139,6 +114,16 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Main Content */}
             <article className="lg:w-2/3">
+              <div className="mb-8">
+                <BannerCarousel 
+                  position="hero"
+                  local={topLocal}
+                  maxBanners={1}
+                  interval={5000}
+                  autoRotate={true}
+                  className="mx-auto"
+                />
+              </div>
               {/* Article Header */}
               <header className="mb-8">
                 <div className="mb-4">
@@ -172,11 +157,28 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
                 </div>
               )}
 
-              {/* Article Content with Banner */}
+              {formattedDek ? (
+                <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-900">
+                  <div className="font-semibold mb-2">Resumo em 30 segundos</div>
+                  <div className="text-sm">{formattedDek}</div>
+                </div>
+              ) : null}
+
               <div 
                 className="prose prose-lg max-w-none mb-8"
-                dangerouslySetInnerHTML={{ __html: contentWithBanner }}
+                dangerouslySetInnerHTML={{ __html: formattedHtml || news.conteudo }}
               />
+
+              <div className="my-8">
+                <BannerCarousel 
+                  position="hero"
+                  local={bottomLocal}
+                  maxBanners={1}
+                  interval={5000}
+                  autoRotate={true}
+                  className="mx-auto"
+                />
+              </div>
 
               {/* Share Buttons */}
               <div className="border-t border-gray-200 pt-6 mb-8">
@@ -204,57 +206,40 @@ export default function NewsPage({ news, relatedNews, banner }: NewsPageProps) {
 
             {/* Sidebar */}
             <aside className="lg:w-1/3 space-y-6">
-              {/* Banner Principal da Sidebar */}
-              <BannerContainer 
-                position="Notícia - Sidebar Topo" 
-                className="w-full rounded-lg"
-              />
+              {popular?.length ? <PopularNewsSidebar items={popular as any} /> : null}
 
-              {/* Related News */}
+              <div className="hidden lg:block">
+                <BannerCarousel 
+                  position="sidebar"
+                  local="noticia-sidebar-1"
+                  interval={6000}
+                  autoRotate={true}
+                  maxBanners={5}
+                  className="w-full rounded-lg"
+                />
+              </div>
+
+              <FeaturedBusinessesCarousel items={(businesses as any) || []} />
+
               {relatedNews.length > 0 && (
-                <div className="bg-white rounded-xl shadow-md p-6">
-                  <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <i className="fas fa-newspaper text-indigo-600 mr-2"></i>
-                    Notícias Relacionadas
-                  </h3>
-                  <div className="space-y-4">
-                    {relatedNews.map((relatedNews) => (
-                      <Link key={relatedNews.id} href={`/noticias/${relatedNews.id}`} className="block group">
-                        <div className="flex space-x-3">
-                          {relatedNews.imagem && (
-                            <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                              <Image
-                                src={relatedNews.imagem}
-                                alt={relatedNews.titulo}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <h4 className="font-medium text-sm line-clamp-2 group-hover:text-indigo-600 transition-colors">
-                              {relatedNews.titulo}
-                            </h4>
-                            <p className="text-xs text-gray-500 mt-1">{formatDate(relatedNews.data)}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+                <LatestNewsSidebar items={relatedNews as any} />
               )}
+              {businesses?.length ? <FeaturedBusinessesSidebar items={businesses as any} /> : null}
+              {events?.length ? <UpcomingEventsSidebar items={events as any} /> : null}
+              {classifieds?.length ? <RecentClassifiedsSidebar items={classifieds as any} /> : null}
+              <NewsletterSidebar />
 
-              {/* Banner Publicitário 1 - Após Notícias Relacionadas */}
-              <BannerContainer 
-                position="Notícia - Após Relacionadas 1" 
-                className="w-full rounded-lg"
-              />
-
-              {/* Banner Publicitário 2 - Após Notícias Relacionadas */}
-              <BannerContainer 
-                position="Notícia - Após Relacionadas 2" 
-                className="w-full rounded-lg"
-              />
+              {/* Publicidade - Carrossel 2 (300x250) */}
+              <div className="hidden lg:block">
+                <BannerCarousel 
+                  position="sidebar"
+                  local="noticia-sidebar-2"
+                  interval={5000}
+                  autoRotate={true}
+                  maxBanners={5}
+                  className="w-full rounded-lg"
+                />
+              </div>
             </aside>
           </div>
         </div>
@@ -297,7 +282,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
     
-    // Buscar banner associado se existir
     let banner = null;
     if (news.banner_id) {
       const { data: bannerData } = await supabase
@@ -306,24 +290,40 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         .eq('id', news.banner_id)
         .eq('ativo', true)
         .single();
-      
       banner = bannerData;
     }
-    
-    // Buscar notícias relacionadas da mesma categoria
+
     const { data: relatedNews } = await supabase
       .from('noticias')
-      .select('*')
+      .select('id,titulo,imagem,created_at')
       .eq('categoria', news.categoria)
       .neq('id', id)
       .order('created_at', { ascending: false })
-      .limit(3);
-    
+      .limit(5);
+
+    const formatted = autoFormatNews({ title: news.titulo, content: news.conteudo, category: news.categoria })
+
+    const nowIso = new Date().toISOString();
+    const [popularRes, latestRes, eventsRes, classifiedsRes, businessesRes] = await Promise.all([
+      supabase.from('noticias').select('id,titulo,imagem,created_at').order('created_at', { ascending: false }).limit(5),
+      supabase.from('noticias').select('id,titulo,imagem,created_at').order('created_at', { ascending: false }).limit(5),
+      supabase.from('eventos').select('id,titulo,data,local').gte('data', nowIso).order('data').limit(3),
+      supabase.from('classificados').select('id,titulo,preco,categoria,imagem').order('created_at', { ascending: false }).limit(3),
+      supabase.from('empresas').select('id,nome,categoria,logo').order('created_at', { ascending: false }).limit(3)
+    ]);
+
     return {
       props: {
         news,
         relatedNews: relatedNews || [],
-        banner
+        banner,
+        popular: popularRes.data || [],
+        latest: latestRes.data || [],
+        events: eventsRes.data || [],
+        classifieds: classifiedsRes.data || [],
+        businesses: businessesRes.data || [],
+        formattedHtml: formatted.html,
+        formattedDek: formatted.dek
       }
     };
   } catch (error) {

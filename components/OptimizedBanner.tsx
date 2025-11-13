@@ -34,7 +34,10 @@ export const BANNER_SIZES = {
   'mobile-banner': { width: 320, height: 50 },
   'small-rectangle': { width: 300, height: 100 },
   'skyscraper': { width: 160, height: 600 },
-  'wide-skyscraper': { width: 300, height: 600 }
+  'wide-skyscraper': { width: 300, height: 600 },
+  // Novos tamanhos suportando layouts específicos
+  'cta-half': { width: 585, height: 360 },
+  'hero-large': { width: 1170, height: 330 }
 } as const
 
 export type BannerSize = keyof typeof BANNER_SIZES
@@ -138,6 +141,9 @@ export default function OptimizedBanner({
   // Classes CSS responsivas
   const getResponsiveClasses = () => {
     const baseClasses = 'relative overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-all duration-300'
+    if (position === 'sidebar') {
+      return `${baseClasses} w-full aspect-square mx-auto`
+    }
     
     switch (bannerSize) {
       case 'mobile-banner':
@@ -152,6 +158,10 @@ export default function OptimizedBanner({
         return `${baseClasses} w-full max-w-[728px] h-auto mx-auto`
       case 'banner':
         return `${baseClasses} w-full max-w-[468px] h-auto mx-auto`
+      case 'cta-half':
+        return `${baseClasses} w-full max-w-[585px] max-h-[360px] mx-auto bg-transparent rounded-lg shadow-none p-0`
+      case 'hero-large':
+        return `${baseClasses} w-full max-w-[1170px] h-auto mx-auto`
       default:
         return `${baseClasses} w-full mx-auto`
     }
@@ -160,7 +170,7 @@ export default function OptimizedBanner({
   // Placeholder enquanto carrega
   const Placeholder = () => (
     <div 
-      className={`${getResponsiveClasses()} bg-gray-100 animate-pulse flex items-center justify-center`}
+      className={`${getResponsiveClasses()} bg-gray-100 shadow-md animate-pulse flex items-center justify-center`}
       style={{ width: banner.largura, height: banner.altura }}
     >
       <div className="text-gray-400 text-sm">Carregando...</div>
@@ -170,7 +180,7 @@ export default function OptimizedBanner({
   // Error fallback
   const ErrorFallback = () => (
     <div 
-      className={`${getResponsiveClasses()} bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center`}
+      className={`${getResponsiveClasses()} bg-gray-50 shadow-md flex items-center justify-center`}
       style={{ width: banner.largura, height: banner.altura }}
     >
       <div className="text-gray-400 text-xs text-center p-2">
@@ -194,8 +204,8 @@ export default function OptimizedBanner({
       style={{ 
         width: '100%',
         height: 'auto',
-        maxWidth: banner.largura,
-        aspectRatio: `${banner.largura}/${banner.altura}`,
+        ...(position === 'sidebar' ? { maxWidth: '100%' } : { maxWidth: banner.largura }),
+        aspectRatio: position === 'sidebar' ? '1 / 1' : `${banner.largura}/${banner.altura}`,
         position: 'relative',
         zIndex: 1
       }}
@@ -217,7 +227,7 @@ export default function OptimizedBanner({
           priority={priority}
           quality={92}
           sizes={`${banner.largura}px`}
-          className="w-full h-full object-contain md:object-cover"
+          className={`w-full h-full ${position === 'sidebar' ? 'object-cover rounded-lg' : bannerSize === 'cta-half' ? 'object-cover rounded-lg drop-shadow-[0_8px_16px_rgba(255,255,255,0.25)]' : 'object-contain md:object-cover rounded-lg'}`}
           onLoad={handleImageLoad}
           onError={handleImageError}
           placeholder="blur"

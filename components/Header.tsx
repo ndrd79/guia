@@ -16,7 +16,7 @@ const Header: React.FC = () => {
           .limit(10);
         
         if (error) {
-          console.error('Erro ao buscar notícias:', error);
+          console.warn('Falha ao buscar notícias, usando fallback.');
           // Fallback para notícias estáticas em caso de erro
           setNoticias([
             'Prefeitura anuncia novo programa de incentivo fiscal para pequenas empresas',
@@ -28,7 +28,7 @@ const Header: React.FC = () => {
           setNoticias(data?.map(noticia => noticia.titulo) || []);
         }
       } catch (error) {
-        console.error('Erro ao conectar com o banco:', error);
+        console.warn('Falha de conexão, usando fallback.');
         // Fallback para notícias estáticas
         setNoticias([
           'Prefeitura anuncia novo programa de incentivo fiscal para pequenas empresas',
