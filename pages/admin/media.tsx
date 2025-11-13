@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import AdminLayout from '@/components/admin/AdminLayout';
+import AdminLayout from '../../components/admin/AdminLayout';
 import MediaLibrary from '../../components/admin/MediaLibrary';
 import EnhancedImageUploader from '../../components/admin/EnhancedImageUploader';
 import { 

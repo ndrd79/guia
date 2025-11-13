@@ -1,5 +1,8 @@
+"use client";
 import React from 'react';
-import { BannerSlot } from '@/components/banners/BannerSlot';
+import dynamic from 'next/dynamic';
+
+const BannerSlot = dynamic(() => import('@/components/banners/BannerSlot'), { ssr: false });
 
 export default function HomePage() {
   return (

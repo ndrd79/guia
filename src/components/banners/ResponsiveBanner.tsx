@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { BannerData, TemplateComponent, BannerTemplateConfig } from '@/lib/banners/BannerTemplateRegistry';
 import { useDeviceType } from '@/hooks/useDeviceType';

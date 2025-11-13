@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { CarouselTemplate } from '@/components/banners/templates/CarouselTemplate';
 import { StaticTemplate } from '@/components/banners/templates/StaticTemplate';
