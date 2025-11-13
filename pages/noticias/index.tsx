@@ -437,11 +437,11 @@ export const getStaticProps: GetStaticProps = async () => {
     const supabase = createServerSupabaseClient()
     
     // Buscar notícias ativas ordenadas por data
-    const { data: noticias, error } = await supabase
+  const { data: noticias, error } = await supabase
       .from('noticias')
-      .select('*')
+      .select('id,titulo,descricao,imagem,categoria,data,destaque,created_at')
       .order('created_at', { ascending: false })
-      .limit(50) // Limitar para performance
+      .limit(36)
 
     if (error) {
       console.error('Erro ao buscar notícias:', error)

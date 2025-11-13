@@ -18,22 +18,14 @@ import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Ban
 
 interface HomePageProps {
   noticias: Noticia[];
-  eventos: Evento[];
   empresas: Empresa[];
   classificados: Classificado[];
-  categoriasBanners: Banner[];
-  servicosBanners: Banner[];
-  heroBanners: Banner[];
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
   noticias, 
-  eventos, 
   empresas, 
-  classificados, 
-  categoriasBanners, 
-  servicosBanners,
-  heroBanners
+  classificados
 }) => {
   // Usar dados reais do banco em vez de dados mockados
   const featuredNews = noticias.find(n => n.destaque) ?? noticias[0];
@@ -381,29 +373,18 @@ export const getStaticProps: GetStaticProps = async () => {
     // Otimização: Executar consultas em paralelo em vez de sequencial
     const [
       noticiasResult,
-      eventosResult,
       empresasResult,
       classificadosResult,
-      categoriasBannersResult,
-      servicosBannersResult,
-      heroBannersResult
     ] = await Promise.all([
       supabase
         .from('noticias')
-        .select('*')
+        .select('id,titulo,descricao,imagem,categoria,data,destaque,created_at')
         .order('created_at', { ascending: false })
-        .limit(20),
-      
-      supabase
-        .from('eventos')
-        .select('*')
-        .gte('data_evento', new Date().toISOString().split('T')[0])
-        .order('data_evento', { ascending: true })
-        .limit(10),
+        .limit(12),
       
       supabase
         .from('empresas')
-        .select('*')
+        .select('id,name,description,category,rating,reviews,location,image,featured,is_new,plan_type,premium_expires_at,created_at')
         .eq('ativo', true)
         .or('featured.eq.true,plan_type.eq.premium')
         .order('featured', { ascending: false })
@@ -412,32 +393,9 @@ export const getStaticProps: GetStaticProps = async () => {
       
       supabase
         .from('classificados')
-        .select('*')
+        .select('id,titulo,categoria,preco,imagem,localizacao,descricao,created_at')
         .order('created_at', { ascending: false })
         .limit(8),
-      
-      supabase
-        .from('banners')
-        .select('*')
-        .eq('ativo', true)
-        .eq('posicao', 'Categorias Banner')
-        .limit(5),
-      
-      supabase
-        .from('banners')
-        .select('*')
-        .eq('ativo', true)
-        .eq('posicao', 'Serviços Banner')
-        .limit(5),
-      
-      supabase
-        .from('banners')
-        .select('*')
-        .eq('ativo', true)
-        .eq('posicao', 'Hero Carousel')
-        .order('ordem', { ascending: true })
-        // Sem limite para permitir múltiplos banners no carrossel
-        .limit(1000)
     ]);
 
     // Erros são tratados silenciosamente em produção
@@ -467,12 +425,8 @@ export const getStaticProps: GetStaticProps = async () => {
     return {
       props: {
         noticias: noticiasResult.data || [],
-        eventos: eventosResult.data || [],
         empresas: empresasFiltradas,
-        classificados: classificadosResult.data || [],
-        categoriasBanners: categoriasBannersResult.data || [],
-        servicosBanners: servicosBannersResult.data || [],
-        heroBanners: heroBannersResult.data || []
+        classificados: classificadosResult.data || []
       },
       // ISR: Revalidar a cada 5 minutos
       revalidate: 300
@@ -482,12 +436,8 @@ export const getStaticProps: GetStaticProps = async () => {
     return {
       props: {
         noticias: [],
-        eventos: [],
         empresas: [],
-        classificados: [],
-        categoriasBanners: [],
-        servicosBanners: [],
-        heroBanners: []
+        classificados: []
       },
       // Em caso de erro, tentar novamente em 1 minuto
       revalidate: 60
