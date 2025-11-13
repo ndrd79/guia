@@ -14,9 +14,9 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // Bypass de desenvolvimento: permitir acesso às rotas admin sem sessão
-  if (process.env.NEXT_PUBLIC_ADMIN_DEV_BYPASS === 'true') {
-    log.middleware('DEV_BYPASS ativo: liberando rota admin sem autenticação', pathname)
+  // Bypass de desenvolvimento (apenas fora de produção): permitir acesso às rotas admin sem sessão
+  if (process.env.NEXT_PUBLIC_ADMIN_DEV_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
+    log.middleware('DEV_BYPASS ativo em ambiente não-produção: liberando rota admin sem autenticação', pathname)
     return res
   }
 

@@ -1,6 +1,30 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '../../../lib/supabase'
 
+const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL
+const RATE_LIMIT_MAX = Number(process.env.ANALYTICS_RATE_LIMIT_MAX || 10)
+const RATE_LIMIT_WINDOW_MS = Number(process.env.ANALYTICS_RATE_LIMIT_WINDOW_MS || 60_000)
+const rlStore: Record<string, { count: number; start: number }> = {}
+
+function isAllowedOrigin(req: NextApiRequest) {
+  const origin = req.headers.origin || ''
+  const referer = req.headers.referer || ''
+  if (!ALLOWED_ORIGIN) return true
+  return origin.startsWith(ALLOWED_ORIGIN) || referer.startsWith(ALLOWED_ORIGIN)
+}
+
+function rateLimit(key: string) {
+  const now = Date.now()
+  const bucket = rlStore[key]
+  if (!bucket || now - bucket.start > RATE_LIMIT_WINDOW_MS) {
+    rlStore[key] = { count: 1, start: now }
+    return true
+  }
+  if (bucket.count >= RATE_LIMIT_MAX) return false
+  bucket.count++
+  return true
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' })
@@ -13,13 +37,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'banner_id e position são obrigatórios' })
     }
 
+    if (!isAllowedOrigin(req)) {
+      return res.status(403).json({ error: 'origin não permitida' })
+    }
+
+    const ipRaw = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
+    const ipKey = ipRaw.split(',')[0].trim() || 'unknown'
+    if (!rateLimit(`bv:${ipKey}:${banner_id}`)) {
+      return res.status(429).json({ error: 'rate limit' })
+    }
+
     // Registrar visualização no banco
     const { error } = await supabase
       .from('banner_analytics')
       .insert({
         banner_id,
         tipo: 'impressao',
-        ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+        ip_address: null,
         user_agent: req.headers['user-agent']
       })
 
