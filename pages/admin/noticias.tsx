@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, AlertCircle } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
@@ -86,33 +86,41 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   
   const { banners } = useBanners()
 
-  // Guarda de autenticação client-side
+  // Estado para controlar carregamento e erros
+  const [authChecked, setAuthChecked] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [authSuccess, setAuthSuccess] = useState(false)
+
+  // Guarda de autenticação client-side - apenas verificação leve, sem redirecionamento
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) {
-          showToast('Faça login para acessar o painel de notícias.', 'error')
-          router.replace('/admin/login')
+          setAuthError('Sessão não encontrada. Por favor, faça login novamente.')
+          setAuthChecked(true)
           return
         }
-        // Verificar perfil admin
+        // Verificar perfil admin apenas para exibir mensagem se necessário
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single()
         if (!profile || profile.role !== 'admin') {
-          showToast('Acesso restrito a administradores.', 'error')
-          router.replace('/admin/login?error=unauthorized')
+          setAuthError('Acesso restrito a administradores.')
+        } else {
+          setAuthSuccess(true)
         }
+        setAuthChecked(true)
       } catch (e) {
-        // Em caso de erro de sessão, redirecionar para login
-        router.replace('/admin/login')
+        setAuthError('Erro ao verificar autenticação.')
+        console.error('Erro na verificação client-side:', e)
+        setAuthChecked(true)
       }
     }
     checkAuth()
-  }, [router, showToast])
+  }, [])
 
   // Filter and paginate noticias
   const filteredAndPaginatedNoticias = useMemo(() => {
@@ -412,6 +420,50 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
     { label: 'Lista' }
   ]
 
+  // Renderizar estados de carregamento e erro
+  if (!authChecked) {
+    return (
+      <AdminLayout title="Gerenciar Notícias">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Verificando autenticação...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  if (authError) {
+    return (
+      <AdminLayout title="Gerenciar Notícias">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+            <div className="text-red-600 mb-4">
+              <AlertCircle size={48} className="mx-auto" />
+            </div>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Erro de Autenticação</h3>
+            <p className="text-red-600 mb-4">{authError}</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/admin/login')}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+              >
+                Fazer Login
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
+              >
+                Tentar Novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
   return (
     <AdminLayout title="Gerenciar Notícias">
       <div className="space-y-6">
@@ -420,7 +472,12 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
         
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Notícias</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Notícias</h1>
+            {authSuccess && (
+              <p className="text-sm text-green-600 mt-1">✅ Autenticação verificada com sucesso</p>
+            )}
+          </div>
           <EnhancedButton
             onClick={() => setShowForm(true)}
             icon={PlusCircle}
