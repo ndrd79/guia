@@ -28,10 +28,13 @@ const HomePage: React.FC<HomePageProps> = ({
   classificados
 }) => {
   // Usar dados reais do banco em vez de dados mockados
-  const featuredNews = noticias.find(n => n.destaque) ?? noticias[0];
+  const safeNoticias = Array.isArray(noticias) ? noticias : [];
+  const safeEmpresas = Array.isArray(empresas) ? empresas : [];
+  const safeClassificados = Array.isArray(classificados) ? classificados : [];
+  const featuredNews = safeNoticias.find(n => n.destaque) ?? safeNoticias[0];
   const recentNews = (featuredNews 
-    ? noticias.filter(n => n.id !== featuredNews.id)
-    : noticias
+    ? safeNoticias.filter(n => n.id !== featuredNews.id)
+    : safeNoticias
   ).slice(0, 7);
   // Uma notícia ao lado do destaque e as demais abaixo
   const companionNews = recentNews[0];
@@ -107,7 +110,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </Link>
             </div>
             
-            {noticias.length > 0 ? (
+            {safeNoticias.length > 0 ? (
               <div className="space-y-8">
                 {/* Linha com destaque (2/3) e uma notícia ao lado (1/3) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
@@ -248,7 +251,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 Ver todas <i className="fas fa-arrow-right ml-1"></i>
               </Link>
             </div>
-            <BusinessCarousel businesses={empresas} />
+            <BusinessCarousel businesses={safeEmpresas} />
           </div>
         </section>
 
@@ -262,9 +265,9 @@ const HomePage: React.FC<HomePageProps> = ({
               </Link>
             </div>
             
-            {classificados && classificados.length > 0 ? (
+            {safeClassificados && safeClassificados.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {classificados.map((classificado) => (
+                {safeClassificados.map((classificado) => (
                   <div key={classificado.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                     {classificado.imagem && (
                       <div className="relative h-48 overflow-hidden">
@@ -428,8 +431,7 @@ export const getStaticProps: GetStaticProps = async () => {
         empresas: empresasFiltradas,
         classificados: classificadosResult.data || []
       },
-      // ISR: Revalidar a cada 5 minutos
-      revalidate: 300
+      revalidate: 60
     };
   } catch (error) {
     // Erro tratado silenciosamente em produção
