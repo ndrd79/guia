@@ -8,6 +8,8 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [debugInfo, setDebugInfo] = useState('')
+  const [isAlreadyAuthenticated, setIsAlreadyAuthenticated] = useState(false)
+  const [hasRedirected, setHasRedirected] = useState(false)
   const router = useRouter()
 
   // Verificar conexão com Supabase na inicialização
@@ -28,8 +30,44 @@ export default function AdminLogin() {
     checkSupabaseConnection()
   }, [])
 
+  // Verificar se já está autenticado ao carregar a página
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          setDebugInfo('Sessão existente detectada. Verificando permissões...')
+          
+          // Verificar se é admin
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+            
+          if (profile?.role === 'admin') {
+            setDebugInfo('Usuário já autenticado como admin.')
+            setIsAlreadyAuthenticated(true)
+            // NÃO redirecionar automaticamente - deixar o usuário decidir
+            // Isso previne loops infinitos de redirecionamento
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao verificar sessão existente:', err)
+      }
+    }
+
+    // Só verificar sessão existente se NÃO estivermos vindo de um redirecionamento
+    const redirectFrom = router.query.redirect as string
+    if (!redirectFrom) {
+      checkExistingSession()
+    }
+  }, [router.query.redirect])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (loading) return // Evitar múltiplos cliques
     
     setLoading(true)
     setError('')
@@ -86,27 +124,17 @@ export default function AdminLogin() {
         return
       }
 
-      setDebugInfo('Login bem-sucedido! Redirecionando...')
+      setDebugInfo('Login bem-sucedido! Verificando permissões...')
+      
+      // Pequena pausa para garantir que a sessão foi processada
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       // Verificar se a sessão foi salva corretamente
-      let { data: sessionData } = await supabase.auth.getSession()
-      if (!sessionData.session && data.session) {
-        // Fallback: persistir sessão manualmente
-        const { data: setSessionData, error: setSessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        })
-        if (setSessionError) {
-          setError('Erro ao salvar sessão. Tente novamente.')
-          setDebugInfo('Falha ao persistir sessão via fallback: ' + setSessionError.message)
-          return
-        }
-        sessionData = { session: setSessionData.session }
-      }
-
+      const { data: sessionData } = await supabase.auth.getSession()
+      
       if (!sessionData.session) {
         setError('Erro ao salvar sessão. Tente novamente.')
-        setDebugInfo('Erro: Sessão não foi salva (sem tokens disponíveis)')
+        setDebugInfo('Erro: Sessão não foi salva corretamente')
         return
       }
       
@@ -128,15 +156,20 @@ export default function AdminLogin() {
         setDebugInfo(`Erro perfil: ${String(profileErr)}`)
         return
       }
-       
-       // Redirecionamento via página intermediária
-       setDebugInfo('Login bem-sucedido! Redirecionando...')
-       
-       // Usar página de redirecionamento intermediária para garantir autenticação
-       const redirectTo = router.query.redirect as string || '/admin'
-       const redirectUrl = `/admin/redirect?redirect=${encodeURIComponent(redirectTo)}`
-       // Navegar usando o router para evitar aborts
-       router.replace(redirectUrl)
+      
+      setDebugInfo('✅ Autenticação confirmada! Redirecionando...')
+      
+      // Prevenir múltiplos redirecionamentos
+      if (hasRedirected) return
+      setHasRedirected(true)
+      
+      // Redirecionamento direto sem página intermediária
+      const redirectTo = router.query.redirect as string || '/admin'
+      
+      // Usar setTimeout para evitar problemas de estado durante o redirect
+      setTimeout(() => {
+        router.replace(redirectTo)
+      }, 100)
 
     } catch (err: any) {
       const errorMessage = err.message || 'Erro inesperado ao fazer login'
@@ -159,13 +192,31 @@ export default function AdminLogin() {
           </div>
         )}
         
+        {/* Mensagem para usuários já autenticados */}
+        {isAlreadyAuthenticated && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <div className="flex items-center justify-between">
+              <span>Você já está autenticado como administrador!</span>
+              <button
+                onClick={() => {
+                  const redirectTo = router.query.redirect as string || '/admin'
+                  router.replace(redirectTo)
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        )}
+        
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className={isAlreadyAuthenticated ? 'opacity-50 pointer-events-none' : ''}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Email
@@ -198,7 +249,7 @@ export default function AdminLogin() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || hasRedirected}
             className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Entrando...' : 'Entrar'}
