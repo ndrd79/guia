@@ -9,6 +9,17 @@ const supabase = createClient(supabaseUrl, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 })
 
+function createSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+    .replace(/\s+/g, '-') // Substitui espaços por hífens
+    .replace(/-+/g, '-') // Remove hífens duplicados
+    .trim();
+}
+
 async function isAdmin(req: NextApiRequest): Promise<boolean> {
   try {
     const authHeader = req.headers.authorization
@@ -49,6 +60,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await supabase.from('noticias').update({ destaque: false })
       }
 
+      const slug = createSlug(data.titulo);
+      
       const payload = {
         titulo: data.titulo,
         categoria: data.categoria,
@@ -58,6 +71,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         conteudo: data.conteudo,
         banner_id: data.banner_id || null,
         destaque: !!data.destaque,
+        workflow_status: 'published', // Definir como publicado para aparecer nas páginas
+        slug: slug, // Adicionar slug para URL amigável
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
@@ -88,6 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         conteudo: data.conteudo,
         banner_id: data.banner_id || null,
         destaque: !!data.destaque,
+        workflow_status: 'published', // Garantir que permaneça publicada
         updated_at: new Date().toISOString(),
       }
 
