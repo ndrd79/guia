@@ -254,7 +254,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
       <Nav />
 
       {/* News Hero Section */}
-      <section className="relative bg-gradient-to-r from-indigo-700 to-purple-800 text-white py-16">
+      <section className="relative bg-gradient-to-r from-indigo-700 to-purple-800 text-white py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Notícias de Maria Helena</h1>
           <p className="text-xl max-w-3xl mx-auto">Fique por dentro de tudo o que acontece na nossa cidade. Informações atualizadas sobre política, eventos, economia e muito mais.</p>
@@ -291,7 +291,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
       </section>
 
       {/* Main News Content */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-6 md:py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="news-page-layout">
             {/* Main News Column */}
@@ -306,24 +306,24 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
               )}
 
               {/* News Grid */}
-              <h2 className="text-3xl font-bold mb-8">
+              <h2 className="text-3xl font-bold mb-4 md:mb-8">
                 {selectedCategory === 'Todas' ? 'Últimas Notícias' : `Notícias - ${selectedCategory}`}
               </h2>
               
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-8">
                   {Array.from({ length: 6 }, (_, i) => (
                     <NewsSkeleton key={i} />
                   ))}
                 </div>
               ) : regularNews.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-8">
                   {regularNews.map(news => (
                     <NewsCard key={news.id} news={news} />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-6 md:py-12">
                   <i className="fas fa-newspaper text-gray-400 text-6xl mb-4"></i>
                   <p className="text-gray-500 text-lg">Nenhuma notícia encontrada para esta categoria.</p>
                 </div>
@@ -333,7 +333,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-12 flex justify-center">
+                <div className="mt-6 md:mt-12 flex justify-center">
                   <nav className="flex space-x-2">
                     <button 
                       onClick={() => handlePageChange(currentPage - 1)}
@@ -373,7 +373,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
             </div>
 
             {/* Sidebar */}
-            <div className="news-sidebar space-y-6">
+            <div className="news-sidebar space-y-4 md:space-y-6">
               <PopularNewsSidebar items={popularNews as any} />
 
               <div className="w-full hidden lg:block">

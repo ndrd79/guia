@@ -98,9 +98,9 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Seção de Notícias */}
-        <section className="py-12 bg-gradient-to-b from-white to-gray-50">
+        <section className="py-6 md:py-12 bg-gradient-to-b from-white to-gray-50">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-4 md:mb-8">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">Notícias</h2>
                 <p className="text-gray-600 mt-1 text-sm md:text-base">Acompanhe as últimas atualizações da cidade</p>
@@ -111,9 +111,9 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
             
             {safeNoticias.length > 0 ? (
-              <div className="space-y-8">
+              <div className="space-y-4 md:space-y-8">
                 {/* Linha com destaque (2/3) e uma notícia ao lado (1/3) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-stretch">
                   <div className="md:col-span-2 rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5">
                     {featuredNews && (
                       <NewsCard 
@@ -178,14 +178,14 @@ const HomePage: React.FC<HomePageProps> = ({
         
 
         {/* CTA - Explore Itaperuçu */}
-        <section className="py-16 bg-[#0D1321]">
+        <section className="py-8 md:py-16 bg-[#0D1321]">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-center">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                   Descubra o melhor de Maria Helena
                 </h2>
-                <p className="text-gray-200 text-base md:text-lg mb-6">
+                <p className="text-gray-200 text-base md:text-lg mb-3 md:mb-6">
                   Encontre negócios locais, eventos imperdíveis e tudo que sua cidade tem para oferecer.
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -226,9 +226,9 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Seção de Categorias */}
-        <section className="py-12 bg-gray-50">
+        <section className="py-6 md:py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Explore Nossas Categorias</h2>
+            <h2 className="text-3xl font-bold text-center mb-6 md:mb-12">Explore Nossas Categorias</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {categories.map((category, index) => (
                 <Link key={index} href={category.href} className="bg-indigo-50 rounded-lg p-4 text-center hover:bg-indigo-100 transition">
@@ -243,9 +243,9 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Seção de Empresas em Destaque */}
-        <section className="py-12 bg-white">
+        <section className="py-6 md:py-12 bg-white">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-4 md:mb-8">
               <h2 className="text-3xl font-bold">Empresas em Destaque</h2>
               <Link href="/guia" className="text-indigo-600 hover:text-indigo-800 font-medium">
                 Ver todas <i className="fas fa-arrow-right ml-1"></i>
@@ -256,9 +256,9 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Seção de Classificados em Destaque */}
-        <section className="py-12 bg-indigo-50">
+        <section className="py-6 md:py-12 bg-indigo-50">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-4 md:mb-8">
               <h2 className="text-3xl font-bold">Classificados em Destaque</h2>
               <Link href="/classificados" className="text-indigo-600 hover:text-indigo-800 font-medium">
                 Ver todos <i className="fas fa-arrow-right ml-1"></i>
@@ -266,7 +266,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
             
             {safeClassificados && safeClassificados.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {safeClassificados.map((classificado) => (
                   <div key={classificado.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                     {classificado.imagem && (
@@ -326,17 +326,17 @@ const HomePage: React.FC<HomePageProps> = ({
         </section>
 
         {/* Seção de Serviços Úteis */}
-        <section className="py-12 bg-gray-50">
+        <section className="py-6 md:py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Serviços Úteis</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <h2 className="text-3xl font-bold text-center mb-6 md:mb-12">Serviços Úteis</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {services.map((service, index) => (
-                <Link key={index} href={service.href} className="bg-indigo-50 rounded-xl p-6 text-center hover:bg-indigo-100 transition">
-                  <div className="bg-indigo-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
+                <Link key={index} href={service.href} className="bg-indigo-50 rounded-xl p-4 md:p-6 text-center hover:bg-indigo-100 transition">
+                  <div className="bg-indigo-100 w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full flex items-center justify-center mb-3 md:mb-4">
                     <i className={`${service.icon} text-indigo-600 text-3xl`}></i>
                   </div>
                   <h3 className="font-bold text-lg mb-2">{service.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+                  <p className="text-gray-600 text-sm mb-3 md:mb-4">{service.description}</p>
                   <span className="text-indigo-600 font-medium text-sm">
                     Acessar <i className="fas fa-arrow-right ml-1"></i>
                   </span>
