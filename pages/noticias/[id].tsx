@@ -264,6 +264,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .from('noticias')
       .select('*')
       .eq('id', id)
+      .eq('workflow_status', 'published')
       .single();
     
     if (!news) {
@@ -291,6 +292,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .from('noticias')
       .select('id,titulo,imagem,created_at')
       .eq('categoria', news.categoria)
+      .eq('workflow_status', 'published')
       .neq('id', id)
       .order('created_at', { ascending: false })
       .limit(5);
@@ -299,8 +301,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const nowIso = new Date().toISOString();
     const [popularRes, latestRes, eventsRes, classifiedsRes, businessesRes] = await Promise.all([
-      supabase.from('noticias').select('id,titulo,imagem,created_at').order('created_at', { ascending: false }).limit(5),
-      supabase.from('noticias').select('id,titulo,imagem,created_at').order('created_at', { ascending: false }).limit(5),
+      supabase.from('noticias').select('id,titulo,imagem,created_at').eq('workflow_status', 'published').order('created_at', { ascending: false }).limit(5),
+      supabase.from('noticias').select('id,titulo,imagem,created_at').eq('workflow_status', 'published').order('created_at', { ascending: false }).limit(5),
       supabase.from('eventos').select('id,titulo,data,local').gte('data', nowIso).order('data').limit(3),
       supabase.from('classificados').select('id,titulo,preco,categoria,imagem').order('created_at', { ascending: false }).limit(3),
       supabase.from('empresas').select('id,nome,categoria,logo').order('created_at', { ascending: false }).limit(3)

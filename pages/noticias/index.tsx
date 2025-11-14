@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
-import { GetStaticProps } from 'next'
+import { GetServerSideProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
@@ -432,7 +432,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
   )
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const supabase = createServerSupabaseClient()
     
@@ -440,6 +440,7 @@ export const getStaticProps: GetStaticProps = async () => {
   const { data: noticias, error } = await supabase
       .from('noticias')
       .select('id,titulo,descricao,imagem,categoria,data,destaque,created_at')
+      .eq('workflow_status', 'published')
       .order('created_at', { ascending: false })
       .limit(36)
 
@@ -477,8 +478,7 @@ export const getStaticProps: GetStaticProps = async () => {
         events: events || [],
         classifieds: classifieds || [],
         businesses: businesses || []
-      },
-      revalidate: 600
+      }
     }
   } catch (error) {
     console.error('Erro ao conectar com Supabase:', error)
@@ -487,8 +487,7 @@ export const getStaticProps: GetStaticProps = async () => {
         noticias: [],
         categorias: [],
         totalNoticias: 0
-      },
-      revalidate: 60 // Revalidar em 1 minuto em caso de erro
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import Header from '../components/Header';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -369,7 +369,7 @@ const HomePage: React.FC<HomePageProps> = ({
   );
 };
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const supabase = createServerSupabaseClient();
     
@@ -382,6 +382,7 @@ export const getStaticProps: GetStaticProps = async () => {
       supabase
         .from('noticias')
         .select('id,titulo,descricao,imagem,categoria,data,destaque,created_at')
+        .eq('workflow_status', 'published')
         .order('created_at', { ascending: false })
         .limit(12),
       
@@ -430,8 +431,7 @@ export const getStaticProps: GetStaticProps = async () => {
         noticias: noticiasResult.data || [],
         empresas: empresasFiltradas,
         classificados: classificadosResult.data || []
-      },
-      revalidate: 60
+      }
     };
   } catch (error) {
     // Erro tratado silenciosamente em produção
@@ -440,9 +440,7 @@ export const getStaticProps: GetStaticProps = async () => {
         noticias: [],
         empresas: [],
         classificados: []
-      },
-      // Em caso de erro, tentar novamente em 1 minuto
-      revalidate: 60
+      }
     };
   }
 };

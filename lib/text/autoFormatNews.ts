@@ -14,8 +14,35 @@ export type AutoFormatOutput = {
   html: string
 }
 
-const splitSentences = (text: string) => text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).filter(Boolean)
-const splitParagraphs = (text: string) => text.split(/\n\s*\n|<\/?p>/i).map(t => t.trim()).filter(Boolean)
+const splitSentences = (text: string) => {
+  const norm = text.replace(/\s+/g, ' ').trim()
+  const parts = norm.split(/(?<=[.!?])\s+/).filter(Boolean)
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const s of parts) {
+    const k = s.toLowerCase()
+    if (!seen.has(k)) {
+      seen.add(k)
+      out.push(s)
+    }
+  }
+  return out
+}
+
+const splitParagraphs = (text: string) => {
+  const raw = text.split(/\n\s*\n|<\/?p>/i).map(t => t.trim()).filter(Boolean)
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const p of raw) {
+    const norm = p.replace(/\s+/g, ' ').trim()
+    const key = norm.toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      out.push(norm)
+    }
+  }
+  return out
+}
 
 const makeDek = (text: string) => {
   const s = splitSentences(text)
