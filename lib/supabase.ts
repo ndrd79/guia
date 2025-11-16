@@ -51,6 +51,8 @@ export interface Noticia {
   meta_description?: string
   slug?: string
   tags?: string[]
+  credito_foto?: string
+  fonte?: string
   created_at: string
   updated_at: string
 }

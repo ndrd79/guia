@@ -140,14 +140,21 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
 
               {/* Featured Image */}
               {news.imagem && (
-                <div className="relative h-96 mb-8 rounded-xl overflow-hidden">
-                  <Image
-                    src={news.imagem}
-                    alt={news.titulo}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
+                <div className="mb-8">
+                  <div className="relative h-96 rounded-xl overflow-hidden">
+                    <Image
+                      src={news.imagem}
+                      alt={news.titulo}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                  {news.credito_foto && (
+                    <div className="mt-2 text-sm text-gray-600 text-right">
+                      Foto: {news.credito_foto}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -162,6 +169,14 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
                 className="prose prose-lg max-w-none mb-8"
                 dangerouslySetInnerHTML={{ __html: formattedHtml || news.conteudo }}
               />
+
+              {news.fonte && (
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="text-sm text-gray-600">
+                    <strong>Fonte:</strong> {news.fonte}
+                  </div>
+                </div>
+              )}
 
               <div className="my-8">
                 <BannerCarousel 

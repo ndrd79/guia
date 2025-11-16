@@ -31,6 +31,8 @@ const noticiaSchema = z.object({
   destaque: z.boolean().default(false),
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   conteudo: z.string().min(1, 'Conteúdo é obrigatório'),
+  credito_foto: z.string().optional(),
+  fonte: z.string().optional(),
 })
 
 type NoticiaFormData = z.infer<typeof noticiaSchema>
@@ -271,6 +273,8 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
       conteudo: noticia.conteudo,
       banner_id: noticia.banner_id || '',
       destaque: noticia.destaque || false,
+      credito_foto: noticia.credito_foto || '',
+      fonte: noticia.fonte || '',
     })
     setShowForm(true)
   }
@@ -583,6 +587,30 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
                   folder="images"
                   showLibraryButton={true}
                   useNewMediaAPI={true}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Crédito da Foto
+                </label>
+                <input
+                  {...register('credito_foto')}
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nome do fotógrafo ou fonte da imagem"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fonte da Notícia
+                </label>
+                <input
+                  {...register('fonte')}
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: Assessoria de Imprensa, Entrevista, etc."
                 />
               </div>
 

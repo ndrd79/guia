@@ -71,6 +71,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         conteudo: data.conteudo,
         banner_id: data.banner_id || null,
         destaque: !!data.destaque,
+        credito_foto: data.credito_foto || null,
+        fonte: data.fonte || null,
         workflow_status: 'published', // Definir como publicado para aparecer nas páginas
         slug: slug, // Adicionar slug para URL amigável
         created_at: new Date().toISOString(),
@@ -103,6 +105,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         conteudo: data.conteudo,
         banner_id: data.banner_id || null,
         destaque: !!data.destaque,
+        credito_foto: data.credito_foto || null,
+        fonte: data.fonte || null,
         workflow_status: 'published', // Garantir que permaneça publicada
         updated_at: new Date().toISOString(),
       }
