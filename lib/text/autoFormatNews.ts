@@ -15,48 +15,66 @@ export type AutoFormatOutput = {
 }
 
 const splitSentences = (text: string) => {
-  const norm = text.replace(/\s+/g, ' ').trim()
-  const parts = norm.split(/(?<=[.!?])\s+/).filter(Boolean)
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const s of parts) {
-    const k = s.toLowerCase()
-    if (!seen.has(k)) {
-      seen.add(k)
-      out.push(s)
-    }
-  }
-  return out
+  // Preservar pontuação e dividir corretamente por frases
+  const sentences = text
+    .replace(/\s+/g, ' ') // Normalizar espaços
+    .split(/(?<=[.!?])\s+/) // Dividir após pontuação final
+    .map(s => s.trim())
+    .filter(s => s.length > 5) // Ignorar fragmentos muito pequenos
+    .filter((sentence, index, array) => {
+      // Evitar duplicações mantendo apenas a primeira ocorrência
+      const cleanSentence = sentence.toLowerCase().replace(/[^\w\s]/g, '')
+      const isDuplicate = array.slice(0, index).some(prev => 
+        prev.toLowerCase().replace(/[^\w\s]/g, '') === cleanSentence
+      )
+      return !isDuplicate
+    })
+  
+  return sentences.length > 0 ? sentences : [text.trim()]
 }
 
 const splitParagraphs = (text: string) => {
+  // Se não houver quebras de parágrafo claras, tratar o texto como um único bloco
+  const hasParagraphBreaks = text.includes('\n\n') || text.includes('<p>')
+  
+  if (!hasParagraphBreaks) {
+    // Para textos sem quebras, retornar como está
+    return [text.trim()]
+  }
+  
+  // Para textos com quebras, dividir normalmente
   const raw = text.split(/\n\s*\n|<\/?p>/i).map(t => t.trim()).filter(Boolean)
   const out: string[] = []
   const seen = new Set<string>()
   for (const p of raw) {
     const norm = p.replace(/\s+/g, ' ').trim()
-    const key = norm.toLowerCase()
-    if (!seen.has(key)) {
-      seen.add(key)
-      out.push(norm)
+    if (norm.length > 20) { // Ignorar parágrafos muito pequenos
+      const key = norm.toLowerCase()
+      if (!seen.has(key)) {
+        seen.add(key)
+        out.push(norm)
+      }
     }
   }
-  return out
+  return out.length > 0 ? out : [text.trim()]
 }
 
 const makeDek = (text: string) => {
   const s = splitSentences(text)
-  const d = s.slice(0, 2).join(' ')
-  return d.length > 160 ? s[0] : d
+  // Pegar apenas a primeira frase para evitar duplicação
+  const firstSentence = s[0] || ''
+  // Limitar tamanho e evitar que seja igual ao título
+  return firstSentence.length > 200 ? firstSentence.substring(0, 200) + '...' : firstSentence
 }
 
 const chunk = <T,>(arr: T[], size: number) => Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size))
 
 const headingFrom = (para: string, index: number) => {
-  const s = splitSentences(para)[0] || para
-  const h = s.replace(/[,.:;–-].*/, '').trim()
-  if (!h || h.length < 4) return `Seção ${index + 1}`
-  return h.length > 60 ? `Seção ${index + 1}` : h
+  // Para o primeiro parágrafo, usar "Resumo" em vez de "Seção 1"
+  if (index === 0) return 'Resumo'
+  
+  // Para outros parágrafos, não criar títulos automáticos
+  return '' // Retornar vazio para não criar seções desnecessárias
 }
 
 const extractBullets = (paras: string[]) => {
@@ -78,35 +96,93 @@ const impactFor = (cat?: string) => {
 
 const nextStepsDefault = ['Próximas etapas do órgão responsável', 'Como participar ou obter mais informações']
 
+// Função para criar parágrafos bem estruturados e legíveis
+function createReadableParagraphs(sentences: string[]): string[] {
+  const paragraphs: string[] = []
+  let currentParagraph: string[] = []
+  
+  for (let i = 0; i < sentences.length; i++) {
+    currentParagraph.push(sentences[i])
+    
+    // Criar novo parágrafo a cada 3-5 frases ou após pontos de transição
+    const shouldBreak = 
+      currentParagraph.length >= 4 || // Tamanho ideal: 4 frases
+      (currentParagraph.length >= 3 && i < sentences.length - 1 && sentences[i].includes('.')) || // 3 frases + ponto final
+      (sentences[i].includes('"') && sentences[i].endsWith('.')) || // Após citações
+      (sentences[i].includes('?') || sentences[i].includes('!')) // Após interrogação/exclamação
+    
+    if (shouldBreak && currentParagraph.length > 0) {
+      paragraphs.push(currentParagraph.join(' '))
+      currentParagraph = []
+    }
+  }
+  
+  // Adicionar frases restantes
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph.join(' '))
+  }
+  
+  return paragraphs
+}
+
+function cleanInputText(text: string): string {
+  let t = text.trim()
+  t = t.replace(/^Resumo(?:\s+em\s+30\s+segundos)?\s*[:\-]*\s*/i, '')
+  t = t.replace(/^Seção\s+\d+\s*[:\-]*\s*/i, '')
+  t = t.replace(/^\d+\.$/, '')
+  return t
+}
+
 export function autoFormatNews(input: AutoFormatInput): AutoFormatOutput {
-  const paras = splitParagraphs(input.content)
-  const title = input.title && input.title.trim().length > 6 ? input.title.trim() : (splitSentences(paras[0] || '')[0] || 'Notícia')
-  const dek = makeDek(paras.join(' '))
-  const blocks = chunk(paras.slice(1), 3)
-  const sections = blocks.map((block, i) => ({ heading: headingFrom(block[0] || '', i), body: block }))
-  const bullets = extractBullets(paras)
+  const originalText = cleanInputText(input.content)
+  const originalSentences = splitSentences(originalText)
+  
+  // Título: usar o fornecido ou primeira frase
+  const title = input.title && input.title.trim().length > 6 ? input.title.trim() : (originalSentences[0] || 'Notícia')
+  
+  const dekSentences = originalSentences.slice(0, 2)
+  const dek = dekSentences.join(' ').trim()
+  
+  // Criar parágrafos legíveis
+  const readableParagraphs = createReadableParagraphs(originalSentences.slice(2)) // Pular frases usadas no dek
+  
+  // Se não houver parágrafos suficientes, usar o texto original como está
+  if (readableParagraphs.length === 0) {
+    readableParagraphs.push(originalText)
+  }
+  
+  const bullets = extractBullets([originalText]) // Extrair do texto completo
   const impact = impactFor(input.category)
   const nextSteps = nextStepsDefault
+  
   const htmlParts: string[] = []
-  htmlParts.push(`<p><strong>${dek}</strong></p>`) 
-  sections.forEach(s => {
-    htmlParts.push(`<h2>${s.heading}</h2>`) 
-    s.body.forEach(p => htmlParts.push(`<p>${p}</p>`))
+
+  // Texto principal em parágrafos bem estruturados
+  readableParagraphs.forEach((para, index) => {
+    if (para.trim().length > 20) { // Apenas parágrafos com conteúdo significativo
+      htmlParts.push(`<p>${para.trim()}</p>`)
+      
+      // Adicionar respiração visual entre parágrafos longos
+      if (para.length > 200 && index < readableParagraphs.length - 1) {
+        htmlParts.push('')
+      }
+    }
   })
-  if (bullets.length) {
-    htmlParts.push('<h2>Pontos-chave</h2>')
+  
+  // Apenas bullets se realmente existirem e forem relevantes
+  if (bullets.length > 0 && bullets.some(b => input.content.includes(b))) {
+    htmlParts.push('<h3>Principais pontos</h3>')
     htmlParts.push('<ul>')
-    bullets.forEach(b => htmlParts.push(`<li>${b}</li>`))
+    bullets.slice(0, 5).forEach(b => htmlParts.push(`<li>${b}</li>`))
     htmlParts.push('</ul>')
   }
-  htmlParts.push('<h2>O que fica</h2>')
-  htmlParts.push('<ul>')
-  impact.forEach(b => htmlParts.push(`<li>${b}</li>`))
-  htmlParts.push('</ul>')
-  htmlParts.push('<h2>Próximos passos</h2>')
-  htmlParts.push('<ul>')
-  nextSteps.forEach(b => htmlParts.push(`<li>${b}</li>`))
-  htmlParts.push('</ul>')
+  
+  // Criar sections para compatibilidade
+  const sections = readableParagraphs.map((para, i) => ({
+    heading: i === 0 ? 'Texto principal' : '',
+    body: [para]
+  }))
+  
   const html = htmlParts.join('\n')
   return { title, dek, sections, bullets, impact, nextSteps, html }
 }

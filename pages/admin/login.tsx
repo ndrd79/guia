@@ -257,11 +257,14 @@ export default function AdminLogin() {
           
           <button
             type="button"
-            onClick={handleSubmit}
+            onClick={() => {
+              setEmail('admin@portal.com')
+              setPassword('admin123')
+            }}
             disabled={loading}
             className="w-full mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🧪 Teste Automático (admin@portal.com)
+            🧪 Preencher Dados de Teste
           </button>
         </form>
 
