@@ -134,6 +134,7 @@ const Footer: React.FC = () => {
             <div className="flex space-x-6">
               <Link href="/termos" className="hover:text-white transition">Termos de Serviço</Link>
               <Link href="/privacidade" className="hover:text-white transition">Política de Privacidade</Link>
+              <Link href="/transparencia" className="hover:text-white transition">Política de Transparência</Link>
               <Link href="/mapa-site" className="hover:text-white transition">Mapa do Site</Link>
             </div>
           </div>
