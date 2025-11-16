@@ -970,17 +970,18 @@
     
     /* Correção para news ticker em mobile */
     .news-ticker-container {
-      height: 1.25rem;
+      height: 1.5rem;
     }
 
     .news-ticker-content {
       animation: ticker-scroll 25s linear infinite;
+      flex-wrap: nowrap;
     }
 
     .news-ticker-item {
       font-size: 0.75rem;
       margin-right: 2rem;
-      line-height: 1rem;
+      line-height: 1.25rem;
     }
 
     .news-ticker-item:last-child {
@@ -990,7 +991,7 @@
     /* Correções para telas muito pequenas */
     @media (max-width: 480px) {
       .news-ticker-container {
-        height: 1rem;
+        height: 1.25rem;
       }
       
       .news-ticker-content {
@@ -1000,7 +1001,7 @@
       .news-ticker-item {
         font-size: 0.7rem;
         margin-right: 1.5rem;
-        line-height: 0.875rem;
+        line-height: 1.125rem;
       }
       
       .news-ticker-item:last-child {

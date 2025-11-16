@@ -105,8 +105,8 @@ const HomePage: React.FC<HomePageProps> = ({
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">Notícias</h2>
                 <p className="text-gray-600 mt-1 text-sm md:text-base">Acompanhe as últimas atualizações da cidade</p>
               </div>
-              <Link href="/noticias" className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
-                Ver todas <i className="fas fa-arrow-right ml-2 text-xs"></i>
+              <Link href="/noticias" className="inline-flex items-center rounded-full transition px-3 py-2 text-sm font-medium bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50 md:bg-indigo-600 md:text-white md:border-transparent md:hover:bg-indigo-700 md:px-4 md:py-2 md:text-base md:font-semibold">
+                Ver todas <i className="fas fa-arrow-right ml-1 text-[10px] md:ml-2 md:text-xs"></i>
               </Link>
             </div>
             
@@ -247,8 +247,8 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-4 md:mb-8">
               <h2 className="text-3xl font-bold">Empresas em Destaque</h2>
-              <Link href="/guia" className="text-indigo-600 hover:text-indigo-800 font-medium">
-                Ver todas <i className="fas fa-arrow-right ml-1"></i>
+              <Link href="/guia" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm md:text-base transition">
+                Ver todas <i className="fas fa-arrow-right ml-1 text-[10px] md:text-xs"></i>
               </Link>
             </div>
             <BusinessCarousel businesses={safeEmpresas} />
