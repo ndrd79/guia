@@ -35,39 +35,38 @@ export default function AINewsRewriter({ title, subtitle, content, onRewrite }: 
 
     setIsRewriting(true)
     try {
-      console.log('Enviando para reescrita:', { title, subtitle, content, options })
-      
-      const response = await fetch('/api/ai-rewrite', {
+      const response = await fetch('/api/news/paraphrase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           title,
-          subtitle,
           content,
-          options
+          category: ''
         })
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({ error: 'erro' }))
         throw new Error(errorData.error || 'Erro ao reescrever conteúdo')
       }
 
       const result = await response.json()
-      console.log('Resultado da reescrita:', result)
-      
-      if (result.success && result.rewrittenContent) {
-        onRewrite(result.rewrittenContent)
+      if (result.success && result.paraphrased && result.formatted) {
+        const rewritten = {
+          title: result.paraphrased.title,
+          subtitle: result.formatted.dek || subtitle,
+          content: result.paraphrased.content
+        }
+        onRewrite(rewritten)
         setLastRewriteTime(new Date().toLocaleTimeString())
         alert('Conteúdo reescrito com sucesso!')
       } else {
         throw new Error('Resposta inválida da API')
       }
-    } catch (error) {
-      console.error('Erro na reescrita:', error)
-      alert(`Erro ao reescrever conteúdo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao reescrever conteúdo')
     } finally {
       setIsRewriting(false)
     }

@@ -89,10 +89,15 @@ export default function BannerCarousel({
 
   if (!banners.length) return null
 
-  const targetHeight = (currentBanner?.altura as number | undefined) || 360
+  const ratio = currentBanner?.largura && currentBanner?.altura 
+    ? `${currentBanner.largura}/${currentBanner.altura}` 
+    : '1170/330'
 
   return (
-    <div className={`banner-carousel relative overflow-hidden ${className}`} style={{ height: targetHeight }}>
+    <div 
+      className={`banner-carousel relative overflow-hidden ${className} max-h-[220px] sm:max-h-[250px] lg:max-h-[330px]`}
+      style={{ height: 'auto', aspectRatio: ratio }}
+    >
       <div className="absolute inset-0">
         {previousBanner && (
           <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${animating ? 'opacity-0' : 'opacity-0'}`}>

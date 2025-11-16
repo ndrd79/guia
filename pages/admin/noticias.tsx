@@ -8,7 +8,7 @@ import { PlusCircle, AlertCircle } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
-import AINewsRewriter from '../../components/admin/AINewsRewriter'
+import { autoFormatNews } from '../../lib/text/autoFormatNews'
 import Breadcrumb from '../../components/admin/Breadcrumb'
 import EnhancedButton from '../../components/admin/EnhancedButton'
 import SearchBar from '../../components/admin/SearchBar'
@@ -650,69 +650,43 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
                 {errors.conteudo && (
                   <p className="mt-1 text-sm text-red-600">{errors.conteudo.message}</p>
                 )}
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3">
                   <button
                     type="button"
                     className="px-3 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
                     onClick={async () => {
                       try {
-                        const resp = await fetch('/api/news/auto-format', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ title: watchedTitulo, content: watchedConteudo, category: watch('categoria') })
-                        })
-                        const json = await resp.json()
-                        if (!resp.ok) throw new Error(json?.error || 'Falha ao autoformatar')
-                        const r = json.result
-                        if (r?.dek) setValue('descricao', r.dek)
-                        if (r?.html) setValue('conteudo', r.html)
-                        showToast('Conteúdo autoformatado', 'success')
-                      } catch (e: any) {
-                        showToast(e?.message || 'Erro ao autoformatar', 'error')
-                      }
-                    }}
-                  >
-                    Autoformatar
-                  </button>
-                  <button
-                    type="button"
-                    className="px-3 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700"
-                    onClick={async () => {
-                      try {
+                        const category = watch('categoria')
                         const resp = await fetch('/api/news/paraphrase', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ title: watchedTitulo, content: watchedConteudo, category: watch('categoria') })
+                          body: JSON.stringify({
+                            title: watchedTitulo,
+                            content: watchedConteudo,
+                            category
+                          })
                         })
                         const json = await resp.json()
-                        if (!resp.ok) throw new Error(json?.error || 'Falha ao reescrever')
+                        if (!json?.success) throw new Error(json?.error || 'Falha ao reescrever notícia')
                         const p = json.paraphrased
-                        const f = json.formatted
+                        const formatted = json.formatted
                         if (p?.title) setValue('titulo', p.title)
-                        if (f?.dek) setValue('descricao', f.dek)
-                        if (f?.html) setValue('conteudo', f.html)
-                        showToast('Texto reescrito e formatado', 'success')
+                        if (formatted?.dek) setValue('descricao', formatted.dek)
+                        const plain = Array.isArray(formatted?.sections)
+                          ? formatted.sections.map((s: any) => s.body.join(' ')).join('\n\n')
+                          : (formatted?.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || p.content
+                        setValue('conteudo', plain)
+                        showToast('Notícia reescrita com sucesso', 'success')
                       } catch (e: any) {
-                        showToast(e?.message || 'Erro ao reescrever', 'error')
+                        showToast(e?.message || 'Erro ao reescrever notícia', 'error')
                       }
                     }}
                   >
-                    Reescrever e formatar
+                    Reescrever notícia
                   </button>
                 </div>
               </div>
               
-              {/* Componente de IA para reescrita */}
-              {watchedTitulo && watchedConteudo && (
-                <div className="mt-4">
-                  <AINewsRewriter
-                    title={watchedTitulo}
-                    subtitle={watchedDescricao}
-                    content={watchedConteudo}
-                    onRewrite={handleRewrittenContent}
-                  />
-                </div>
-              )}
 
               <div className="flex justify-end space-x-4">
                 <button

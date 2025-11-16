@@ -23,12 +23,10 @@ interface RewriteResponse {
   error?: string
 }
 
-// Função principal de simulação de reescrita com IA
+// Função principal de simulação de reescrita com IA - VERSÃO CORRIGIDA
 function simulateAIRewrite(request: RewriteRequest): { title: string; subtitle: string; content: string } {
   const { title, subtitle, content, options } = request
-  
-  // Sinônimos e variações para reescrita profunda
-  const synonyms = {
+  const synonyms: Record<string, string[]> = {
     'anunciou': ['revelou', 'divulgou', 'comunicou', 'informou', 'declarou'],
     'governo': ['administração pública', 'poder executivo', 'gestão federal', 'autoridades'],
     'medidas': ['ações', 'iniciativas', 'estratégias', 'políticas', 'diretrizes'],
@@ -38,160 +36,81 @@ function simulateAIRewrite(request: RewriteRequest): { title: string; subtitle: 
     'projeto': ['iniciativa', 'programa', 'plano', 'proposta', 'empreendimento'],
     'importante': ['relevante', 'significativo', 'fundamental', 'essencial', 'crucial'],
     'novo': ['recente', 'inédito', 'inovador', 'moderno', 'atual'],
-    'grande': ['significativo', 'expressivo', 'considerável', 'substancial', 'amplo']
+    'grande': ['expressivo', 'considerável', 'substancial', 'amplo'],
+    'cidade': ['município', 'localidade', 'urbe'],
+    'prefeitura': ['administração municipal', 'gestão municipal', 'executivo local'],
+    'bairro': ['região', 'zona', 'localidade'],
+    'rua': ['via', 'logradouro', 'avenida'],
+    'obra': ['intervenção', 'serviço', 'trabalho'],
+    'trânsito': ['fluxo viário', 'circulação', 'mobilidade'],
+    'interdição': ['bloqueio', 'restrição', 'suspensão'],
+    'serviço': ['atendimento', 'prestação', 'trabalho'],
+    'manutenção': ['reparo', 'ajuste', 'conservação'],
+    'moradores': ['residentes', 'população local', 'habitantes'],
+    'secretaria': ['pasta', 'departamento', 'órgão'],
+    'saúde': ['setor de saúde', 'área da saúde'],
+    'educação': ['ensino', 'rede de educação'],
+    'segurança': ['proteção', 'ordem pública']
   }
-  
-  // Estruturas alternativas para reescrita
-  const structures = {
-    formal: {
-      openings: [
-        'De acordo com informações oficiais,',
-        'Conforme divulgado recentemente,',
-        'Segundo dados oficiais,',
-        'Com base em comunicado oficial,'
-      ],
-      transitions: [
-        'Além disso,', 'Por outro lado,', 'Nesse contexto,', 'Vale destacar que,'
-      ]
-    },
-    informal: {
-      openings: [
-        'Você sabia que',
-        'Acabou de sair:',
-        'Novidade importante:',
-        'Atenção pessoal:'
-      ],
-      transitions: [
-        'E tem mais:', 'Olha só:', 'Mas não para por aí:', 'E aí que fica interessante:'
-      ]
-    },
-    neutral: {
-      openings: [
-        'Informações recentes indicam que',
-        'Dados atualizados mostram que',
-        'Segundo levantamento,',
-        'Conforme apurado,'
-      ],
-      transitions: [
-        'Adicionalmente,', 'Em paralelo,', 'Simultaneamente,', 'Complementarmente,'
-      ]
+  const replaceWithSynonyms = (text: string): string => {
+    let out = text
+    let count = 0
+    const max = 8
+    for (const [orig, alts] of Object.entries(synonyms)) {
+      if (count >= max) break
+      const rx = new RegExp(`\\b${orig}\\b`, 'gi')
+      if (rx.test(out)) {
+        const alt = alts[Math.floor(Math.random() * alts.length)]
+        out = out.replace(rx, alt)
+        count++
+      }
     }
+    return out
   }
-  
-  // Função para substituir palavras por sinônimos
-  function replaceWithSynonyms(text: string): string {
-    let rewrittenText = text
-    
-    Object.entries(synonyms).forEach(([original, alternatives]) => {
-      const regex = new RegExp(`\\b${original}\\b`, 'gi')
-      if (regex.test(rewrittenText)) {
-        const randomSynonym = alternatives[Math.floor(Math.random() * alternatives.length)]
-        rewrittenText = rewrittenText.replace(regex, randomSynonym)
-      }
-    })
-    
-    return rewrittenText
+  const splitSentences = (text: string): string[] => {
+    return text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 3)
   }
-  
-  // Função para reestruturar frases
-  function restructureSentences(text: string): string {
-    const sentences = text.split('. ')
-    const restructured = sentences.map(sentence => {
-      // Inverter ordem de algumas frases
-      if (sentence.includes(',') && Math.random() > 0.5) {
-        const parts = sentence.split(',')
-        if (parts.length === 2) {
-          return `${parts[1].trim()}, ${parts[0].trim()}`
-        }
-      }
-      return sentence
-    })
-    
-    return restructured.join('. ')
+  const rewriteSentence = (s: string, index: number): string => {
+    let r = replaceWithSynonyms(s)
+    if (index === 0 && !/^de acordo com/i.test(r)) {
+      r = `De acordo com informações locais, ${r.charAt(0).toLowerCase()}${r.slice(1)}`
+    }
+    return r
   }
-  
-  // Reescrita profunda do título
-  let rewrittenTitle = replaceWithSynonyms(title)
-  
-  // Adicionar contexto local se palavras-chave incluem localização
-  if (options.targetKeywords && options.targetKeywords.toLowerCase().includes('maria helena')) {
-    rewrittenTitle = `Maria Helena: ${rewrittenTitle}`
-  }
-  
-  // Modificar estrutura do título baseado no tom
+  let rewrittenTitle = title.trim()
   if (options.tone === 'informal') {
-    rewrittenTitle = `${rewrittenTitle} - Confira os Detalhes!`
+    rewrittenTitle = `Atualização: ${rewrittenTitle}`
   } else if (options.tone === 'formal') {
     rewrittenTitle = `Análise: ${rewrittenTitle}`
+  } else {
+    rewrittenTitle = `Resumo: ${rewrittenTitle}`
   }
-  
-  // Reescrita profunda do subtítulo
   let rewrittenSubtitle = subtitle ? replaceWithSynonyms(subtitle) : ''
-  if (rewrittenSubtitle && options.seoOptimization) {
-    rewrittenSubtitle = `${rewrittenSubtitle} - Entenda os impactos e desdobramentos`
+  if (!rewrittenSubtitle) {
+    const snip = splitSentences(content)[0] || ''
+    rewrittenSubtitle = snip.length > 120 ? `${snip.slice(0, 120)}...` : snip
   }
-  
-  // Reescrita profunda do conteúdo
-  let rewrittenContent = content
-  
-  // 1. Substituir palavras por sinônimos
-  rewrittenContent = replaceWithSynonyms(rewrittenContent)
-  
-  // 2. Reestruturar frases
-  rewrittenContent = restructureSentences(rewrittenContent)
-  
-  // 3. Adicionar abertura baseada no tom
-  const currentStructure = structures[options.tone]
-  const randomOpening = currentStructure.openings[Math.floor(Math.random() * currentStructure.openings.length)]
-  
-  // 4. Adicionar contexto local se especificado
-  let localContext = ''
-  if (options.targetKeywords && options.targetKeywords.toLowerCase().includes('maria helena')) {
-    localContext = ' A informação tem relevância direta para os moradores e comerciantes da região.'
+  if (rewrittenSubtitle && options.seoOptimization && !/impactos/i.test(rewrittenSubtitle)) {
+    rewrittenSubtitle = `${rewrittenSubtitle} — entenda os impactos`
   }
-  
-  // 5. Reestruturar parágrafos
-  const paragraphs = rewrittenContent.split('\n\n')
-  const rewrittenParagraphs = paragraphs.map((paragraph, index) => {
-    if (index === 0) {
-      return `${randomOpening} ${paragraph.toLowerCase().charAt(0).toUpperCase() + paragraph.slice(1)}${localContext}`
-    }
-    
-    // Adicionar transições entre parágrafos
-    const randomTransition = currentStructure.transitions[Math.floor(Math.random() * currentStructure.transitions.length)]
-    return `${randomTransition} ${paragraph}`
-  })
-  
-  rewrittenContent = rewrittenParagraphs.join('\n\n')
-  
-  // 6. Adicionar instruções personalizadas se fornecidas
+  const sentences = splitSentences(content)
+  let rewrittenContent = sentences.map(rewriteSentence).join(' ')
   if (options.customInstructions) {
-    const instructions = options.customInstructions.toLowerCase()
-    
-    if (instructions.includes('maior') || instructions.includes('expandir')) {
-      rewrittenContent += '\n\nEsta situação representa um marco importante que merece atenção especial da comunidade. Os desdobramentos desta decisão podem influenciar significativamente o cenário local nos próximos meses, criando novas oportunidades e desafios para todos os envolvidos.'
+    const instr = options.customInstructions.toLowerCase()
+    if (/(maior|expandir)/i.test(instr) && !/marco importante/i.test(rewrittenContent)) {
+      rewrittenContent += '\n\nEste desenvolvimento representa um marco importante para a comunidade.'
     }
-    
-    if (instructions.includes('local') || instructions.includes('regional')) {
-      rewrittenContent += '\n\nPara a região de Maria Helena, este desenvolvimento assume particular relevância, considerando as características específicas do mercado local e as necessidades da comunidade.'
-    }
-    
-    if (instructions.includes('técnico') || instructions.includes('detalhado')) {
-      rewrittenContent += '\n\nOs aspectos técnicos desta implementação envolvem múltiplas variáveis que devem ser cuidadosamente analisadas pelos especialistas do setor, garantindo que todos os procedimentos sejam executados conforme as melhores práticas estabelecidas.'
+    if (/(local|regional)/i.test(instr) && !/relevância local/i.test(rewrittenContent)) {
+      rewrittenContent += '\n\nPara a região, o tema tem relevância local.'
     }
   }
-  
-  // 7. Otimização SEO avançada
   if (options.seoOptimization && options.targetKeywords) {
-    const keywords = options.targetKeywords.split(',').map(k => k.trim())
-    rewrittenContent += `\n\nEste conteúdo aborda temas relacionados a: ${keywords.join(', ')}. Mantenha-se informado sobre estes e outros assuntos relevantes para sua região.`
+    const keywords = options.targetKeywords.split(',').map(k => k.trim()).filter(Boolean)
+    if (keywords.length > 0) {
+      rewrittenContent += `\n\nTemas: ${keywords.join(', ')}.`
+    }
   }
-  
-  return {
-    title: rewrittenTitle,
-    subtitle: rewrittenSubtitle,
-    content: rewrittenContent
-  }
+  return { title: rewrittenTitle, subtitle: rewrittenSubtitle, content: rewrittenContent }
 }
 
 // Em produção, integrar com serviços de IA reais
