@@ -189,18 +189,52 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
                 />
               </div>
 
-              {/* Share Buttons */}
               <div className="border-t border-gray-200 pt-6 mb-8">
                 <h3 className="text-lg font-bold mb-4">Compartilhe esta notícia</h3>
                 <div className="flex space-x-4">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    onClick={() => {
+                      const url = typeof window !== 'undefined' ? window.location.href : ''
+                      const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+                      window.open(shareUrl, '_blank', 'noopener,noreferrer')
+                    }}
+                  >
                     <i className="fab fa-facebook-f mr-2"></i>Facebook
                   </button>
-                  <button className="bg-blue-400 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition">
-                    <i className="fab fa-twitter mr-2"></i>Twitter
-                  </button>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                  <button
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                    onClick={() => {
+                      const url = typeof window !== 'undefined' ? window.location.href : ''
+                      const text = `${news.titulo} - ${url}`
+                      const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+                      window.open(shareUrl, '_blank', 'noopener,noreferrer')
+                    }}
+                  >
                     <i className="fab fa-whatsapp mr-2"></i>WhatsApp
+                  </button>
+                  <button
+                    className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition"
+                    onClick={async () => {
+                      const url = typeof window !== 'undefined' ? window.location.href : ''
+                      const text = `${news.titulo} - ${url}`
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({ title: news.titulo, text: news.descricao || news.titulo, url })
+                        } catch {}
+                      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                        try {
+                          await navigator.clipboard.writeText(text)
+                          alert('Link copiado. Abra o Instagram e cole na publicação ou mensagem.')
+                        } catch {
+                          window.prompt('Copie o link para compartilhar no Instagram:', text)
+                        }
+                      } else {
+                        window.prompt('Copie o link para compartilhar no Instagram:', text)
+                      }
+                    }}
+                  >
+                    <i className="fab fa-instagram mr-2"></i>Instagram
                   </button>
                 </div>
               </div>
