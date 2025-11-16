@@ -95,7 +95,7 @@ export default function BannerCarousel({
 
   return (
     <div 
-      className={`banner-carousel relative overflow-hidden ${className} max-h-[220px] sm:max-h-[250px] lg:max-h-[330px]`}
+      className={`banner-carousel relative overflow-hidden mx-auto w-full lg:max-w-[1100px] ${className} max-h-[220px] sm:max-h-[250px] lg:max-h-[330px]`}
       style={{ height: 'auto', aspectRatio: ratio }}
     >
       <div className="absolute inset-0">

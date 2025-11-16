@@ -161,7 +161,7 @@ export default function OptimizedBanner({
       case 'cta-half':
         return `${baseClasses} w-full max-w-[585px] max-h-[360px] mx-auto bg-transparent rounded-lg shadow-none p-0`
       case 'hero-large':
-        return `${baseClasses} w-full max-w-[1170px] h-auto mx-auto`
+        return `${baseClasses} w-full h-auto mx-auto`
       default:
         return `${baseClasses} w-full mx-auto`
     }
@@ -204,7 +204,7 @@ export default function OptimizedBanner({
       style={{ 
         width: '100%',
         height: 'auto',
-        ...(position === 'sidebar' ? { maxWidth: '100%' } : { maxWidth: banner.largura }),
+        maxWidth: '100%',
         aspectRatio: position === 'sidebar' ? '1 / 1' : `${banner.largura}/${banner.altura}`,
         position: 'relative',
         zIndex: 1
