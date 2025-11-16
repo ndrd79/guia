@@ -53,7 +53,7 @@ const Header: React.FC = () => {
           <Link href="/area-usuario" className="hover:text-indigo-200">
             <i className="fas fa-user mr-1"></i> Área do Usuário
           </Link>
-          <Link href="/admin" className="hover:text-indigo-200">
+          <Link href="/admin/login" className="hover:text-indigo-200">
             <i className="fas fa-lock mr-1"></i> Painel Admin
           </Link>
         </div>
