@@ -17,8 +17,14 @@ export default function Cadastro() {
     confirmPassword: '',
     nome_completo: '',
     telefone: '',
+    whatsapp: '',
     cidade: '',
-    estado: ''
+    estado: '',
+    birthdate: '',
+    gender: '',
+    acceptedPrivacy: false,
+    acceptedTerms: false,
+    newsletter: false
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +44,24 @@ export default function Cadastro() {
       return
     }
 
+    if (!formData.acceptedPrivacy || !formData.acceptedTerms) {
+      setError('É necessário aceitar a Privacidade e os Termos de Uso')
+      setLoading(false)
+      return
+    }
+
+    const dateMatch = /^([0-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/([0-9]{4})$/.test(formData.birthdate)
+    if (!dateMatch) {
+      setError('Informe a data de nascimento no formato dd/mm/aaaa')
+      setLoading(false)
+      return
+    }
+
+    const [d, m, y] = formData.birthdate.split('/')
+    const isoBirthdate = `${y}-${m}-${d}`
+    const phoneDigits = (formData.telefone || '').replace(/\D/g, '')
+    const whatsappDigits = (formData.whatsapp || formData.telefone || '').replace(/\D/g, '')
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -45,9 +69,15 @@ export default function Cadastro() {
         options: {
           data: {
             nome_completo: formData.nome_completo,
-            telefone: formData.telefone,
+            telefone: phoneDigits,
+            whatsapp: whatsappDigits,
             cidade: formData.cidade,
-            estado: formData.estado
+            estado: formData.estado,
+            birthdate: isoBirthdate,
+            gender: formData.gender,
+            newsletter: formData.newsletter,
+            accepted_privacy: formData.acceptedPrivacy,
+            accepted_terms: formData.acceptedTerms
           }
         }
       })
@@ -59,12 +89,17 @@ export default function Cadastro() {
         if (data.user) {
           await supabase
             .from('user_profiles')
-            .update({
-              telefone: formData.telefone,
+            .upsert({
+              id: data.user.id,
+              nome_completo: formData.nome_completo,
+              telefone: phoneDigits,
+              whatsapp: whatsappDigits,
               cidade: formData.cidade,
-              estado: formData.estado
+              estado: formData.estado,
+              birthdate: isoBirthdate,
+              gender: formData.gender,
+              newsletter: formData.newsletter
             })
-            .eq('id', data.user.id)
         }
         
         router.push('/login?message=Cadastro realizado! Verifique seu email para confirmar a conta.')
@@ -77,10 +112,9 @@ export default function Cadastro() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    const { name, type } = e.target
+    const value = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   return (
@@ -118,6 +152,31 @@ export default function Cadastro() {
               />
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nascimento (dd/mm/aaaa) *</label>
+                <input
+                  type="text"
+                  name="birthdate"
+                  placeholder="dd/mm/aaaa"
+                  value={formData.birthdate}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-6 mt-6 md:mt-0">
+                <label className="inline-flex items-center">
+                  <input type="radio" name="gender" value="M" checked={formData.gender === 'M'} onChange={handleChange} className="mr-2" />
+                  Masculino
+                </label>
+                <label className="inline-flex items-center">
+                  <input type="radio" name="gender" value="F" checked={formData.gender === 'F'} onChange={handleChange} className="mr-2" />
+                  Feminino
+                </label>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email *
@@ -132,18 +191,30 @@ export default function Cadastro() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Telefone
-              </label>
-              <input
-                type="tel"
-                name="telefone"
-                value={formData.telefone}
-                onChange={handleChange}
-                placeholder="(00) 00000-0000"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Celular / WhatsApp *</label>
+                <input
+                  type="tel"
+                  name="telefone"
+                  value={formData.telefone}
+                  onChange={handleChange}
+                  placeholder="(00) 00000-0000"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+                <input
+                  type="tel"
+                  name="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={handleChange}
+                  placeholder="(00) 00000-0000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -160,28 +231,48 @@ export default function Cadastro() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
                 <select
                   name="estado"
                   value={formData.estado}
                   onChange={handleChange}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Selecione</option>
+                  <option value="AC">Acre</option>
+                  <option value="AL">Alagoas</option>
+                  <option value="AP">Amapá</option>
+                  <option value="AM">Amazonas</option>
+                  <option value="BA">Bahia</option>
+                  <option value="CE">Ceará</option>
+                  <option value="DF">Distrito Federal</option>
+                  <option value="ES">Espírito Santo</option>
+                  <option value="GO">Goiás</option>
+                  <option value="MA">Maranhão</option>
+                  <option value="MT">Mato Grosso</option>
+                  <option value="MS">Mato Grosso do Sul</option>
+                  <option value="MG">Minas Gerais</option>
+                  <option value="PA">Pará</option>
+                  <option value="PB">Paraíba</option>
                   <option value="PR">Paraná</option>
-                  <option value="SC">Santa Catarina</option>
+                  <option value="PE">Pernambuco</option>
+                  <option value="PI">Piauí</option>
+                  <option value="RJ">Rio de Janeiro</option>
+                  <option value="RN">Rio Grande do Norte</option>
                   <option value="RS">Rio Grande do Sul</option>
-                  {/* Adicionar outros estados conforme necessário */}
+                  <option value="RO">Rondônia</option>
+                  <option value="RR">Roraima</option>
+                  <option value="SC">Santa Catarina</option>
+                  <option value="SP">São Paulo</option>
+                  <option value="SE">Sergipe</option>
+                  <option value="TO">Tocantins</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Senha *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Senha *</label>
               <input
                 type="password"
                 name="password"
@@ -194,9 +285,7 @@ export default function Cadastro() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirmar Senha *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Repita sua senha *</label>
               <input
                 type="password"
                 name="confirmPassword"
@@ -206,6 +295,21 @@ export default function Cadastro() {
                 minLength={6}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <label className="flex items-center">
+                <input type="checkbox" name="acceptedPrivacy" checked={formData.acceptedPrivacy} onChange={handleChange} className="mr-2" />
+                <span>Li e concordo com a <Link href="/privacidade" className="text-blue-600 hover:underline">Política de Privacidade</Link></span>
+              </label>
+              <label className="flex items-center">
+                <input type="checkbox" name="acceptedTerms" checked={formData.acceptedTerms} onChange={handleChange} className="mr-2" />
+                <span>Li e concordo com os <Link href="/termos" className="text-blue-600 hover:underline">Termos de Uso</Link></span>
+              </label>
+              <label className="flex items-center">
+                <input type="checkbox" name="newsletter" checked={formData.newsletter} onChange={handleChange} className="mr-2" />
+                <span>Desejo receber novidades por e‑mail</span>
+              </label>
             </div>
 
             <button
