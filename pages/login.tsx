@@ -37,7 +37,7 @@ export default function Login() {
       if (error) {
         setError(error.message)
       } else {
-        router.push('/minha-conta')
+        router.push('/area-usuario')
       }
     } catch (err) {
       setError('Erro ao fazer login. Tente novamente.')

@@ -99,7 +99,7 @@ export default function AreaUsuario() {
           {/* Menu de Opções */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Meu Perfil */}
-            <Link href="/perfil" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href="/area-usuario/perfil" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <div className="bg-blue-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <i className="fas fa-user-edit text-blue-600 text-2xl"></i>
@@ -110,7 +110,7 @@ export default function AreaUsuario() {
             </Link>
 
             {/* Meus Classificados */}
-            <Link href="/meus-classificados" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href="/area-usuario/meus-classificados" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <div className="bg-green-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <i className="fas fa-tags text-green-600 text-2xl"></i>
@@ -121,7 +121,7 @@ export default function AreaUsuario() {
             </Link>
 
             {/* Novo Classificado */}
-            <Link href="/novo-classificado" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href="/area-usuario/novo-classificado" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <div className="bg-purple-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <i className="fas fa-plus-circle text-purple-600 text-2xl"></i>
@@ -132,7 +132,7 @@ export default function AreaUsuario() {
             </Link>
 
             {/* Mensagens */}
-            <Link href="/mensagens" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href="/area-usuario/mensagens" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <div className="bg-yellow-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <i className="fas fa-envelope text-yellow-600 text-2xl"></i>
@@ -143,7 +143,7 @@ export default function AreaUsuario() {
             </Link>
 
             {/* Favoritos */}
-            <Link href="/favoritos" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href="/area-usuario/favoritos" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <div className="bg-red-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <i className="fas fa-heart text-red-600 text-2xl"></i>
@@ -154,7 +154,7 @@ export default function AreaUsuario() {
             </Link>
 
             {/* Configurações */}
-            <Link href="/configuracoes" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href="/area-usuario/configuracoes" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="text-center">
                 <div className="bg-gray-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
                   <i className="fas fa-cog text-gray-600 text-2xl"></i>
