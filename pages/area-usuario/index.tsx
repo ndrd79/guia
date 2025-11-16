@@ -5,6 +5,7 @@ import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import UserLayout from '../../components/UserLayout'
 import { GetServerSideProps } from 'next'
+import Link from 'next/link'
 import { createServerSupabaseClient } from '../../lib/supabase'
 
 interface Props {
@@ -23,18 +24,18 @@ export default function UserDashboard({ name }: Props) {
         <div className="space-y-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Bem-vindo{name ? `, ${name}` : ''}</h1>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <Link href="/area-usuario/perfil" className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="font-semibold mb-1">Perfil</div>
               <div className="text-gray-600 text-sm">Gerencie seus dados</div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            </Link>
+            <Link href="/area-usuario/favoritos" className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="font-semibold mb-1">Favoritos</div>
               <div className="text-gray-600 text-sm">Empresas e notícias salvas</div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
+            </Link>
+            <Link href="/area-usuario/configuracoes" className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="font-semibold mb-1">Configurações</div>
               <div className="text-gray-600 text-sm">Preferências da conta</div>
-            </div>
+            </Link>
           </div>
         </div>
       </UserLayout>
