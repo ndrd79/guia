@@ -554,8 +554,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const handlePosicaoChange = (posicaoNome: string) => {
     const posicao = posicoesBanner.find(p => p.nome === posicaoNome)
     if (posicao) {
-      setValue('largura', posicao.larguraRecomendada)
-      setValue('altura', posicao.alturaRecomendada)
+      setValue('largura', (posicao.larguraRecomendada ?? watchedLargura ?? 0))
+      setValue('altura', (posicao.alturaRecomendada ?? watchedAltura ?? 0))
     }
     triggerValidate(posicaoNome)
   }
