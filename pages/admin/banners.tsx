@@ -341,6 +341,22 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const posInfo = posicoesBanner.find(p => p.nome === watchedPosicao)
   const idealWidth = posInfo?.larguraRecomendada || watchedLargura || 0
   const idealHeight = posInfo?.alturaRecomendada || watchedAltura || 0
+  // Compatibilidade modelo × local (para validação e sugestões)
+  const mapLocalToPagina = (local: string): string[] => {
+    switch (local) {
+      case 'home': return ['Página Inicial']
+      case 'guia_comercial': return ['Guia Comercial']
+      case 'noticias': return ['Notícias']
+      case 'eventos': return ['Eventos']
+      case 'classificados': return ['Classificados']
+      case 'geral':
+      default:
+        return ['Todas as páginas']
+    }
+  }
+  const paginaNames = mapLocalToPagina(watchedLocal || 'geral')
+  const isCompatible = !posInfo || (posInfo.paginas || []).includes('Todas as páginas') || paginaNames.some(n => (posInfo.paginas || []).includes(n))
+  const suggestedForLocal = posicoesBanner.filter(p => (p.paginas || []).includes('Todas as páginas') || paginaNames.some(n => (p.paginas || []).includes(n)))
   const deviceWidths: Record<'desktop' | 'tablet' | 'mobile', number> = {
     desktop: idealWidth || 1170,
     tablet: 768,
@@ -2070,23 +2086,3 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     }
   }
 }
-  // Compatibilidade modelo × local
-  const mapLocalToPagina = (local: string): string[] => {
-    switch (local) {
-      case 'home': return ['Página Inicial']
-      case 'guia_comercial': return ['Guia Comercial']
-      case 'noticias': return ['Notícias']
-      case 'eventos': return ['Eventos']
-      case 'classificados': return ['Classificados']
-      case 'geral':
-      default:
-        return ['Todas as páginas']
-    }
-  }
-  const paginaNames = mapLocalToPagina(watchedLocal || 'geral')
-  const isCompatible = (() => {
-    if (!posInfo) return true
-    if ((posInfo.paginas || []).includes('Todas as páginas')) return true
-    return paginaNames.some(n => (posInfo.paginas || []).includes(n))
-  })()
-  const suggestedForLocal = posicoesBanner.filter(p => (p.paginas || []).includes('Todas as páginas') || paginaNames.some(n => (p.paginas || []).includes(n)))
