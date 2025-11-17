@@ -1297,12 +1297,12 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                           <div className="mt-3">
                             <div className="text-xs text-blue-900 font-semibold mb-1">Status da posição</div>
                             {validateLoading ? (
-                              <div className="flex items-center text-sm text-blue-700"><div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-2"></div>Validando...</div>
+                              <div className="flex items-center text-sm text-blue-700" role="status" aria-live="polite"><div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-2"></div>Validando...</div>
                             ) : validateError ? (
-                              <div className="text-sm text-red-700">{validateError}</div>
+                              <div className="text-sm text-red-700" role="status" aria-live="polite">{validateError}</div>
                             ) : validateResult ? (
                               <div className="space-y-2">
-                                <div className={`text-sm ${validateResult.valid ? 'text-green-700' : 'text-orange-700'}`}>{validateResult.message || (validateResult.valid ? 'Posição disponível' : 'Conflitos detectados')}</div>
+                                <div className={`text-sm ${validateResult.valid ? 'text-green-700' : 'text-orange-700'}`} role="status" aria-live="polite">{validateResult.message || (validateResult.valid ? 'Posição disponível' : 'Conflitos detectados')}</div>
                                 {typeof validateResult.count === 'number' && (
                                   <div className="text-xs text-gray-700">Banners ativos nessa posição: <span className="font-semibold">{validateResult.count}</span></div>
                                 )}
