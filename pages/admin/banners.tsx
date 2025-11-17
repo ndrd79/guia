@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, BarChart3, Search, X, Filter, Calendar, CheckCircle, Clock, AlertTriangle, Monitor, Tablet, Smartphone } from 'lucide-react'
 import BannerModelSelect from '../../components/admin/banners/BannerModelSelect'
+import BannerModelGrid from '../../components/admin/banners/BannerModelGrid'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
@@ -1423,6 +1424,14 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     })()}
                   </div>
                 )}
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">Seleção visual</div>
+                  <BannerModelGrid
+                    options={posicoesBanner}
+                    value={watchedPosicao}
+                    onSelect={(nome) => { setValue('posicao', nome); handlePosicaoChange(nome); }}
+                  />
+                </div>
               </div>
 
                 <div>
