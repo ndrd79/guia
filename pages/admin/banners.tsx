@@ -11,6 +11,7 @@ import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
 import { AnalyticsDashboard } from '../../src/components/analytics/AnalyticsDashboard'
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
+import { bannerCatalog } from '../../lib/banners/catalog'
 import { formatDate } from '../../lib/formatters'
 import { useToastActions } from '../../components/admin/ToastProvider'
 
@@ -124,155 +125,10 @@ interface BannersPageProps {
   initialBanners: Banner[]
 }
 
-// Configurações de posições com tamanhos recomendados
-const posicoesBanner = [
-  {
-    nome: 'Hero Carousel',
-    descricao: 'Carrossel grande no topo da página inicial; ocupa toda a largura e alterna automaticamente. Exemplo: primeiro bloco visível logo abaixo do cabeçalho.',
-    tamanhoRecomendado: '1170x330 (Hero Banner)',
-    larguraRecomendada: 1170,
-    alturaRecomendada: 330,
-    paginas: ['Página Inicial']
-  },
-  {
-    nome: 'Categorias Banner',
-    descricao: 'Faixa acima da seção "Explore Nossas Categorias" na página inicial, antes dos ícones de categorias. Exemplo: logo após o carrossel principal.',
-    tamanhoRecomendado: '1170x330 (Hero Banner)',
-    larguraRecomendada: 1170,
-    alturaRecomendada: 330,
-    paginas: ['Página Inicial']
-  },
-  {
-    nome: 'Serviços Banner',
-    descricao: 'Faixa abaixo da seção "Serviços Úteis" na página inicial, separando serviços e próximo conteúdo. Exemplo: bloco imediatamente após os cartões de serviços.',
-    tamanhoRecomendado: '1170x330 (Hero Banner)',
-    larguraRecomendada: 1170,
-    alturaRecomendada: 330,
-    paginas: ['Página Inicial']
-  },
-
-  {
-    nome: 'CTA Banner',
-    descricao: 'Faixa retangular na coluna direita do bloco escuro (abaixo de Notícias e acima do Banner Categorias).',
-    tamanhoRecomendado: '585x360 (Retângulo amplo)',
-    larguraRecomendada: 585,
-    alturaRecomendada: 360,
-    paginas: ['Página Inicial']
-  },
-
-  {
-    nome: 'Header Inferior', 
-    descricao: 'Faixa horizontal logo abaixo do menu principal (topo da página). Visível em todas as páginas.',
-    tamanhoRecomendado: '970x90 (Super Banner)',
-    larguraRecomendada: 970,
-    alturaRecomendada: 90,
-    paginas: ['Todas as páginas']
-  },
-  {
-    nome: 'Banner Principal',
-    descricao: 'Banner destacado à direita do carrossel principal na página inicial. Exemplo: bloco lateral direito do topo.',
-    tamanhoRecomendado: '400x300 (Retângulo)',
-    larguraRecomendada: 400,
-    alturaRecomendada: 300,
-    paginas: ['Página Inicial']
-  },
-  {
-    nome: 'Empresas Destaque - Topo',
-    descricao: 'Faixa posicionada acima da seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
-    tamanhoRecomendado: '970x250 (Billboard)',
-    larguraRecomendada: 970,
-    alturaRecomendada: 250,
-    paginas: ['Página Inicial', 'Guia Comercial']
-  },
-  {
-    nome: 'Empresas Destaque - Rodapé 1',
-    descricao: 'Primeira faixa logo após a seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
-    tamanhoRecomendado: '300x250 (Retângulo Médio)',
-    larguraRecomendada: 300,
-    alturaRecomendada: 250,
-    paginas: ['Página Inicial', 'Guia Comercial']
-  },
-  {
-    nome: 'Empresas Destaque - Rodapé 2',
-    descricao: 'Segunda faixa após a seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
-    tamanhoRecomendado: '300x250 (Retângulo Médio)',
-    larguraRecomendada: 300,
-    alturaRecomendada: 250,
-    paginas: ['Página Inicial', 'Guia Comercial']
-  },
-  {
-    nome: 'Eventos - Rodapé',
-    descricao: 'Faixa logo após a seção de eventos. Visível na página inicial e na página de Eventos.',
-    tamanhoRecomendado: '728x90 (Leaderboard)',
-    larguraRecomendada: 728,
-    alturaRecomendada: 90,
-    paginas: ['Página Inicial', 'Eventos']
-  },
-  {
-    nome: 'Sidebar Direita',
-    descricao: 'Banner na barra lateral direita, ao lado do conteúdo principal. Páginas: Notícias, Eventos e Classificados.',
-    tamanhoRecomendado: '300x600 (Arranha-céu)',
-    larguraRecomendada: 300,
-    alturaRecomendada: 600,
-    paginas: ['Notícias', 'Eventos', 'Classificados']
-  },
-  {
-    nome: 'Sidebar Esquerda',
-    descricao: 'Banner na barra lateral esquerda, ao lado do conteúdo principal. Páginas: Notícias, Eventos e Classificados.',
-    tamanhoRecomendado: '300x600 (Arranha-céu)',
-    larguraRecomendada: 300,
-    alturaRecomendada: 600,
-    paginas: ['Notícias', 'Eventos', 'Classificados']
-  },
-  {
-    nome: 'Entre Conteúdo',
-    descricao: 'Banner inserido entre blocos de conteúdo, dentro do corpo das páginas. Ideal para breaks de leitura.',
-    tamanhoRecomendado: '336x280 (Retângulo Grande)',
-    larguraRecomendada: 336,
-    alturaRecomendada: 280,
-    paginas: ['Notícias', 'Eventos', 'Classificados']
-  },
-  {
-    nome: 'Footer',
-    descricao: 'Faixa posicionada no rodapé do site, antes dos links finais. Visível em todas as páginas.',
-    tamanhoRecomendado: '728x90 (Leaderboard)',
-    larguraRecomendada: 728,
-    alturaRecomendada: 90,
-    paginas: ['Todas as páginas']
-  },
-  {
-    nome: 'Popup',
-    descricao: 'Janela modal sobreposta ao conteúdo. Pode aparecer sobre qualquer página, ideal para campanhas pontuais.',
-    tamanhoRecomendado: '300x250 (Retângulo Médio)',
-    larguraRecomendada: 300,
-    alturaRecomendada: 250,
-    paginas: ['Todas as páginas']
-  },
-  {
-    nome: 'Mobile Banner',
-    descricao: 'Faixa otimizada para dispositivos móveis. Exibido em telas pequenas, geralmente no topo ou entre blocos.',
-    tamanhoRecomendado: '320x50 (Mobile Banner)',
-    larguraRecomendada: 320,
-    alturaRecomendada: 50,
-    paginas: ['Todas as páginas']
-  },
-  {
-    nome: 'Empresas Destaque - Rodapé 3',
-    descricao: 'Terceira faixa após a seção "Empresas em Destaque" na página inicial e no Guia Comercial.',
-    tamanhoRecomendado: '300x250 (Retângulo Médio)',
-    larguraRecomendada: 300,
-    alturaRecomendada: 250,
-    paginas: ['Página Inicial', 'Guia Comercial']
-  },
-  {
-    nome: 'Notícias - Topo',
-    descricao: 'Faixa acima da listagem de notícias na página de Notícias. Exemplo: aparece antes dos cards de notícia.',
-    tamanhoRecomendado: '728x90 (Leaderboard)',
-    larguraRecomendada: 728,
-    alturaRecomendada: 90,
-    paginas: ['Notícias']
-  }
-]
+const posicoesBanner = bannerCatalog.map(p => ({
+  ...p,
+  tamanhoRecomendado: p.larguraRecomendada && p.alturaRecomendada ? `${p.larguraRecomendada}x${p.alturaRecomendada}` : undefined,
+}))
 
 // Função para determinar o status de agendamento de um banner
 const getBannerScheduleStatus = (banner: Banner) => {
