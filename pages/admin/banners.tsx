@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, Edit, Trash2, Eye, EyeOff, ExternalLink, BarChart3, Search, X, Filter, Calendar, CheckCircle, Clock, AlertTriangle, Monitor, Tablet, Smartphone } from 'lucide-react'
+import BannerModelSelect from '../../components/admin/banners/BannerModelSelect'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
 import ImageUploader from '../../components/admin/ImageUploader'
@@ -466,8 +467,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedPosicao = watch('posicao')
   const watchedLargura = watch('largura')
   const watchedAltura = watch('altura')
-  const [posicaoOpen, setPosicaoOpen] = useState(false)
-  const [posicaoQuery, setPosicaoQuery] = useState('')
+  const [posicaoOpen] = useState(false)
+  const [posicaoQuery] = useState('')
   const [validateLoading, setValidateLoading] = useState(false)
   const [validateError, setValidateError] = useState<string | null>(null)
   const [validateResult, setValidateResult] = useState<{
@@ -1346,66 +1347,12 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Posição no Site *</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={posicaoQuery}
-                      onChange={(e) => setPosicaoQuery(e.target.value)}
-                      onFocus={() => setPosicaoOpen(true)}
-                      placeholder={watchedPosicao || 'Digite para buscar posição...'}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    />
-                    {posicaoOpen && (
-                      <div className="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-gray-200 bg-white shadow">
-                        {(() => {
-                          const filtro = (posicaoQuery || '').toLowerCase()
-                          const deriveLoc = (nome: string) => {
-                            if (nome.toLowerCase().includes('header')) return 'Header'
-                            if (nome.toLowerCase().includes('sidebar')) return 'Sidebar'
-                            if (nome.toLowerCase().includes('footer')) return 'Footer'
-                            if (nome.toLowerCase().includes('conteúdo') || nome.toLowerCase().includes('conteudo')) return 'Conteúdo'
-                            if (nome.toLowerCase().includes('popup')) return 'Popup'
-                            return 'Outros'
-                          }
-                          const grupos: Record<string, typeof posicoesBanner> = {}
-                          posicoesBanner
-                            .filter(p => p.nome.toLowerCase().includes(filtro))
-                            .forEach(p => {
-                              const g = deriveLoc(p.nome)
-                              grupos[g] = grupos[g] ? [...grupos[g], p] : [p]
-                            })
-                          const keys = Object.keys(grupos)
-                          if (keys.length === 0) {
-                            return <div className="px-3 py-2 text-sm text-gray-500">Nenhuma posição encontrada</div>
-                          }
-                          return (
-                            <div>
-                              {keys.map(k => (
-                                <div key={k}>
-                                  <div className="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-50">{k}</div>
-                                  {grupos[k].map(item => (
-                                    <button
-                                      key={item.nome}
-                                      type="button"
-                                      onClick={() => {
-                                        setValue('posicao', item.nome)
-                                        handlePosicaoChange(item.nome)
-                                        setPosicaoQuery('')
-                                        setPosicaoOpen(false)
-                                      }}
-                                      className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${watchedPosicao === item.nome ? 'bg-orange-100' : ''}`}
-                                    >
-                                      <span className="font-medium text-gray-900">{item.nome}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              ))}
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    )}
-                  </div>
+                  <BannerModelSelect
+                    options={posicoesBanner}
+                    value={watchedPosicao}
+                    onChange={(nome) => { setValue('posicao', nome); handlePosicaoChange(nome); }}
+                    placeholder="Digite para buscar posição..."
+                  />
                   {errors.posicao && (
                     <p className="mt-1 text-sm text-red-600">{errors.posicao.message}</p>
                   )}
