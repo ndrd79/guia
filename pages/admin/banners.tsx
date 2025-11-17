@@ -461,6 +461,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     altura: 200,
     ordem: 0,
     ativo: true,
+    local: 'geral',
   },
   })
 
@@ -468,6 +469,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
   const watchedPosicao = watch('posicao')
   const watchedLargura = watch('largura')
   const watchedAltura = watch('altura')
+  const watchedLocal = watch('local')
   const [posicaoOpen] = useState(false)
   const [posicaoQuery] = useState('')
   const [validateLoading, setValidateLoading] = useState(false)
@@ -1370,6 +1372,44 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                   {errors.posicao && (
                     <p className="mt-1 text-sm text-red-600">{errors.posicao.message}</p>
                   )}
+                  {/* Local de exibição (validação apenas) */}
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Local de Exibição (validação)</label>
+                      <select
+                        {...register('local')}
+                        className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="geral">Geral</option>
+                        <option value="home">Página Inicial</option>
+                        <option value="guia_comercial">Guia Comercial</option>
+                        <option value="noticias">Notícias</option>
+                        <option value="eventos">Eventos</option>
+                        <option value="classificados">Classificados</option>
+                      </select>
+                    </div>
+                    {watchedPosicao && (
+                      <div className="p-3 rounded border text-sm ${isCompatible ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-800'}">
+                        <div className="font-medium mb-1">Compatibilidade com local selecionado</div>
+                        <div>{isCompatible ? 'Compatível' : 'Posição pouco indicada para este local'}</div>
+                        {!isCompatible && (
+                          <div className="mt-2">
+                            <div className="text-xs font-semibold mb-1">Sugestões para este local:</div>
+                            <div className="flex flex-wrap gap-2">
+                              {suggestedForLocal.slice(0,6).map(s => (
+                                <button
+                                  key={`sug-${s.nome}`}
+                                  type="button"
+                                  onClick={() => { setValue('posicao', s.nome); handlePosicaoChange(s.nome); }}
+                                  className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs"
+                                >{s.nome}</button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 {watchedPosicao && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
                     {(() => {
@@ -2174,3 +2214,23 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     }
   }
 }
+  // Compatibilidade modelo × local
+  const mapLocalToPagina = (local: string): string[] => {
+    switch (local) {
+      case 'home': return ['Página Inicial']
+      case 'guia_comercial': return ['Guia Comercial']
+      case 'noticias': return ['Notícias']
+      case 'eventos': return ['Eventos']
+      case 'classificados': return ['Classificados']
+      case 'geral':
+      default:
+        return ['Todas as páginas']
+    }
+  }
+  const paginaNames = mapLocalToPagina(watchedLocal || 'geral')
+  const isCompatible = (() => {
+    if (!posInfo) return true
+    if ((posInfo.paginas || []).includes('Todas as páginas')) return true
+    return paginaNames.some(n => (posInfo.paginas || []).includes(n))
+  })()
+  const suggestedForLocal = posicoesBanner.filter(p => (p.paginas || []).includes('Todas as páginas') || paginaNames.some(n => (p.paginas || []).includes(n)))
