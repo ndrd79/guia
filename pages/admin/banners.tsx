@@ -1274,7 +1274,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                         <div>
                           <div className="flex flex-wrap gap-2 mb-2">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{posicaoSelecionada.tamanhoRecomendado}</span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{posicaoSelecionada.paginas.join(', ')}</span>
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{(posicaoSelecionada.paginas || ['Todas as páginas']).join(', ')}</span>
                           </div>
                           <div className="text-sm text-blue-800 font-medium">{posicaoSelecionada.nome}</div>
                           <div className="text-sm text-blue-600">{posicaoSelecionada.descricao}</div>
