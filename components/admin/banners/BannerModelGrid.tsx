@@ -29,16 +29,29 @@ const deriveCategory = (nome: string) => {
 export default function BannerModelGrid({ options, value, onSelect }: BannerModelGridProps) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('Todos')
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [recents, setRecents] = useState<string[]>([])
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const fav = JSON.parse(localStorage.getItem('bannerModelFavorites') || '[]')
+      const rec = JSON.parse(localStorage.getItem('bannerModelRecent') || '[]')
+      setFavorites(Array.isArray(fav) ? fav : [])
+      setRecents(Array.isArray(rec) ? rec : [])
+    } catch {}
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return options.filter(o => (
-      (!q || o.nome.toLowerCase().includes(q)) &&
-      (category === 'Todos' || deriveCategory(o.nome) === category)
-    ))
+    let base = options.filter(o => (!q || o.nome.toLowerCase().includes(q)))
+    if (category === 'Favoritos') base = base.filter(o => favorites.includes(o.nome))
+    else if (category === 'Recentes') base = base.filter(o => recents.includes(o.nome))
+    else if (category !== 'Todos') base = base.filter(o => deriveCategory(o.nome) === category)
+    return base
   }, [options, search, category])
 
-  const categories = ['Todos', ...Array.from(new Set(options.map(o => deriveCategory(o.nome))))]
+  const categories = ['Todos', 'Favoritos', 'Recentes', ...Array.from(new Set(options.map(o => deriveCategory(o.nome))))]
 
   return (
     <div className="space-y-3">
@@ -64,7 +77,15 @@ export default function BannerModelGrid({ options, value, onSelect }: BannerMode
             largura={opt.larguraRecomendada}
             altura={opt.alturaRecomendada}
             selected={value === opt.nome}
-            onSelect={() => onSelect(opt.nome)}
+            onSelect={() => {
+              onSelect(opt.nome)
+              if (typeof window !== 'undefined') {
+                const rec = JSON.parse(localStorage.getItem('bannerModelRecent') || '[]')
+                const list = Array.isArray(rec) ? [opt.nome, ...rec.filter((n: string) => n !== opt.nome)].slice(0, 8) : [opt.nome]
+                localStorage.setItem('bannerModelRecent', JSON.stringify(list))
+                localStorage.setItem('lastBannerModel', opt.nome)
+              }
+            }}
           />
         ))}
       </div>

@@ -641,6 +641,19 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     }
   }, [])
 
+  // Prefill last selected position when creating new
+  useEffect(() => {
+    if (editingBanner) return
+    const current = watch('posicao')
+    if (current) return
+    if (typeof window === 'undefined') return
+    const last = localStorage.getItem('lastBannerModel')
+    if (last) {
+      setValue('posicao', last)
+      handlePosicaoChange(last)
+    }
+  }, [editingBanner])
+
   // Carregar filtros do localStorage após montagem
   useEffect(() => {
     if (typeof window !== 'undefined') {
