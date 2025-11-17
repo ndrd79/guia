@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="80">
+  <rect width="220" height="80" fill="#eef2ff"/>
+  <rect x="10" y="10" width="200" height="50" rx="6" fill="#c7d2fe"/>
+  <text x="12" y="25" font-size="10" fill="#3256eb">Hero</text>
+</svg>
