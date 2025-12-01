@@ -17,7 +17,9 @@ interface BusSchedule {
 }
 
 const TransportePage: React.FC = () => {
-  const busSchedules: BusSchedule[] = [
+  const [selectedDay, setSelectedDay] = React.useState<'weekday' | 'saturday'>('weekday');
+
+  const weekdaySchedules: BusSchedule[] = [
     {
       route: "Umuarama → Maria Helena",
       direction: "ida",
@@ -50,6 +52,37 @@ const TransportePage: React.FC = () => {
     }
   ];
 
+  const saturdaySchedules: BusSchedule[] = [
+    {
+      route: "Umuarama → Maria Helena",
+      direction: "ida",
+      icon: "arrow-right",
+      color: "from-emerald-500 to-teal-600",
+      schedules: [
+        { time: "11:30" },
+        { time: "12:30" },
+        { time: "14:45" },
+        { time: "15:30" },
+        { time: "17:30" }
+      ]
+    },
+    {
+      route: "Maria Helena → Umuarama",
+      direction: "volta",
+      icon: "arrow-left",
+      color: "from-blue-500 to-indigo-600",
+      schedules: [
+        { time: "06:50" },
+        { time: "07:00" },
+        { time: "09:05" },
+        { time: "10:15" },
+        { time: "15:05" }
+      ]
+    }
+  ];
+
+  const busSchedules = selectedDay === 'weekday' ? weekdaySchedules : saturdaySchedules;
+
   return (
     <>
       <Head>
@@ -73,13 +106,30 @@ const TransportePage: React.FC = () => {
               <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                 Transporte Público
               </h1>
-              <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-xl md:text-2x text-blue-100 max-w-3xl mx-auto leading-relaxed">
                 Horários atualizados de ônibus entre Maria Helena e Umuarama.
                 <br />
                 <span className="text-white font-medium">Planeje sua viagem com facilidade!</span>
               </p>
-              <div className="mt-6 bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-                <p className="text-lg font-semibold">📅 Horários de Segunda à Sexta-feira</p>
+              <div className="mt-6 flex gap-4 justify-center">
+                <button
+                  onClick={() => setSelectedDay('weekday')}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${selectedDay === 'weekday'
+                      ? 'bg-white text-blue-600 shadow-lg'
+                      : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                    }`}
+                >
+                  📅 Segunda à Sexta
+                </button>
+                <button
+                  onClick={() => setSelectedDay('saturday')}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${selectedDay === 'saturday'
+                      ? 'bg-white text-blue-600 shadow-lg'
+                      : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                    }`}
+                >
+                  🗓️ Sábado
+                </button>
               </div>
             </div>
           </div>
@@ -169,23 +219,23 @@ const TransportePage: React.FC = () => {
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <div className="flex items-center mb-4">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <i className="fas fa-ticket-alt text-green-600"></i>
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                      <i className="fas fa-id-card text-red-600"></i>
                     </div>
-                    <h4 className="font-bold text-gray-800">Passagens</h4>
+                    <h4 className="font-bold text-gray-800">Documentação</h4>
                   </div>
                   <ul className="space-y-3 text-gray-600">
                     <li className="flex items-start">
-                      <i className="fas fa-check-circle text-green-500 mr-2 mt-1 text-sm"></i>
-                      <span>Adquira no terminal ou com o motorista</span>
+                      <i className="fas fa-exclamation-circle text-red-500 mr-2 mt-1 text-sm"></i>
+                      <span><strong>Obrigatório</strong> portar documento pessoal</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fas fa-check-circle text-green-500 mr-2 mt-1 text-sm"></i>
-                      <span>Valor: <strong>R$ 5,50</strong></span>
+                      <i className="fas fa-exclamation-circle text-red-500 mr-2 mt-1 text-sm"></i>
+                      <span>RG, CNH ou documento oficial com foto</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fas fa-check-circle text-green-500 mr-2 mt-1 text-sm"></i>
-                      <span>Desconto para estudantes e idosos</span>
+                      <i className="fas fa-info-circle text-gray-500 mr-2 mt-1 text-sm"></i>
+                      <span className="text-xs">Conforme Resolução ANTT nº 4.308/2014</span>
                     </li>
                   </ul>
                 </div>
@@ -215,23 +265,23 @@ const TransportePage: React.FC = () => {
 
                 <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <div className="flex items-center mb-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                      <i className="fas fa-calendar text-purple-600"></i>
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                      <i className="fas fa-ticket-alt text-green-600"></i>
                     </div>
-                    <h4 className="font-bold text-gray-800">Sábados</h4>
+                    <h4 className="font-bold text-gray-800">Passagens</h4>
                   </div>
                   <ul className="space-y-3 text-gray-600">
                     <li className="flex items-start">
-                      <i className="fas fa-info-circle text-purple-500 mr-2 mt-1 text-sm"></i>
-                      <span>Horários reduzidos aos sábados</span>
+                      <i className="fas fa-check-circle text-green-500 mr-2 mt-1 text-sm"></i>
+                      <span>Adquira no terminal ou com o motorista</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fas fa-info-circle text-purple-500 mr-2 mt-1 text-sm"></i>
-                      <span>Sem serviço aos domingos e feriados</span>
+                      <i className="fas fa-check-circle text-green-500 mr-2 mt-1 text-sm"></i>
+                      <span>Desconto para estudantes e idosos</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fas fa-info-circle text-purple-500 mr-2 mt-1 text-sm"></i>
-                      <span>Consulte a viação para confirmar</span>
+                      <i className="fas fa-info-circle text-gray-500 mr-2 mt-1 text-sm"></i>
+                      <span>Consulte tarifas com a empresa</span>
                     </li>
                   </ul>
                 </div>
