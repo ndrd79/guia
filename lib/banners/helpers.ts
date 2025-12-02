@@ -1,4 +1,4 @@
-import { Banner } from '../lib/supabase'
+import { Banner } from '../../lib/supabase'
 import { BannerScheduleStatus } from '../types/banner'
 import { EyeOff, CheckCircle, Calendar, AlertTriangle } from 'lucide-react'
 
