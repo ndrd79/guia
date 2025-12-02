@@ -10,8 +10,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   cookieOptions: {
     name: 'sb-auth-token',
-    lifetime: 60 * 60 * 24 * 7, // 7 days
-    domain: '',
     sameSite: 'lax',
     path: '/',
   }
