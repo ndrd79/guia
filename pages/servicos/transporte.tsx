@@ -106,7 +106,7 @@ const TransportePage: React.FC = () => {
               <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                 Transporte Público
               </h1>
-              <p className="text-xl md:text-2x text-blue-100 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
                 Horários atualizados de ônibus entre Maria Helena e Umuarama.
                 <br />
                 <span className="text-white font-medium">Planeje sua viagem com facilidade!</span>
@@ -276,12 +276,12 @@ const TransportePage: React.FC = () => {
                       <span>Adquira no terminal ou com o motorista</span>
                     </li>
                     <li className="flex items-start">
-                      <i className="fas fa-check-circle text-green-500 mr-2 mt-1 text-sm"></i>
-                      <span>Desconto para estudantes e idosos</span>
+                      <i className="fas fa-info-circle text-gray-500 mr-2 mt-1 text-sm"></i>
+                      <span>Consulte tarifas com a empresa</span>
                     </li>
                     <li className="flex items-start">
                       <i className="fas fa-info-circle text-gray-500 mr-2 mt-1 text-sm"></i>
-                      <span>Consulte tarifas com a empresa</span>
+                      <span>Sem serviço aos domingos e feriados</span>
                     </li>
                   </ul>
                 </div>
