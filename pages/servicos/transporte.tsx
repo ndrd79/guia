@@ -98,7 +98,9 @@ const TransportePage: React.FC = () => {
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white">
           <div className="absolute inset-0 bg-black opacity-10"></div>
-          <div className="relative container mx-auto px-4 py-20">
+
+          {/* Content Container - Added z-10 to ensure it's above decorative elements */}
+          <div className="relative z-10 container mx-auto px-4 py-20">
             <div className="text-center max-w-4xl mx-auto">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-full mb-8 backdrop-blur-sm">
                 <i className="fas fa-bus text-4xl text-white"></i>
@@ -114,7 +116,7 @@ const TransportePage: React.FC = () => {
               <div className="mt-6 flex gap-4 justify-center">
                 <button
                   onClick={() => setSelectedDay('weekday')}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${selectedDay === 'weekday'
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer relative z-20 ${selectedDay === 'weekday'
                       ? 'bg-white text-blue-600 shadow-lg'
                       : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
                     }`}
@@ -123,7 +125,7 @@ const TransportePage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setSelectedDay('saturday')}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${selectedDay === 'saturday'
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer relative z-20 ${selectedDay === 'saturday'
                       ? 'bg-white text-blue-600 shadow-lg'
                       : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
                     }`}
@@ -134,8 +136,8 @@ const TransportePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+          {/* Decorative elements - Added pointer-events-none to prevent blocking clicks */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-white opacity-5 rounded-full"></div>
             <div className="absolute top-20 right-20 w-32 h-32 bg-white opacity-5 rounded-full"></div>
             <div className="absolute bottom-10 left-1/4 w-24 h-24 bg-white opacity-5 rounded-full"></div>
