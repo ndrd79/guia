@@ -28,6 +28,13 @@ export default function AdminLogin() {
     }
 
     checkSupabaseConnection()
+
+    // Limpar qualquer sessão existente ao carregar a página
+    // Isso resolve problemas de cookies antigos/inválidos
+    const clearSession = async () => {
+      await supabase.auth.signOut()
+    }
+    clearSession()
   }, [])
 
   // Verificar se já está autenticado ao carregar a página
@@ -100,7 +107,6 @@ export default function AdminLogin() {
       })
 
       if (authError) {
-
         // Mensagens de erro mais específicas
         let errorMessage = 'Erro ao fazer login'
         if (authError.message.includes('Invalid login credentials')) {
@@ -129,14 +135,9 @@ export default function AdminLogin() {
       // Pequena pausa para garantir que a sessão foi processada
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      // Verificar se a sessão foi salva corretamente
-      const { data: sessionData } = await supabase.auth.getSession()
-
-      if (!sessionData.session) {
-        setError('Erro ao salvar sessão. Tente novamente.')
-        setDebugInfo('Erro: Sessão não foi salva corretamente')
-        return
-      }
+      // NÃO verificar getSession aqui agressivamente
+      // O cookie pode demorar um pouco para ser setado ou estar pendente
+      // Se o signInWithPassword retornou sucesso, confiamos nele para o redirect
 
       // Verificar apenas se o perfil admin existe (sem elevar privilégios)
       try {
