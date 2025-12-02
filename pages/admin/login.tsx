@@ -37,14 +37,14 @@ export default function AdminLogin() {
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
           setDebugInfo('Sessão existente detectada. Verificando permissões...')
-          
+
           // Verificar se é admin
           const { data: profile } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
             .single()
-            
+
           if (profile?.role === 'admin') {
             setDebugInfo('Usuário já autenticado como admin.')
             setIsAlreadyAuthenticated(true)
@@ -66,9 +66,9 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (loading) return // Evitar múltiplos cliques
-    
+
     setLoading(true)
     setError('')
     setDebugInfo('Processando login...')
@@ -100,7 +100,7 @@ export default function AdminLogin() {
       })
 
       if (authError) {
-        
+
         // Mensagens de erro mais específicas
         let errorMessage = 'Erro ao fazer login'
         if (authError.message.includes('Invalid login credentials')) {
@@ -112,7 +112,7 @@ export default function AdminLogin() {
         } else {
           errorMessage = authError.message
         }
-        
+
         setError(errorMessage)
         setDebugInfo(`Erro de auth: ${authError.message}`)
         return
@@ -125,19 +125,19 @@ export default function AdminLogin() {
       }
 
       setDebugInfo('Login bem-sucedido! Verificando permissões...')
-      
+
       // Pequena pausa para garantir que a sessão foi processada
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Verificar se a sessão foi salva corretamente
       const { data: sessionData } = await supabase.auth.getSession()
-      
+
       if (!sessionData.session) {
         setError('Erro ao salvar sessão. Tente novamente.')
         setDebugInfo('Erro: Sessão não foi salva corretamente')
         return
       }
-      
+
       // Verificar apenas se o perfil admin existe (sem elevar privilégios)
       try {
         const { data: profile, error: profileError } = await supabase
@@ -156,16 +156,16 @@ export default function AdminLogin() {
         setDebugInfo(`Erro perfil: ${String(profileErr)}`)
         return
       }
-      
+
       setDebugInfo('✅ Autenticação confirmada! Redirecionando...')
-      
+
       // Prevenir múltiplos redirecionamentos
       if (hasRedirected) return
       setHasRedirected(true)
-      
+
       // Redirecionamento direto sem página intermediária
       const redirectTo = router.query.redirect as string || '/admin'
-      
+
       // Usar setTimeout para evitar problemas de estado durante o redirect
       setTimeout(() => {
         router.replace(redirectTo)
@@ -184,14 +184,10 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold text-center mb-6">Login Administrativo</h1>
-        
+
         {/* Informações de debug */}
-        {debugInfo && (
-          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 text-sm">
-            <strong>Debug:</strong> {debugInfo}
-          </div>
-        )}
-        
+
+
         {/* Mensagem para usuários já autenticados */}
         {isAlreadyAuthenticated && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -209,7 +205,7 @@ export default function AdminLogin() {
             </div>
           </div>
         )}
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -254,25 +250,12 @@ export default function AdminLogin() {
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              setEmail('admin@portal.com')
-              setPassword('admin123')
-            }}
-            disabled={loading}
-            className="w-full mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            🧪 Preencher Dados de Teste
-          </button>
+
+
         </form>
 
         {/* Informações de ambiente para debug */}
-        <div className="mt-4 text-xs text-gray-500 text-center">
-          <p>Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada'}</p>
-          <p>Anon Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada'}</p>
-        </div>
+
       </div>
     </div>
   )
