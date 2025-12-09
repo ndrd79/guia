@@ -18,22 +18,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       bannersQuery = bannersQuery.eq('posicao', position)
     }
 
-    const { data: banners, error: bannersError } = await bannersQuery
-    if (bannersError) {
-      return res.status(500).json({ error: 'Erro ao buscar banners', details: bannersError.message })
-    }
-
     // Buscar eventos de analytics no período para cálculo preciso
     let analyticsQuery = supabase
       .from('banner_analytics')
       .select('banner_id, tipo, created_at')
 
-    if (startDate) analyticsQuery = analyticsQuery.gte('created_at', startDate)
-    if (endDate) analyticsQuery = analyticsQuery.lte('created_at', endDate)
+    // Default to last 30 days if no date range provided
+    if (!startDate && !endDate) {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      analyticsQuery = analyticsQuery.gte('created_at', d.toISOString())
+    } else {
+      if (startDate) analyticsQuery = analyticsQuery.gte('created_at', startDate)
+      if (endDate) analyticsQuery = analyticsQuery.lte('created_at', endDate)
+    }
 
     const { data: events, error: analyticsError } = await analyticsQuery
     if (analyticsError) {
       return res.status(500).json({ error: 'Erro ao buscar eventos', details: analyticsError.message })
+    }
+
+    const { data: banners, error: bannersError } = await bannersQuery
+    if (bannersError) {
+      return res.status(500).json({ error: 'Erro ao buscar banners', details: bannersError.message })
     }
 
     const byBanner: Record<string, { impressions: number, clicks: number }> = {}

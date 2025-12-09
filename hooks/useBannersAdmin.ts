@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { BannerWithStats, BannerStats } from '../types/banner'
 import { BannerFormData } from '../lib/banners/validation'
+import { log } from '../lib/logger'
 
 interface UseBannersAdminOptions {
     onSuccess?: (message: string) => void
@@ -24,9 +25,9 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
      * Carrega todos os banners do Supabase (incluindo inativos)
      */
     const loadBanners = useCallback(async () => {
-        console.log('📊 Iniciando carregamento dos banners (admin)...')
+        log.debug('[useBannersAdmin] Iniciando carregamento dos banners...')
         if (!supabase) {
-            console.error('❌ Supabase não configurado')
+            log.error('[useBannersAdmin] Supabase não configurado')
             setError('Sistema não está configurado')
             return
         }
@@ -38,7 +39,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
             // Verificar autenticação
             const { data: { session } } = await supabase.auth.getSession()
             if (!session?.user) {
-                console.warn('⚠️ Usuário não autenticado no admin.')
+                log.warn('[useBannersAdmin] Usuário não autenticado')
                 return
             }
 
@@ -51,7 +52,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
 
             if (error) {
                 const errMsg = (error as any)?.message || String(error)
-                console.warn('⚠️ Erro ao ordenar. Aplicando fallback.', errMsg)
+                log.warn('[useBannersAdmin] Erro ao ordenar. Aplicando fallback.', { error: errMsg })
 
                 // Fallback: tentar apenas ordenar por created_at
                 const { data: fallbackData, error: fallbackError } = await supabase
@@ -61,20 +62,20 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
 
                 if (fallbackError) {
                     const fbMsg = (fallbackError as any)?.message || String(fallbackError)
-                    console.error('❌ Erro ao carregar banners (fallback):', fbMsg)
+                    log.error('[useBannersAdmin] Erro ao carregar banners (fallback)', { error: fbMsg })
                     setError('Erro ao carregar banners: ' + fbMsg)
                     return
                 }
 
-                console.log('✅ Banners carregados (fallback):', fallbackData?.length || 0)
+                log.info(`[useBannersAdmin] Banners carregados (fallback): ${fallbackData?.length || 0}`)
                 setBanners(fallbackData || [])
                 return
             }
 
-            console.log('✅ Banners carregados:', data?.length || 0)
+            log.info(`[useBannersAdmin] Banners carregados: ${data?.length || 0}`)
             setBanners(data || [])
         } catch (error) {
-            console.error('❌ Erro na função loadBanners:', error)
+            log.error('[useBannersAdmin] Erro na função loadBanners', { error })
             const msg = (error as any)?.message || String(error)
             setError('Erro inesperado: ' + msg)
         } finally {
@@ -86,14 +87,14 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
      * Carrega estatísticas de todos os banners
      */
     const loadBannerStats = useCallback(async (signal?: AbortSignal) => {
-        console.log('📊 Carregando estatísticas...')
+        log.debug('[useBannersAdmin] Carregando estatísticas...')
         setLoadingStats(true)
 
         try {
             const { data: { session } } = await supabase.auth.getSession()
 
             if (!session?.access_token) {
-                console.warn('⚠️ Não autenticado para carregar estatísticas')
+                log.warn('[useBannersAdmin] Não autenticado para carregar estatísticas')
                 return
             }
 
@@ -106,7 +107,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
             })
 
             if (!response.ok) {
-                console.warn('⚠️ Estatísticas indisponíveis:', response.status)
+                log.warn('[useBannersAdmin] Estatísticas indisponíveis', { status: response.status })
                 return
             }
 
@@ -127,11 +128,11 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
 
             if (Object.keys(statsMap).length) {
                 setBannerStats(statsMap)
-                console.log('✅ Estatísticas carregadas para', Object.keys(statsMap).length, 'banners')
+                log.info(`[useBannersAdmin] Estatísticas carregadas para ${Object.keys(statsMap).length} banners`)
             }
         } catch (error: any) {
             if (error?.name !== 'AbortError') {
-                console.warn('⚠️ Erro ao carregar estatísticas:', error)
+                log.warn('[useBannersAdmin] Erro ao carregar estatísticas', { error })
             }
         } finally {
             setLoadingStats(false)
@@ -142,7 +143,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
      * Cria novo banner
      */
     const createBanner = useCallback(async (data: BannerFormData): Promise<boolean> => {
-        console.log('➕ Criando banner...')
+        log.debug('[useBannersAdmin] Criando banner...')
         setLoading(true)
 
         try {
@@ -163,12 +164,12 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
                 throw new Error(json?.message || `Falha (status ${resp.status})`)
             }
 
-            console.log('✅ Banner criado:', json.id)
+            log.info('[useBannersAdmin] Banner criado', { id: json.id })
             await loadBanners()
             options?.onSuccess?.('Banner criado!')
             return true
         } catch (error) {
-            console.error('❌ Erro ao criar:', error)
+            log.error('[useBannersAdmin] Erro ao criar banner', { error })
             const msg = (error as Error).message
             setError('Erro: ' + msg)
             options?.onError?.(msg)
@@ -182,7 +183,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
      * Atualiza banner
      */
     const updateBanner = useCallback(async (id: string, data: BannerFormData): Promise<boolean> => {
-        console.log('✏️ Atualizando:', id)
+        log.debug('[useBannersAdmin] Atualizando banner', { id })
         setLoading(true)
 
         try {
@@ -196,12 +197,12 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
 
             if (error) throw error
 
-            console.log('✅ Atualizado')
+            log.info('[useBannersAdmin] Banner atualizado', { id })
             await loadBanners()
             options?.onSuccess?.('Banner atualizado!')
             return true
         } catch (error) {
-            console.error('❌ Erro:', error)
+            log.error('[useBannersAdmin] Erro ao atualizar banner', { error })
             const msg = (error as Error).message
             setError('Erro: ' + msg)
             options?.onError?.(msg)
@@ -215,7 +216,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
      * Deleta banner
      */
     const deleteBanner = useCallback(async (id: string): Promise<boolean> => {
-        console.log('🗑️ Excluindo:', id)
+        log.debug('[useBannersAdmin] Excluindo banner', { id })
         setLoading(true)
 
         try {
@@ -226,12 +227,12 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
 
             if (error) throw error
 
-            console.log('✅ Excluído')
+            log.info('[useBannersAdmin] Banner excluído', { id })
             await loadBanners()
             options?.onSuccess?.('Banner excluído!')
             return true
         } catch (error) {
-            console.error('❌ Erro:', error)
+            log.error('[useBannersAdmin] Erro ao excluir banner', { error })
             const msg = (error as Error).message
             setError('Erro: ' + msg)
             options?.onError?.(msg)
@@ -245,7 +246,7 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
      * Alterna status ativo/inativo
      */
     const toggleStatus = useCallback(async (id: string, current: boolean): Promise<boolean> => {
-        console.log('🔄 Toggle status:', id)
+        log.debug('[useBannersAdmin] Toggle status', { id, current })
         setLoading(true)
 
         try {
@@ -259,12 +260,12 @@ export const useBannersAdmin = (initialBanners: BannerWithStats[] = [], options?
 
             if (error) throw error
 
-            console.log('✅ Status alterado')
+            log.info('[useBannersAdmin] Status alterado', { id, newStatus: !current })
             await loadBanners()
             options?.onSuccess?.(`Banner ${!current ? 'ativado' : 'desativado'}!`)
             return true
         } catch (error) {
-            console.error('❌ Erro:', error)
+            log.error('[useBannersAdmin] Erro ao alterar status', { error })
             const msg = (error as Error).message
             setError('Erro: ' + msg)
             options?.onError?.(msg)

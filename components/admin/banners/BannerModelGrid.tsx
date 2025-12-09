@@ -1,18 +1,11 @@
 import React, { useMemo, useState } from 'react'
 import BannerModelCard from './BannerModelCard'
-
-export interface BannerModelOption {
-  nome: string
-  descricao?: string
-  larguraRecomendada?: number
-  alturaRecomendada?: number
-  paginas?: string[]
-}
+import { BannerModelOption } from './BannerModelSelect'
 
 interface BannerModelGridProps {
   options: BannerModelOption[]
   value?: string
-  onSelect: (nome: string) => void
+  onSelect: (id: string) => void
 }
 
 const deriveCategory = (nome: string) => {
@@ -39,17 +32,17 @@ export default function BannerModelGrid({ options, value, onSelect }: BannerMode
       const rec = JSON.parse(localStorage.getItem('bannerModelRecent') || '[]')
       setFavorites(Array.isArray(fav) ? fav : [])
       setRecents(Array.isArray(rec) ? rec : [])
-    } catch {}
+    } catch { }
   }, [])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    let base = options.filter(o => (!q || o.nome.toLowerCase().includes(q)))
-    if (category === 'Favoritos') base = base.filter(o => favorites.includes(o.nome))
-    else if (category === 'Recentes') base = base.filter(o => recents.includes(o.nome))
+    let base = options.filter(o => (!q || o.nome.toLowerCase().includes(q) || (o.label && o.label.toLowerCase().includes(q))))
+    if (category === 'Favoritos') base = base.filter(o => favorites.includes(o.id))
+    else if (category === 'Recentes') base = base.filter(o => recents.includes(o.id))
     else if (category !== 'Todos') base = base.filter(o => deriveCategory(o.nome) === category)
     return base
-  }, [options, search, category])
+  }, [options, search, category, favorites, recents])
 
   const categories = ['Todos', 'Favoritos', 'Recentes', ...Array.from(new Set(options.map(o => deriveCategory(o.nome))))]
 
@@ -72,18 +65,18 @@ export default function BannerModelGrid({ options, value, onSelect }: BannerMode
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map(opt => (
           <BannerModelCard
-            key={opt.nome}
-            nome={opt.nome}
+            key={opt.id}
+            nome={opt.label || opt.nome}
             largura={opt.larguraRecomendada}
             altura={opt.alturaRecomendada}
-            selected={value === opt.nome}
+            selected={value === opt.id}
             onSelect={() => {
-              onSelect(opt.nome)
+              onSelect(opt.id)
               if (typeof window !== 'undefined') {
                 const rec = JSON.parse(localStorage.getItem('bannerModelRecent') || '[]')
-                const list = Array.isArray(rec) ? [opt.nome, ...rec.filter((n: string) => n !== opt.nome)].slice(0, 8) : [opt.nome]
+                const list = Array.isArray(rec) ? [opt.id, ...rec.filter((n: string) => n !== opt.id)].slice(0, 8) : [opt.id]
                 localStorage.setItem('bannerModelRecent', JSON.stringify(list))
-                localStorage.setItem('lastBannerModel', opt.nome)
+                localStorage.setItem('lastBannerModel', opt.id)
               }
             }}
           />

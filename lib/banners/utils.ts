@@ -1,44 +1,14 @@
-import { Banner } from '../../lib/supabase'
+/**
+ * Banner Utilities
+ * Helper functions for banner management
+ */
+
+import { Banner } from '../supabase'
 import { BannerScheduleStatus } from '../../types/banner'
 import { EyeOff, CheckCircle, Calendar, AlertTriangle } from 'lucide-react'
 
 /**
- * Valida se uma URL é segura (protocolo HTTP/HTTPS, não é IP local/privado)
- */
-export const isSecureUrl = (url: string): boolean => {
-    if (!url) return true // URLs vazias são permitidas
-
-    try {
-        const parsedUrl = new URL(url)
-
-        // Permitir apenas protocolos seguros
-        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-            return false
-        }
-
-        // Bloquear IPs locais e privados
-        const hostname = parsedUrl.hostname.toLowerCase()
-        const blockedPatterns = [
-            /^localhost$/,
-            /^127\./,
-            /^192\.168\./,
-            /^10\./,
-            /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-            /^0\./,
-            /^169\.254\./,
-            /^::1$/,
-            /^fc00:/,
-            /^fe80:/
-        ]
-
-        return !blockedPatterns.some(pattern => pattern.test(hostname))
-    } catch {
-        return false
-    }
-}
-
-/**
- * Determina o status de agendamento de um banner
+ * Determines the schedule status of a banner
  */
 export const getBannerScheduleStatus = (banner: Banner): BannerScheduleStatus => {
     const now = new Date()
@@ -96,7 +66,7 @@ export const getBannerScheduleStatus = (banner: Banner): BannerScheduleStatus =>
 }
 
 /**
- * Calcula o tempo restante até uma data alvo
+ * Calculates time remaining until a target date
  */
 export const getTimeRemaining = (targetDate: Date): string | null => {
     const now = new Date()
@@ -114,7 +84,7 @@ export const getTimeRemaining = (targetDate: Date): string | null => {
 }
 
 /**
- * Verifica se o banner está prestes a expirar (menos de 24h)
+ * Checks if a banner is expiring soon (less than 24 hours)
  */
 export const isBannerExpiringSoon = (banner: Banner): boolean => {
     if (!banner.data_fim) return false
@@ -127,26 +97,36 @@ export const isBannerExpiringSoon = (banner: Banner): boolean => {
 }
 
 /**
- * Mapeia "local" para nomes de páginas legíveis
+ * Validates if a URL is secure
  */
-export const mapLocalToPagina = (local: string): string[] => {
-    switch (local) {
-        case 'home': return ['Página Inicial']
-        case 'guia_comercial': return ['Guia Comercial']
-        case 'noticias': return ['Notícias']
-        case 'eventos': return ['Eventos']
-        case 'classificados': return ['Classificados']
-        case 'geral':
-        default:
-            return ['Todas as páginas']
-    }
-}
+export const isSecureUrl = (url: string): boolean => {
+    if (!url) return true // URLs vazias são permitidas
 
-/**
- * Formata uma data para o formato datetime-local do HTML
- */
-export const formatDateForInput = (dateString: string | null): string => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toISOString().slice(0, 16) // Remove segundos e timezone
+    try {
+        const parsedUrl = new URL(url)
+
+        // Permitir apenas protocolos seguros
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return false
+        }
+
+        // Bloquear IPs locais e privados
+        const hostname = parsedUrl.hostname.toLowerCase()
+        const blockedPatterns = [
+            /^localhost$/,
+            /^127\./,
+            /^192\.168\./,
+            /^10\./,
+            /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+            /^0\./,
+            /^169\.254\./,
+            /^::1$/,
+            /^fc00:/,
+            /^fe80:/
+        ]
+
+        return !blockedPatterns.some(pattern => pattern.test(hostname))
+    } catch {
+        return false
+    }
 }

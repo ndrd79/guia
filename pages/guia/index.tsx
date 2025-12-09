@@ -42,22 +42,22 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
 
   const handleSearch = () => {
     setIsLoading(true)
-    
+
     // Simular um pequeno delay para mostrar loading state
     setTimeout(() => {
       let filtered = initialBusinesses
-      
+
       if (searchTerm) {
-        filtered = filtered.filter(business => 
+        filtered = filtered.filter(business =>
           business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (business.description && business.description.toLowerCase().includes(searchTerm.toLowerCase()))
         )
       }
-      
+
       if (selectedCategory) {
         filtered = filtered.filter(business => business.category === selectedCategory)
       }
-      
+
       setFilteredBusinesses(filtered)
       setCurrentPage(1) // Reset para primeira página quando filtrar
       setIsLoading(false)
@@ -96,7 +96,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
   const getPageNumbers = () => {
     const pageNumbers = []
     const maxPagesToShow = 5
-    
+
     if (totalPages <= maxPagesToShow) {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i)
@@ -104,12 +104,12 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
     } else {
       const startPage = Math.max(1, currentPage - 2)
       const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1)
-      
+
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i)
       }
     }
-    
+
     return pageNumbers
   }
 
@@ -130,25 +130,25 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
             <div className="md:w-1/2 mb-8 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">Guia Comercial de Maria Helena</h1>
               <p className="text-xl mb-6">Encontre os melhores estabelecimentos, serviços e profissionais da nossa cidade.</p>
-              
+
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <div className="relative flex-grow">
-                  <input 
-                    type="text" 
-                    placeholder="O que você procura?" 
+                  <input
+                    type="text"
+                    placeholder="O que você procura?"
                     className="w-full py-3 px-4 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
-                  <button 
+                  <button
                     className="absolute right-3 top-3 text-indigo-600"
                     onClick={handleSearch}
                   >
                     <i className="fas fa-search"></i>
                   </button>
                 </div>
-                <select 
+                <select
                   className="py-3 px-4 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   value={selectedCategory}
                   onChange={(e) => {
@@ -163,11 +163,11 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                 </select>
               </div>
             </div>
-            
+
             <div className="md:w-1/2">
-              <BannerCarousel 
-                position="Hero Carousel" 
-                local="guia"
+              <BannerCarousel
+                position="Hero Carousel"
+                local="guia_comercial"
                 interval={6000}
                 autoRotate={true}
                 maxBanners={0}
@@ -185,14 +185,13 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
           <aside className="lg:w-1/4">
             <div className="bg-white rounded-xl shadow-md p-6 mb-6 sticky top-24">
               <h2 className="text-xl font-bold mb-4 text-indigo-600">Categorias</h2>
-              
+
               <div className="space-y-3">
                 {categories.map(category => (
-                  <div 
+                  <div
                     key={category.name}
-                    className={`category-card p-3 rounded-lg hover:bg-indigo-50 transition cursor-pointer ${
-                      selectedCategory === category.name ? 'bg-indigo-100 border-2 border-indigo-300' : ''
-                    }`}
+                    className={`category-card p-3 rounded-lg hover:bg-indigo-50 transition cursor-pointer ${selectedCategory === category.name ? 'bg-indigo-100 border-2 border-indigo-300' : ''
+                      }`}
                     onClick={() => {
                       setSelectedCategory(category.name)
                       setTimeout(handleSearch, 0)
@@ -207,7 +206,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Botão para limpar filtros */}
                 {(selectedCategory || searchTerm) && (
                   <button
@@ -226,8 +225,9 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
               </div>
             </div>
 
-            <BannerCarousel 
+            <BannerCarousel
               position="Sidebar Direita"
+              local="guia_comercial"
               interval={6000}
               autoRotate={true}
               maxBanners={0}
@@ -269,8 +269,8 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                       <div className="flex flex-col md:flex-row">
                         <div className="md:w-1/3 relative">
                           {business.image ? (
-                            <Image 
-                              src={business.image} 
+                            <Image
+                              src={business.image}
                               alt={business.name}
                               fill
                               className="object-cover"
@@ -294,10 +294,10 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                               </span>
                             )}
                           </div>
-                          
+
                           <p className="text-indigo-600 font-medium mb-2">{business.category}</p>
                           <p className="text-gray-600 mb-4">{business.description || 'Descrição não disponível'}</p>
-                          
+
                           <div className="space-y-2 mb-4">
                             {business.address && (
                               <div className="flex items-center text-gray-600">
@@ -320,7 +320,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                               </div>
                             )}
                           </div>
-                          
+
                           <div className="flex justify-between items-center">
                             <div className="flex items-center">
                               <div className="flex text-yellow-400 mr-2">
@@ -330,7 +330,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                               </div>
                               <span className="text-gray-600 text-sm">{business.rating}/5</span>
                             </div>
-                            
+
                             <div className="flex space-x-2">
                               <Link href={`/guia/${business.id}`}>
                                 <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
@@ -356,41 +356,38 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                 {totalPages > 1 && (
                   <div className="flex justify-center mt-8">
                     <div className="flex space-x-2">
-                      <button 
+                      <button
                         onClick={handlePrevious}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 border rounded-lg transition ${
-                          currentPage === 1 
-                            ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                        className={`px-4 py-2 border rounded-lg transition ${currentPage === 1
+                            ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                             : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         <i className="fas fa-chevron-left mr-2"></i>
                         Anterior
                       </button>
-                      
+
                       {getPageNumbers().map(pageNumber => (
-                        <button 
+                        <button
                           key={pageNumber}
                           onClick={() => handlePageChange(pageNumber)}
-                          className={`px-4 py-2 rounded-lg transition ${
-                            currentPage === pageNumber 
-                              ? 'bg-indigo-600 text-white' 
+                          className={`px-4 py-2 rounded-lg transition ${currentPage === pageNumber
+                              ? 'bg-indigo-600 text-white'
                               : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           {pageNumber}
                         </button>
                       ))}
-                      
-                      <button 
+
+                      <button
                         onClick={handleNext}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 border rounded-lg transition ${
-                          currentPage === totalPages 
-                            ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                        className={`px-4 py-2 border rounded-lg transition ${currentPage === totalPages
+                            ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                             : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         Próximo
                         <i className="fas fa-chevron-right ml-2"></i>
@@ -412,7 +409,7 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
 export const getStaticProps: GetStaticProps = async () => {
   try {
     const supabase = createServerSupabaseClient()
-    
+
     // Buscar empresas ativas do banco de dados
     const { data: empresas, error: empresasError } = await supabase
       .from('empresas')
@@ -420,7 +417,7 @@ export const getStaticProps: GetStaticProps = async () => {
       .eq('ativo', true)
       .order('featured', { ascending: false })
       .order('created_at', { ascending: false })
-    
+
     if (empresasError) {
       console.error('Erro ao buscar empresas:', empresasError)
     }
@@ -430,7 +427,7 @@ export const getStaticProps: GetStaticProps = async () => {
       .from('empresas')
       .select('category')
       .eq('ativo', true)
-    
+
     if (categoriesError) {
       console.error('Erro ao buscar categorias:', categoriesError)
     }

@@ -16,21 +16,13 @@ interface BannerStatsResumido {
 // Função simplificada para verificar autenticação
 async function isAuthenticated(req: NextApiRequest): Promise<boolean> {
   try {
-    // Verificar se há token de autorização
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return false
     }
-
     const token = authHeader.substring(7)
-    
-    // Verificar o token com Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token)
-    
-    if (error || !user) {
-      return false
-    }
-
+    if (error || !user) return false
     return true
   } catch (error) {
     console.error('Erro ao verificar autenticação:', error)
@@ -39,16 +31,14 @@ async function isAuthenticated(req: NextApiRequest): Promise<boolean> {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Apenas método GET é permitido
   if (req.method !== 'GET') {
-    return res.status(405).json({ 
+    return res.status(405).json({
       error: 'Método não permitido',
-      message: 'Apenas GET é aceito neste endpoint' 
+      message: 'Apenas GET é aceito neste endpoint'
     })
   }
 
   try {
-    // Verificar se o usuário está autenticado
     const authenticated = await isAuthenticated(req)
     if (!authenticated) {
       return res.status(401).json({
@@ -57,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Buscar todos os banners
+    // 1. Buscar todos os banners
     const { data: banners, error: bannersError } = await supabase
       .from('banners')
       .select('id, nome, posicao, ativo')
@@ -65,99 +55,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (bannersError) {
       console.error('Erro ao buscar banners:', bannersError)
-      return res.status(500).json({
-        error: 'Erro interno',
-        message: 'Não foi possível buscar os banners'
-      })
+      return res.status(500).json({ error: 'Erro interno', message: 'Não foi possível buscar os banners' })
     }
 
     if (!banners || banners.length === 0) {
-      return res.status(200).json({
-        success: true,
-        data: [],
-        message: 'Nenhum banner encontrado'
-      })
+      return res.status(200).json({ success: true, data: [], message: 'Nenhum banner encontrado' })
     }
 
-    // Buscar estatísticas para todos os banners
-    const statsPromises = banners.map(async (banner) => {
-      try {
-        // Buscar impressões
-        const { data: impressoesData, error: impressoesError } = await supabase
-          .from('banner_analytics')
-          .select('created_at')
-          .eq('banner_id', banner.id)
-          .eq('tipo', 'impressao')
+    // 2. Buscar eventos de analytics (últimos 30 dias por padrão para performance)
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
 
-        // Buscar cliques
-        const { data: cliquesData, error: cliquesError } = await supabase
-          .from('banner_analytics')
-          .select('created_at')
-          .eq('banner_id', banner.id)
-          .eq('tipo', 'clique')
+    const { data: events, error: analyticsError } = await supabase
+      .from('banner_analytics')
+      .select('banner_id, tipo, created_at')
+      .gte('created_at', d.toISOString())
 
-        // Buscar última atividade
-        const { data: ultimaAtividadeData, error: ultimaAtividadeError } = await supabase
-          .from('banner_analytics')
-          .select('created_at')
-          .eq('banner_id', banner.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
+    if (analyticsError) {
+      console.error('Erro ao buscar analytics:', analyticsError)
+      // Não falhar tudo, apenas retornar zerado
+    }
 
-        if (impressoesError || cliquesError || ultimaAtividadeError) {
-          console.error(`Erro ao buscar stats para banner ${banner.id}:`, {
-            impressoesError,
-            cliquesError,
-            ultimaAtividadeError
-          })
-          // Retornar dados zerados em caso de erro
-          return {
-            bannerId: banner.id,
-            bannerNome: banner.nome,
-            posicao: banner.posicao,
-            ativo: banner.ativo,
-            impressoes: 0,
-            cliques: 0,
-            ctr: 0,
-            ultimaAtividade: null
-          }
-        }
+    // 3. Agregar em memória
+    const statsMap: Record<string, { impressoes: number, clicks: number, lastActive: string | null }> = {}
 
-        const impressoes = impressoesData?.length || 0
-        const cliques = cliquesData?.length || 0
-        const ctr = impressoes > 0 ? (cliques / impressoes) * 100 : 0
-        const ultimaAtividade = ultimaAtividadeData?.[0]?.created_at || null
+    events?.forEach(ev => {
+      if (!statsMap[ev.banner_id]) {
+        statsMap[ev.banner_id] = { impressoes: 0, clicks: 0, lastActive: null }
+      }
+      if (ev.tipo === 'impressao') statsMap[ev.banner_id].impressoes++
+      if (ev.tipo === 'clique') statsMap[ev.banner_id].clicks++
 
-        const stats: BannerStatsResumido = {
-          bannerId: banner.id,
-          bannerNome: banner.nome,
-          posicao: banner.posicao,
-          ativo: banner.ativo,
-          impressoes,
-          cliques,
-          ctr: Math.round(ctr * 100) / 100, // Arredondar para 2 casas decimais
-          ultimaAtividade
-        }
-
-        return stats
-      } catch (error) {
-        console.error(`Erro ao processar banner ${banner.id}:`, error)
-        // Retornar dados zerados em caso de erro
-        return {
-          bannerId: banner.id,
-          bannerNome: banner.nome,
-          posicao: banner.posicao,
-          ativo: banner.ativo,
-          impressoes: 0,
-          cliques: 0,
-          ctr: 0,
-          ultimaAtividade: null
-        }
+      // Track last activity
+      if (!statsMap[ev.banner_id].lastActive || new Date(ev.created_at) > new Date(statsMap[ev.banner_id].lastActive!)) {
+        statsMap[ev.banner_id].lastActive = ev.created_at
       }
     })
 
-    // Aguardar todas as consultas
-    const allStats = await Promise.all(statsPromises)
+    // 4. Montar resposta
+    const allStats: BannerStatsResumido[] = banners.map(banner => {
+      const s = statsMap[banner.id] || { impressoes: 0, clicks: 0, lastActive: null }
+      const ctr = s.impressoes > 0 ? (s.clicks / s.impressoes) * 100 : 0
+
+      return {
+        bannerId: banner.id,
+        bannerNome: banner.nome,
+        posicao: banner.posicao,
+        ativo: banner.ativo,
+        impressoes: s.impressoes,
+        cliques: s.clicks,
+        ctr: Math.round(ctr * 100) / 100,
+        ultimaAtividade: s.lastActive
+      }
+    })
 
     // Calcular totais
     const totais = allStats.reduce((acc, stats) => ({
@@ -172,8 +122,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       totalBanners: 0
     })
 
-    const ctrGeral = totais.totalImpressoes > 0 
-      ? Math.round((totais.totalCliques / totais.totalImpressoes) * 10000) / 100 
+    const ctrGeral = totais.totalImpressoes > 0
+      ? Math.round((totais.totalCliques / totais.totalImpressoes) * 10000) / 100
       : 0
 
     return res.status(200).json({
@@ -186,7 +136,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error) {
-    // Erro genérico
     console.error('Erro no endpoint de estatísticas gerais:', error)
     return res.status(500).json({
       error: 'Erro interno do servidor',

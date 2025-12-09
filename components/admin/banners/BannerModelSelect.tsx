@@ -1,11 +1,15 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
 
 export interface BannerModelOption {
+  id: string
   nome: string
+  label?: string
+  local?: string
   descricao?: string
   larguraRecomendada?: number
   alturaRecomendada?: number
   paginas?: string[]
+  preview?: string
 }
 
 interface BannerModelSelectProps {
@@ -66,7 +70,7 @@ export default function BannerModelSelect({ options, value, onChange, placeholde
       const rec = JSON.parse(localStorage.getItem('bannerModelRecent') || '[]')
       setFavorites(Array.isArray(fav) ? fav : [])
       setRecents(Array.isArray(rec) ? rec : [])
-    } catch {}
+    } catch { }
   }, [])
 
   const saveFavorites = (list: string[]) => {
@@ -78,20 +82,20 @@ export default function BannerModelSelect({ options, value, onChange, placeholde
     if (typeof window !== 'undefined') localStorage.setItem('bannerModelRecent', JSON.stringify(list))
   }
 
-  const toggleFavorite = (nome: string) => {
-    const exists = favorites.includes(nome)
-    const next = exists ? favorites.filter(n => n !== nome) : [...favorites, nome]
+  const toggleFavorite = (id: string) => {
+    const exists = favorites.includes(id)
+    const next = exists ? favorites.filter(n => n !== id) : [...favorites, id]
     saveFavorites(next)
   }
 
-  const registerRecent = (nome: string) => {
-    const without = recents.filter(n => n !== nome)
-    const next = [nome, ...without].slice(0, 8)
+  const registerRecent = (id: string) => {
+    const without = recents.filter(n => n !== id)
+    const next = [id, ...without].slice(0, 8)
     saveRecents(next)
-    if (typeof window !== 'undefined') localStorage.setItem('lastBannerModel', nome)
+    if (typeof window !== 'undefined') localStorage.setItem('lastBannerModel', id)
   }
 
-  const selected = options.find(o => o.nome === value)
+  const selected = options.find(o => o.id === value)
 
   return (
     <div className="relative">
@@ -101,7 +105,7 @@ export default function BannerModelSelect({ options, value, onChange, placeholde
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setOpen(true)}
-        placeholder={selected?.nome || placeholder || 'Digite para buscar posição...'}
+        placeholder={selected?.label || selected?.nome || placeholder || 'Digite para buscar posição...'}
         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
       />
       {open && (
@@ -117,18 +121,18 @@ export default function BannerModelSelect({ options, value, onChange, placeholde
                 {favorites.length > 0 && (
                   <div>
                     <div className="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-50">Favoritos</div>
-                    {favorites.map(nome => {
-                      const item = options.find(o => o.nome === nome)
+                    {favorites.map(id => {
+                      const item = options.find(o => o.id === id)
                       if (!item) return null
                       return (
                         <button
-                          key={`fav-${nome}`}
+                          key={`fav-${id}`}
                           type="button"
-                          onClick={() => { onChange(item.nome); registerRecent(item.nome); setQuery(''); setOpen(false) }}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${value === item.nome ? 'bg-orange-100' : ''}`}
+                          onClick={() => { onChange(item.id); registerRecent(item.id); setQuery(''); setOpen(false) }}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${value === item.id ? 'bg-orange-100' : ''}`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-900">{item.nome}</span>
+                            <span className="font-medium text-gray-900">{item.label || item.nome}</span>
                             <span className="text-xs text-gray-500">★</span>
                           </div>
                         </button>
@@ -140,17 +144,17 @@ export default function BannerModelSelect({ options, value, onChange, placeholde
                 {recents.length > 0 && (
                   <div>
                     <div className="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-50">Recentes</div>
-                    {recents.map(nome => {
-                      const item = options.find(o => o.nome === nome)
+                    {recents.map(id => {
+                      const item = options.find(o => o.id === id)
                       if (!item) return null
                       return (
                         <button
-                          key={`rec-${nome}`}
+                          key={`rec-${id}`}
                           type="button"
-                          onClick={() => { onChange(item.nome); registerRecent(item.nome); setQuery(''); setOpen(false) }}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${value === item.nome ? 'bg-orange-100' : ''}`}
+                          onClick={() => { onChange(item.id); registerRecent(item.id); setQuery(''); setOpen(false) }}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${value === item.id ? 'bg-orange-100' : ''}`}
                         >
-                          <span className="font-medium text-gray-900">{item.nome}</span>
+                          <span className="font-medium text-gray-900">{item.label || item.nome}</span>
                         </button>
                       )
                     })}
@@ -164,20 +168,20 @@ export default function BannerModelSelect({ options, value, onChange, placeholde
                         key={item.nome}
                         type="button"
                         onClick={() => {
-                          onChange(item.nome)
-                          registerRecent(item.nome)
+                          onChange(item.id)
+                          registerRecent(item.id)
                           setQuery('')
                           setOpen(false)
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${value === item.nome ? 'bg-orange-100' : ''}`}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 ${value === item.id ? 'bg-orange-100' : ''}`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-gray-900">{item.nome}</span>
                           {item.larguraRecomendada && item.alturaRecomendada && (
                             <span className="text-xs text-gray-500">{item.larguraRecomendada}×{item.alturaRecomendada}</span>
                           )}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); toggleFavorite(item.nome) }} className="ml-2 text-xs text-gray-500 hover:text-orange-600">
-                            {favorites.includes(item.nome) ? '★' : '☆'}
+                          <button type="button" onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id) }} className="ml-2 text-xs text-gray-500 hover:text-orange-600">
+                            {favorites.includes(item.id) ? '★' : '☆'}
                           </button>
                         </div>
                       </button>
