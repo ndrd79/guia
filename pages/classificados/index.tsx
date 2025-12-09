@@ -5,6 +5,7 @@ import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerCarousel from '../../components/BannerCarousel'
+import PageBanner from '../../components/PageBanner'
 import { formatCurrency } from '../../lib/formatters'
 
 interface Classified {
@@ -108,22 +109,22 @@ export default function Classificados() {
 
   const handleFilter = () => {
     let filtered = mockClassifieds
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
-    
+
     if (selectedCategory !== 'Todos') {
       filtered = filtered.filter(item => item.category === selectedCategory)
     }
-    
+
     if (selectedLocation !== 'Localização') {
       filtered = filtered.filter(item => item.location === selectedLocation)
     }
-    
+
     setFilteredClassifieds(filtered)
   }
 
@@ -166,14 +167,14 @@ export default function Classificados() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
               <div className="w-full md:w-1/2">
                 <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="O que você está procurando?" 
+                  <input
+                    type="text"
+                    placeholder="O que você está procurando?"
                     className="w-full py-2 px-4 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <button 
+                  <button
                     className="absolute right-3 top-2 text-gray-500 hover:text-indigo-600"
                     onClick={handleFilter}
                   >
@@ -183,7 +184,7 @@ export default function Classificados() {
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 hidden md:block">Filtrar por:</span>
-                <select 
+                <select
                   className="py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
@@ -192,7 +193,7 @@ export default function Classificados() {
                     <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
-                <select 
+                <select
                   className="py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
@@ -201,7 +202,7 @@ export default function Classificados() {
                     <option key={location} value={location}>{location}</option>
                   ))}
                 </select>
-                <select 
+                <select
                   className="py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -212,18 +213,17 @@ export default function Classificados() {
                 </select>
               </div>
             </div>
-            
+
             {/* Quick Filters */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex flex-wrap gap-2">
                 {categories.map(category => (
-                  <button 
+                  <button
                     key={category}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-                      selectedCategory === category 
-                        ? 'bg-indigo-600 text-white filter-active' 
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition ${selectedCategory === category
+                        ? 'bg-indigo-600 text-white filter-active'
                         : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
+                      }`}
                     onClick={() => {
                       setSelectedCategory(category)
                       handleFilter()
@@ -235,29 +235,38 @@ export default function Classificados() {
               </div>
             </div>
           </div>
-          
+
           {/* Espaço publicitário - usando carrossel igual ao Hero */}
           <section className="py-2">
-            <BannerCarousel 
+            <BannerCarousel
               position="content"
               interval={6000}
               autoRotate={true}
               className="rounded-xl mb-6"
             />
           </section>
-          
+
           {/* Results Count */}
           <div className="mb-4">
             <p className="text-gray-600">{filteredClassifieds.length} anúncios encontrados</p>
           </div>
-          
+
+          {/* Banner Grande - Meio da Página */}
+          <div className="mb-8">
+            <PageBanner
+              posicao="Banner Grande - Meio"
+              local="classificados"
+              className="max-w-5xl mx-auto"
+            />
+          </div>
+
           {/* Classifieds Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredClassifieds.map(classified => (
               <div key={classified.id} className="bg-white rounded-lg shadow-md overflow-hidden card-hover transition relative">
                 <div className="h-48 bg-gray-200 flex items-center justify-center relative">
-                  <img 
-                    src={classified.image} 
+                  <img
+                    src={classified.image}
                     alt={classified.title}
                     className="w-full h-full object-cover"
                   />
@@ -305,6 +314,15 @@ export default function Classificados() {
           </div>
         </div>
       </section>
+
+      {/* Banner Grande - Final da Página */}
+      <div className="container mx-auto px-4 pb-12">
+        <PageBanner
+          posicao="Banner Grande - Final"
+          local="classificados"
+          className="max-w-5xl mx-auto"
+        />
+      </div>
 
       <Footer />
     </>

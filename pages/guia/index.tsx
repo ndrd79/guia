@@ -6,6 +6,7 @@ import { GetStaticProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
+import PageBanner from '../../components/PageBanner'
 // import BannerAd from '../../components/BannerAd'
 import BannerCarousel from '../../components/BannerCarousel'
 import { createServerSupabaseClient, Empresa } from '../../lib/supabase'
@@ -360,8 +361,8 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                         onClick={handlePrevious}
                         disabled={currentPage === 1}
                         className={`px-4 py-2 border rounded-lg transition ${currentPage === 1
-                            ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                          ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
                       >
                         <i className="fas fa-chevron-left mr-2"></i>
@@ -373,8 +374,8 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                           key={pageNumber}
                           onClick={() => handlePageChange(pageNumber)}
                           className={`px-4 py-2 rounded-lg transition ${currentPage === pageNumber
-                              ? 'bg-indigo-600 text-white'
-                              : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                            ? 'bg-indigo-600 text-white'
+                            : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                             }`}
                         >
                           {pageNumber}
@@ -385,8 +386,8 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                         onClick={handleNext}
                         disabled={currentPage === totalPages}
                         className={`px-4 py-2 border rounded-lg transition ${currentPage === totalPages
-                            ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                          ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                           }`}
                       >
                         Próximo
@@ -399,6 +400,15 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
             )}
           </main>
         </div>
+      </div>
+
+      {/* Banner Grande - Final da Página */}
+      <div className="container mx-auto px-4 pb-12">
+        <PageBanner
+          posicao="Banner Grande - Final"
+          local="guia_comercial"
+          className="max-w-5xl mx-auto"
+        />
       </div>
 
       <Footer />

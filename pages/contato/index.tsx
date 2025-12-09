@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Header from '../../components/Header';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
+import PageBanner from '../../components/PageBanner';
 
 const ContatoPage = () => {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -157,6 +158,15 @@ const ContatoPage = () => {
         </div>
       </div>
 
+      {/* Banner - Topo da Página */}
+      <div className="container mx-auto px-4 py-8">
+        <PageBanner
+          posicao="Banner - Topo"
+          local="contato"
+          className="max-w-5xl mx-auto"
+        />
+      </div>
+
       {/* Contact Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -166,43 +176,43 @@ const ContatoPage = () => {
               <div className="bg-white rounded-xl shadow-md p-8">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800">Envie sua mensagem</h2>
                 <p className="text-gray-600 mb-6">Preencha o formulário abaixo e entraremos em contato o mais breve possível.</p>
-                
+
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
-                      <input 
-                        type="text" 
-                        id="name" 
+                      <input
+                        type="text"
+                        id="name"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
-                        required 
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                        required
                       />
                     </div>
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
-                      <input 
-                        type="email" 
-                        id="email" 
+                      <input
+                        type="email"
+                        id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
-                        required 
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                        required
                       />
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
                     <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Assunto *</label>
-                    <select 
-                      id="subject" 
+                    <select
+                      id="subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     >
                       <option value="">Selecione um assunto</option>
@@ -214,59 +224,59 @@ const ContatoPage = () => {
                       <option value="other">Outros</option>
                     </select>
                   </div>
-                  
+
                   <div className="mb-4">
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                    <input 
-                      type="tel" 
-                      id="phone" 
+                    <input
+                      type="tel"
+                      id="phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
-                  
+
                   <div className="mb-6">
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Mensagem *</label>
-                    <textarea 
-                      id="message" 
+                    <textarea
+                      id="message"
                       name="message"
                       value={formData.message}
                       onChange={handleInputChange}
-                      rows={5} 
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500" 
+                      rows={5}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     ></textarea>
                   </div>
-                  
+
                   <div className="flex items-center mb-4">
-                    <input 
-                      id="privacy" 
+                    <input
+                      id="privacy"
                       name="privacy"
-                      type="checkbox" 
+                      type="checkbox"
                       checked={formData.privacy}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" 
-                      required 
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      required
                     />
                     <label htmlFor="privacy" className="ml-2 block text-sm text-gray-700">
                       Concordo com a <a href="#" className="text-indigo-600 hover:text-indigo-800">Política de Privacidade</a>
                     </label>
                   </div>
-                  
+
                   <button type="submit" className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium">
                     <i className="fas fa-paper-plane mr-2"></i> Enviar Mensagem
                   </button>
                 </form>
               </div>
             </div>
-            
+
             {/* Contact Info */}
             <div>
               <div className="bg-white rounded-xl shadow-md p-8 mb-8">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800">Informações de Contato</h2>
-                
+
                 <div className="space-y-6">
                   <div className="flex items-start">
                     <div className="contact-icon">
@@ -278,7 +288,7 @@ const ContatoPage = () => {
                       <p className="text-gray-600">Maria Helena - PR, 87480-000</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <div className="contact-icon">
                       <i className="fas fa-phone-alt"></i>
@@ -289,7 +299,7 @@ const ContatoPage = () => {
                       <p className="text-gray-600">(44) 98765-4321 (WhatsApp)</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <div className="contact-icon">
                       <i className="fas fa-envelope"></i>
@@ -300,7 +310,7 @@ const ContatoPage = () => {
                       <p className="text-gray-600">comercial@portalmariahelena.com.br</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <div className="contact-icon">
                       <i className="fas fa-clock"></i>
@@ -313,9 +323,9 @@ const ContatoPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Map */}
-              <div className="contact-map mt-8 mb-8" style={{height: '200px'}}>
+              <div className="contact-map mt-8 mb-8" style={{ height: '200px' }}>
                 <div className="text-center p-4">
                   <i className="fas fa-map-marked-alt text-4xl text-gray-400 mb-2"></i>
                   <h3 className="text-lg font-bold text-gray-700 mb-1">Localização</h3>
@@ -334,18 +344,17 @@ const ContatoPage = () => {
       <section className="py-16 bg-gray-50 border-t border-gray-200">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Perguntas Frequentes</h2>
-          
+
           <div className="max-w-4xl mx-auto">
             {faqData.map((faq, index) => (
               <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
-                <button 
+                <button
                   onClick={() => toggleFAQ(index)}
                   className="w-full text-left p-6 flex justify-between items-center focus:outline-none"
                 >
                   <h3 className="font-medium text-lg text-gray-800">{faq.question}</h3>
-                  <i className={`fas fa-chevron-down text-indigo-600 transition-transform duration-300 ${
-                    openFAQ === index ? 'transform rotate-180' : ''
-                  }`}></i>
+                  <i className={`fas fa-chevron-down text-indigo-600 transition-transform duration-300 ${openFAQ === index ? 'transform rotate-180' : ''
+                    }`}></i>
                 </button>
                 {openFAQ === index && (
                   <div className="px-6 pb-6">
@@ -362,7 +371,7 @@ const ContatoPage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Nossa Equipe</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
               <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden text-center card-hover">
@@ -390,9 +399,9 @@ const ContatoPage = () => {
 
       {/* Floating Action Button - WhatsApp */}
       <div className="fixed bottom-6 right-6 z-50">
-        <a 
-          href="https://wa.me/5544984355545?text=Olá! Vim pelo Portal Maria Helena" 
-          target="_blank" 
+        <a
+          href="https://wa.me/5544984355545?text=Olá! Vim pelo Portal Maria Helena"
+          target="_blank"
           rel="noopener noreferrer"
           className="bg-green-500 text-white w-14 h-14 rounded-full shadow-lg hover:bg-green-600 transition flex items-center justify-center"
         >

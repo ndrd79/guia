@@ -26,6 +26,7 @@ export const bannerCatalog: BannerModelOption[] = [
   { id: 'guia_topo', nome: 'Empresas Destaque - Topo', label: 'Topo Lista (Guia)', local: 'guia_comercial', descricao: 'Acima da lista de empresas', larguraRecomendada: 970, alturaRecomendada: 250, paginas: ['Guia Comercial'] },
   { id: 'guia_rodape', nome: 'Empresas Destaque - Rodapé 1', label: 'Rodapé Lista 1 (Guia)', local: 'guia_comercial', descricao: 'Abaixo da lista de empresas', larguraRecomendada: 300, alturaRecomendada: 250, paginas: ['Guia Comercial'] },
   { id: 'guia_sidebar', nome: 'Sidebar Direita', label: 'Sidebar (Guia)', local: 'guia_comercial', descricao: 'Barra lateral direita no Guia', larguraRecomendada: 300, alturaRecomendada: 600, paginas: ['Guia Comercial'] },
+  { id: 'guia_banner_final', nome: 'Banner Grande - Final', label: 'Banner Grande Final (Guia)', local: 'guia_comercial', descricao: 'Banner grande no final da página do Guia Comercial', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Guia Comercial'] },
 
   // Notícias
   { id: 'noticias_topo', nome: 'Notícias - Topo', label: 'Topo Notícias', local: 'noticias', descricao: 'Faixa acima da listagem de notícias', larguraRecomendada: 728, alturaRecomendada: 90, paginas: ['Notícias'] },
@@ -37,9 +38,16 @@ export const bannerCatalog: BannerModelOption[] = [
   { id: 'eventos_rodape', nome: 'Eventos - Rodapé', label: 'Rodapé Eventos', local: 'eventos', descricao: 'Faixa após a seção de eventos', larguraRecomendada: 728, alturaRecomendada: 90, paginas: ['Eventos'] },
   { id: 'eventos_sidebar', nome: 'Sidebar Direita', label: 'Sidebar (Eventos)', local: 'eventos', descricao: 'Barra lateral direita nos eventos', larguraRecomendada: 300, alturaRecomendada: 600, paginas: ['Eventos'] },
   { id: 'eventos_entre', nome: 'Entre Conteúdo', label: 'Entre Eventos', local: 'eventos', descricao: 'Faixa entre a lista de eventos', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Eventos'] },
+  { id: 'eventos_banner_meio', nome: 'Banner Grande - Meio', label: 'Banner Grande Meio (Eventos)', local: 'eventos', descricao: 'Banner grande no meio da página de Eventos', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Eventos'] },
+  { id: 'eventos_banner_final', nome: 'Banner Grande - Final', label: 'Banner Grande Final (Eventos)', local: 'eventos', descricao: 'Banner grande no final da página de Eventos', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Eventos'] },
 
   // Classificados
   { id: 'classificados_sidebar', nome: 'Sidebar Direita', label: 'Sidebar (Classificados)', local: 'classificados', descricao: 'Barra lateral direita nos classificados', larguraRecomendada: 300, alturaRecomendada: 600, paginas: ['Classificados'] },
+  { id: 'classificados_banner_meio', nome: 'Banner Grande - Meio', label: 'Banner Grande Meio (Classificados)', local: 'classificados', descricao: 'Banner grande no meio da página de Classificados', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Classificados'] },
+  { id: 'classificados_banner_final', nome: 'Banner Grande - Final', label: 'Banner Grande Final (Classificados)', local: 'classificados', descricao: 'Banner grande no final da página de Classificados', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Classificados'] },
+
+  // Contato
+  { id: 'contato_banner_topo', nome: 'Banner - Topo', label: 'Banner Topo (Contato)', local: 'contato', descricao: 'Banner no início da página de Contato', larguraRecomendada: 1170, alturaRecomendada: 330, paginas: ['Contato'] },
 
   // Globais
   { id: 'geral_header', nome: 'Header Inferior', local: 'geral', descricao: 'Logo abaixo do menu principal (Todas as páginas)', larguraRecomendada: 970, alturaRecomendada: 90, paginas: ['Todas as páginas'], preview: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60"><rect width="220" height="60" fill="%23eff6ff"/><rect x="0" y="0" width="220" height="10" fill="%2393c5fd"/></svg>' },

@@ -5,6 +5,7 @@ import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerCarousel from '../../components/BannerCarousel'
+import PageBanner from '../../components/PageBanner'
 
 interface Event {
   id: number
@@ -165,15 +166,15 @@ export default function Eventos() {
 
   const handleFilter = (filter: string) => {
     setSelectedFilter(filter)
-    
+
     let filtered = mockEvents
-    
+
     switch (filter) {
       case 'Gratuitos':
         filtered = mockEvents.filter(event => event.price === 'Gratuito')
         break
       case 'Culturais':
-        filtered = mockEvents.filter(event => 
+        filtered = mockEvents.filter(event =>
           ['Música', 'Teatro', 'Literatura', 'Artesanato'].includes(event.category)
         )
         break
@@ -186,7 +187,7 @@ export default function Eventos() {
       default:
         filtered = mockEvents
     }
-    
+
     setFilteredEvents(filtered)
   }
 
@@ -254,7 +255,7 @@ export default function Eventos() {
                   <i className="fas fa-calendar-plus mr-2"></i> Adicionar Evento
                 </button>
                 <div className="relative">
-                  <select 
+                  <select
                     className="appearance-none bg-gray-100 border border-gray-300 rounded-full py-2 px-4 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                     value={selectedFilter}
                     onChange={(e) => handleFilter(e.target.value)}
@@ -273,7 +274,7 @@ export default function Eventos() {
 
           {/* Espaço publicitário - usando carrossel igual ao Hero */}
           <section className="py-2">
-            <BannerCarousel 
+            <BannerCarousel
               position="content"
               interval={6000}
               autoRotate={true}
@@ -327,6 +328,15 @@ export default function Eventos() {
               </div>
             </div>
           )}
+
+          {/* Banner Grande - Meio da Página */}
+          <div className="mb-12">
+            <PageBanner
+              posicao="Banner Grande - Meio"
+              local="eventos"
+              className="max-w-5xl mx-auto"
+            />
+          </div>
 
           {/* All Events */}
           {regularEvents.length > 0 && (
@@ -384,15 +394,14 @@ export default function Eventos() {
                 </div>
                 <div className="grid grid-cols-7 gap-2">
                   {calendarDays.map((day, index) => (
-                    <div 
-                      key={index} 
-                      className={`h-12 flex items-center justify-center relative ${
-                        !day.isCurrentMonth 
-                          ? 'text-gray-400' 
-                          : day.hasEvent 
-                            ? 'bg-indigo-100 rounded-full text-indigo-600 font-bold' 
+                    <div
+                      key={index}
+                      className={`h-12 flex items-center justify-center relative ${!day.isCurrentMonth
+                          ? 'text-gray-400'
+                          : day.hasEvent
+                            ? 'bg-indigo-100 rounded-full text-indigo-600 font-bold'
                             : ''
-                      }`}
+                        }`}
                     >
                       {day.day}
                       {day.hasEvent && (
@@ -406,6 +415,15 @@ export default function Eventos() {
           </div>
         </div>
       </section>
+
+      {/* Banner Grande - Final da Página */}
+      <div className="container mx-auto px-4 pb-12">
+        <PageBanner
+          posicao="Banner Grande - Final"
+          local="eventos"
+          className="max-w-5xl mx-auto"
+        />
+      </div>
 
       <Footer />
     </>
