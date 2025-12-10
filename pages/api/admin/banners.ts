@@ -1,63 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
+import { withAdminAuth, AdminApiHandler } from '../../../lib/api/withAdminAuth'
 import { log } from '../../../lib/logger'
 
 /**
  * API de administração de banners
  * Suporta GET (listar), POST (criar), PUT (atualizar), DELETE (excluir)
+ * 
+ * Segurança: Usa withAdminAuth para validação centralizada
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const handler: AdminApiHandler = async (req, res, { userId, adminClient }) => {
     try {
-        // Criar cliente Supabase com service role para operações admin
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-        if (!supabaseUrl || !supabaseServiceKey) {
-            log.error('[API admin/banners] Configuração Supabase ausente')
-            return res.status(500).json({ success: false, message: 'Configuração do servidor incompleta' })
-        }
-
-        // Verificar autenticação
-        const authHeader = req.headers.authorization
-        let userId: string | null = null
-
-        if (authHeader?.startsWith('Bearer ')) {
-            const token = authHeader.slice(7)
-            const publicClient = createClient(supabaseUrl, supabaseAnonKey!)
-            const { data: { user }, error } = await publicClient.auth.getUser(token)
-            if (!error && user) {
-                userId = user.id
-            }
-        }
-
-        // Bypass para desenvolvimento local
-        const host = req.headers.host || ''
-        const isDev = process.env.NODE_ENV !== 'production'
-        const isLocal = /localhost|127\.0\.0\.1/.test(host)
-
-        if (!userId && !(isDev && isLocal)) {
-            log.warn('[API admin/banners] Usuário não autenticado')
-            return res.status(401).json({ success: false, message: 'Não autorizado' })
-        }
-
-        // Criar cliente admin
-        const adminClient = createClient(supabaseUrl, supabaseServiceKey)
-
-        // Verificar se é admin (bypass para dev local)
-        if (userId) {
-            const { data: profile } = await adminClient
-                .from('profiles')
-                .select('role')
-                .eq('id', userId)
-                .single()
-
-            if (profile?.role !== 'admin') {
-                log.warn('[API admin/banners] Usuário não é admin', { userId })
-                return res.status(403).json({ success: false, message: 'Acesso negado' })
-            }
-        }
-
         switch (req.method) {
             case 'GET':
                 return handleGet(req, res, adminClient)
@@ -71,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(405).json({ success: false, message: 'Método não permitido' })
         }
     } catch (error) {
-        log.error('[API admin/banners] Erro interno', { error })
+        log.error('[API admin/banners] Erro interno', { error, userId })
         return res.status(500).json({
             success: false,
             message: 'Erro interno do servidor',
@@ -79,6 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
     }
 }
+
+export default withAdminAuth(handler)
 
 /**
  * GET - Listar todos os banners (incluindo inativos)

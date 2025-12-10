@@ -1,13 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-// Cliente administrativo (bypass RLS)
-const supabase = createClient(supabaseUrl, serviceKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-})
+import { withAdminAuth, AdminApiHandler } from '../../../lib/api/withAdminAuth'
 
 function createSlug(title: string): string {
   return title
@@ -20,48 +11,24 @@ function createSlug(title: string): string {
     .trim();
 }
 
-async function isAdmin(req: NextApiRequest): Promise<boolean> {
-  try {
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return false
-
-    const token = authHeader.substring(7)
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-    if (error || !user) return false
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    return profile?.role === 'admin'
-  } catch (e) {
-    return false
-  }
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Configuração do Supabase ausente' })
-  }
-
-  const allowed = await isAdmin(req)
-  if (!allowed) {
-    return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' })
-  }
-
+/**
+ * API de administração de notícias
+ * Suporta POST (criar), PUT (atualizar), DELETE (excluir)
+ * 
+ * Segurança: Usa withAdminAuth para validação centralizada
+ */
+const handler: AdminApiHandler = async (req, res, { adminClient }) => {
   try {
     if (req.method === 'POST') {
       const data = req.body || {}
 
       // Se marcar como destaque, desmarcar outras
       if (data.destaque) {
-        await supabase.from('noticias').update({ destaque: false })
+        await adminClient.from('noticias').update({ destaque: false })
       }
 
       const slug = createSlug(data.titulo);
-      
+
       const payload = {
         titulo: data.titulo,
         categoria: data.categoria,
@@ -79,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updated_at: new Date().toISOString(),
       }
 
-      const { error } = await supabase.from('noticias').insert([payload])
+      const { error } = await adminClient.from('noticias').insert([payload])
       if (error) throw error
       return res.status(201).json({ message: 'Notícia criada com sucesso' })
     }
@@ -90,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Se marcar como destaque, desmarcar outras (exceto a atual)
       if (data.destaque) {
-        await supabase
+        await adminClient
           .from('noticias')
           .update({ destaque: false })
           .neq('id', id)
@@ -111,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updated_at: new Date().toISOString(),
       }
 
-      const { error } = await supabase
+      const { error } = await adminClient
         .from('noticias')
         .update(payload)
         .eq('id', id)
@@ -125,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const noticiaId = Array.isArray(id) ? id[0] : id
       if (!noticiaId) return res.status(400).json({ error: 'ID da notícia é obrigatório' })
 
-      const { error } = await supabase
+      const { error } = await adminClient
         .from('noticias')
         .delete()
         .eq('id', noticiaId)
@@ -138,3 +105,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: error?.message || 'Erro interno' })
   }
 }
+
+export default withAdminAuth(handler)
