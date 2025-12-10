@@ -337,7 +337,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                 largura: Math.round(data.largura),
                 altura: Math.round(data.altura),
                 ordem: typeof data.ordem === 'number' ? Math.round(data.ordem) : 0,
-                local: undefined,
+                local: data.local || 'geral',
                 data_inicio: data.data_inicio ? new Date(data.data_inicio).toISOString() : null,
                 data_fim: data.data_fim ? new Date(data.data_fim).toISOString() : null,
             }
@@ -357,7 +357,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                 const { data: { session } } = await supabase.auth.getSession()
                 const token = session?.access_token || ''
 
-                const response = await fetch('/api/banners', {
+                const response = await fetch('/api/admin/banners', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
