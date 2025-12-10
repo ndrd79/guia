@@ -56,17 +56,23 @@ npm run dev
 
 ```
 ├── components/          # Componentes reutilizáveis
+├── docs/               # Documentação do projeto
+├── hooks/              # Custom React hooks
 ├── lib/                # Utilitários e configurações
 ├── pages/              # Páginas do Next.js
 │   ├── api/           # API routes
+│   ├── admin/         # Painel administrativo
+│   ├── area-usuario/  # Área do usuário
 │   ├── classificados/ # Página de classificados
-│   ├── contato/       # Página de contato
 │   ├── eventos/       # Página de eventos
 │   ├── guia/          # Guia comercial
 │   └── noticias/      # Portal de notícias
-├── prisma/            # Schema do banco de dados
 ├── public/            # Arquivos estáticos
+├── scripts/           # Scripts de manutenção e utilidades
+├── src/               # Código fonte adicional
 ├── styles/            # Estilos globais
+├── supabase/          # Configurações e migrations do Supabase
+│   └── migrations/   # Scripts SQL de migração
 └── README.md
 ```
 
