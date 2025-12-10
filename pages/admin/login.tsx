@@ -28,7 +28,13 @@ export default function AdminLogin() {
     }
 
     checkSupabaseConnection()
-    // REMOVIDO: signOut automático que causava loops de logout
+
+    // Limpar qualquer sessão existente ao carregar a página
+    // Isso resolve problemas de cookies antigos/inválidos
+    const clearSession = async () => {
+      await supabase.auth.signOut()
+    }
+    clearSession()
   }, [])
 
   // Verificar se já está autenticado ao carregar a página
@@ -189,11 +195,9 @@ export default function AdminLogin() {
             <div className="flex items-center justify-between">
               <span>Você já está autenticado como administrador!</span>
               <button
-                type="button"
                 onClick={() => {
-                  const redirectTo = (router.query.redirect as string) || '/admin'
-                  // Usar window.location para garantir redirecionamento
-                  window.location.href = redirectTo
+                  const redirectTo = router.query.redirect as string || '/admin'
+                  router.replace(redirectTo)
                 }}
                 className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded text-sm transition-colors"
               >
