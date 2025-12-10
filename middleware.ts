@@ -68,7 +68,16 @@ export async function middleware(request: NextRequest) {
   })
 
   // Verificar perfil com role admin
-  const { data: profile, error: profileError } = await supabase
+  // NOTA: Usamos createClient diretamente com SERVICE_ROLE_KEY para ignorar RLS
+  // Isso é seguro porque já validamos o usuário via getUser() acima
+  const { createClient } = await import('@supabase/supabase-js')
+  const adminSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+
+  const { data: profile, error: profileError } = await adminSupabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
