@@ -130,47 +130,19 @@ export default function AdminLogin() {
         return
       }
 
-      setDebugInfo('Login bem-sucedido! Verificando permissões...')
+      setDebugInfo('Login bem-sucedido! Redirecionando...')
 
-      // Pequena pausa para garantir que a sessão foi processada
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // NOTA: Verificação de admin será feita pelo middleware
+      // Aqui apenas confiamos que o signInWithPassword funcionou
 
-      // NÃO verificar getSession aqui agressivamente
-      // O cookie pode demorar um pouco para ser setado ou estar pendente
-      // Se o signInWithPassword retornou sucesso, confiamos nele para o redirect
+      // Pequena pausa para garantir que os cookies foram salvos
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Verificar apenas se o perfil admin existe (sem elevar privilégios)
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
+      // Redirecionamento usando window.location para garantir que funciona
+      const redirectTo = (router.query.redirect as string) || '/admin'
 
-        if (profileError || !profile || profile.role !== 'admin') {
-          setError('Acesso restrito a administradores. Solicite habilitação ao suporte.')
-          setDebugInfo('Perfil sem role admin')
-          return
-        }
-      } catch (profileErr) {
-        setError('Erro ao validar permissões de acesso.')
-        setDebugInfo(`Erro perfil: ${String(profileErr)}`)
-        return
-      }
-
-      setDebugInfo('✅ Autenticação confirmada! Redirecionando...')
-
-      // Prevenir múltiplos redirecionamentos
-      if (hasRedirected) return
-      setHasRedirected(true)
-
-      // Redirecionamento direto sem página intermediária
-      const redirectTo = router.query.redirect as string || '/admin'
-
-      // Usar setTimeout para evitar problemas de estado durante o redirect
-      setTimeout(() => {
-        router.replace(redirectTo)
-      }, 100)
+      console.log('Redirecionando para:', redirectTo)
+      window.location.href = redirectTo
 
     } catch (err: any) {
       const errorMessage = err.message || 'Erro inesperado ao fazer login'

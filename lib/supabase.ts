@@ -6,14 +6,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Cliente principal do Supabase (browser) usando cookies via SSR
-// Isso permite que o middleware no servidor reconheça a sessão do usuário
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-  cookieOptions: {
-    name: 'sb-auth-token',
-    sameSite: 'lax',
-    path: '/',
-  }
-})
+// Usando configuração padrão para garantir compatibilidade
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
 // Cliente para uso no servidor (SSR)
 export function createServerSupabaseClient(ctx?: GetServerSidePropsContext) {
