@@ -25,8 +25,8 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // Exceções: páginas de login devem ser acessíveis
-  if (pathname.startsWith('/admin/login')) {
+  // Exceções: páginas de login e diagnóstico devem ser acessíveis
+  if (pathname.startsWith('/admin/login') || pathname.startsWith('/admin/diag')) {
     return res
   }
 
