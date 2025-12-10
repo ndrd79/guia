@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
       largura: Math.round(Number(body?.largura || 0)) || null,
       altura: Math.round(Number(body?.altura || 0)) || null,
       ativo: Boolean(body?.ativo),
+      local: body?.local ? String(body.local).trim() : 'geral',
       data_inicio: body?.data_inicio ? new Date(body.data_inicio).toISOString() : null,
       data_fim: body?.data_fim ? new Date(body.data_fim).toISOString() : null,
       ordem: typeof body?.ordem === 'number' ? Math.round(body.ordem) : 0,
