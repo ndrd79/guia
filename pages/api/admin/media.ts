@@ -5,16 +5,21 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import os from 'os';
+
 // Validação simples de UUID v4
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function isValidUuid(value: string): boolean {
   return typeof value === 'string' && UUID_REGEX.test(value);
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Cliente administrativo (criado sob demanda após autenticação)
+function getAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 export const config = {
   api: {
@@ -65,7 +70,7 @@ function generateUniqueFilename(originalName: string): string {
 }
 
 // Função para otimizar imagem
-async function optimizeImage(filePath: string, filename: string, bucketName: string): Promise<{
+async function optimizeImage(filePath: string, filename: string, bucketName: string, supabase: any): Promise<{
   thumbnail_url?: string;
   optimized_url?: string;
   width?: number;
@@ -74,11 +79,11 @@ async function optimizeImage(filePath: string, filename: string, bucketName: str
   try {
     const image = sharp(filePath);
     const metadata = await image.metadata();
-    
+
     // Gerar thumbnail (300x300)
     const thumbnailFilename = `thumb_${filename}`;
     const thumbnailPath = path.join(path.dirname(filePath), thumbnailFilename);
-    
+
     await image
       .resize(300, 300, { fit: 'cover' })
       .jpeg({ quality: 80 })
@@ -87,7 +92,7 @@ async function optimizeImage(filePath: string, filename: string, bucketName: str
     // Gerar versão otimizada WebP
     const optimizedFilename = `${path.basename(filename, path.extname(filename))}.webp`;
     const optimizedPath = path.join(path.dirname(filePath), optimizedFilename);
-    
+
     await image
       .webp({ quality: 85 })
       .toFile(optimizedPath);
@@ -134,19 +139,82 @@ async function optimizeImage(filePath: string, filename: string, bucketName: str
   }
 }
 
+/**
+ * Valida autenticação admin para esta API
+ * Segue o mesmo padrão do withAdminAuth mas adaptado para bodyParser: false
+ */
+async function validateAdminAuth(req: NextApiRequest): Promise<{
+  success: boolean;
+  userId?: string;
+  error?: string;
+  adminClient?: any;
+}> {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { success: false, error: 'Token de autenticação não fornecido' };
+  }
+
+  const token = authHeader.slice(7);
+
+  if (!token || token.length < 10) {
+    return { success: false, error: 'Token de autenticação inválido' };
+  }
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+    const publicClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error: userError } = await publicClient.auth.getUser(token);
+
+    if (userError || !user) {
+      return { success: false, error: 'Sessão expirada ou inválida' };
+    }
+
+    const adminClient = getAdminClient();
+
+    const { data: profile, error: profileError } = await adminClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+      return { success: false, error: 'Acesso negado. Apenas administradores.' };
+    }
+
+    return { success: true, userId: user.id, adminClient };
+  } catch (error) {
+    console.error('[Media API] Erro na validação:', error);
+    return { success: false, error: 'Erro ao validar autenticação' };
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // Validar autenticação admin
+    const auth = await validateAdminAuth(req);
+
+    if (!auth.success || !auth.adminClient) {
+      return res.status(401).json({
+        success: false,
+        error: auth.error || 'Não autorizado'
+      });
+    }
+
     const { method } = req;
+    const supabase = auth.adminClient;
 
     switch (method) {
       case 'GET':
-        return await handleGet(req, res);
+        return await handleGet(req, res, supabase);
       case 'POST':
-        return await handlePost(req, res);
+        return await handlePost(req, res, supabase, auth.userId!);
       case 'PUT':
-        return await handlePut(req, res);
+        return await handlePut(req, res, supabase);
       case 'DELETE':
-        return await handleDelete(req, res);
+        return await handleDelete(req, res, supabase);
       default:
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
         return res.status(405).json({ error: 'Método não permitido' });
@@ -158,7 +226,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // GET - Listar mídia com filtros e paginação
-async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse, supabase: any) {
   const {
     page = '1',
     limit = '20',
@@ -213,7 +281,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // POST - Upload múltiplo de arquivos
-async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse, supabase: any, userId: string) {
   // Usar diretório temporário compatível com Windows/Linux
   const tmpDir = os.tmpdir();
 
@@ -231,8 +299,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean);
   const folderPath = (fields.folder_path?.[0] as string) || '/';
   const bucketName = (fields.bucket?.[0] as string) || 'noticias';
-  const uploadedBy = (fields.uploaded_by?.[0] as string) || '';
-  const uploadedBySafe = uploadedBy && isValidUuid(uploadedBy) ? uploadedBy : null;
+  // Usar userId autenticado como uploaded_by em vez do campo do formulário
+  const uploadedBySafe = userId;
 
   for (const file of fileArray) {
     if (!file) continue;
@@ -263,7 +331,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       // Otimizar imagem se for o caso
       let optimizationData = {};
       if (fileType === 'image') {
-        optimizationData = await optimizeImage(file.filepath, uniqueFilename, bucketName);
+        optimizationData = await optimizeImage(file.filepath, uniqueFilename, bucketName, supabase);
       }
 
       // Salvar no banco de dados
@@ -315,7 +383,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // PUT - Atualizar metadados de mídia
-async function handlePut(req: NextApiRequest, res: NextApiResponse) {
+async function handlePut(req: NextApiRequest, res: NextApiResponse, supabase: any) {
   const { id } = req.query;
   const { alt_text, caption, description, tags, folder_path } = req.body;
 
@@ -341,7 +409,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // DELETE - Deletar arquivo de mídia
-async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
+async function handleDelete(req: NextApiRequest, res: NextApiResponse, supabase: any) {
   const { id, bucket } = req.query;
   const bucketName = (bucket as string) || 'noticias';
 

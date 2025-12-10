@@ -1,43 +1,35 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '../../../lib/supabase'
+import { withAdminAuth, AdminApiHandler } from '../../../lib/api/withAdminAuth'
+import { createClient } from '@supabase/supabase-js'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Verificar autenticação
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token de autenticação necessário' })
-  }
+/**
+ * API de administração de usuários
+ * Suporta GET (listar), POST (criar), PUT (atualizar), DELETE (excluir)
+ * 
+ * Segurança: Usa withAdminAuth para validação centralizada
+ * IMPORTANTE: Esta API usa funções admin do Supabase que requerem service_role_key
+ */
 
-  const token = authHeader.split(' ')[1]
-  
+// Criar cliente com service role para operações admin
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
+
+const handler: AdminApiHandler = async (req, res, { adminClient }) => {
   try {
-    // Verificar se o token é válido
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Token inválido' })
-    }
-
-    // Verificar se o usuário é admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || profile?.role !== 'admin') {
-      return res.status(403).json({ error: 'Acesso negado. Apenas administradores podem gerenciar usuários.' })
-    }
-
     switch (req.method) {
       case 'GET':
-        return handleGet(req, res)
+        return handleGet(req, res, adminClient)
       case 'POST':
         return handlePost(req, res)
       case 'PUT':
-        return handlePut(req, res)
+        return handlePut(req, res, adminClient)
       case 'DELETE':
-        return handleDelete(req, res)
+        return handleDelete(req, res, adminClient)
       default:
         return res.status(405).json({ error: 'Método não permitido' })
     }
@@ -47,10 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
+export default withAdminAuth(handler)
+
 // Listar usuários
-async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse, adminClient: any) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await adminClient
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false })
@@ -80,8 +74,11 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    // Usar cliente com service role para operações admin
+    const serviceClient = getServiceClient()
+
     // Criar usuário no Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true // Confirma o email automaticamente
@@ -94,7 +91,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Criar perfil do usuário
-    const { error: profileError } = await supabase
+    const { error: profileError } = await serviceClient
       .from('profiles')
       .insert({
         id: authData.user.id,
@@ -104,11 +101,11 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
     if (profileError) {
       // Se falhar ao criar o perfil, tentar deletar o usuário criado
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      await serviceClient.auth.admin.deleteUser(authData.user.id)
       throw profileError
     }
 
-    return res.status(201).json({ 
+    return res.status(201).json({
       message: 'Usuário criado com sucesso',
       usuario: {
         id: authData.user.id,
@@ -122,7 +119,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // Atualizar usuário
-async function handlePut(req: NextApiRequest, res: NextApiResponse) {
+async function handlePut(req: NextApiRequest, res: NextApiResponse, adminClient: any) {
   const { id, email, role, password } = req.body
 
   if (!id) {
@@ -134,8 +131,11 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    // Usar cliente com service role para operações admin
+    const serviceClient = getServiceClient()
+
     // Atualizar perfil
-    const { error: profileError } = await supabase
+    const { error: profileError } = await adminClient
       .from('profiles')
       .update({
         email,
@@ -148,7 +148,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
 
     // Atualizar email no auth se fornecido
     if (email) {
-      const { error: authError } = await supabase.auth.admin.updateUserById(id, {
+      const { error: authError } = await serviceClient.auth.admin.updateUserById(id, {
         email
       })
       if (authError) console.warn('Erro ao atualizar email no auth:', authError.message)
@@ -156,7 +156,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
 
     // Atualizar senha se fornecida
     if (password && password.length >= 6) {
-      const { error: passwordError } = await supabase.auth.admin.updateUserById(id, {
+      const { error: passwordError } = await serviceClient.auth.admin.updateUserById(id, {
         password
       })
       if (passwordError) console.warn('Erro ao atualizar senha:', passwordError.message)
@@ -169,7 +169,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // Deletar usuário
-async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
+async function handleDelete(req: NextApiRequest, res: NextApiResponse, adminClient: any) {
   const { id } = req.body
 
   if (!id) {
@@ -177,8 +177,11 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    // Usar cliente com service role para operações admin
+    const serviceClient = getServiceClient()
+
     // Deletar perfil
-    const { error: profileError } = await supabase
+    const { error: profileError } = await adminClient
       .from('profiles')
       .delete()
       .eq('id', id)
@@ -186,7 +189,7 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse) {
     if (profileError) throw profileError
 
     // Deletar usuário do auth
-    const { error: authError } = await supabase.auth.admin.deleteUser(id)
+    const { error: authError } = await serviceClient.auth.admin.deleteUser(id)
     if (authError) console.warn('Erro ao deletar usuário do auth:', authError.message)
 
     return res.status(200).json({ message: 'Usuário deletado com sucesso' })

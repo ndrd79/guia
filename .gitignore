@@ -114,3 +114,6 @@ prisma/migrations/
 # Original HTML files (keeping for reference)
 PortalNovo/
 .vercel
+
+# Backup de arquivos deletados pela auditoria
+_backup_deletados_audit/

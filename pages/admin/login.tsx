@@ -28,13 +28,7 @@ export default function AdminLogin() {
     }
 
     checkSupabaseConnection()
-
-    // Limpar qualquer sessão existente ao carregar a página
-    // Isso resolve problemas de cookies antigos/inválidos
-    const clearSession = async () => {
-      await supabase.auth.signOut()
-    }
-    clearSession()
+    // REMOVIDO: signOut automático que causava loops de logout
   }, [])
 
   // Verificar se já está autenticado ao carregar a página
