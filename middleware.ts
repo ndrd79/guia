@@ -45,47 +45,47 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Verificar sessão
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  if (sessionError) {
-    log.auth('Erro ao obter sessão', { error: sessionError.message, pathname })
+  // Verificar sessão usando getUser() que é mais seguro e valida no servidor
+  // IMPORTANTE: getSession() pode ler cookies adulterados, getUser() valida o JWT
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError) {
+    log.auth('Erro ao obter usuário', { error: userError.message, pathname })
   }
 
-  const session = sessionData?.session
-  if (!session) {
-    log.middleware('Sessão ausente, redirecionando para login', pathname, { 
-      hasSession: !!sessionData,
-      sessionError: sessionError?.message 
+  if (!user) {
+    log.middleware('Usuário não autenticado, redirecionando para login', pathname, {
+      userError: userError?.message
     })
     const loginUrl = new URL('/admin/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  log.middleware('Sessão encontrada', pathname, { 
-    userId: session.user.id,
-    email: session.user.email 
+  log.middleware('Usuário autenticado', pathname, {
+    userId: user.id,
+    email: user.email
   })
 
   // Verificar perfil com role admin
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   if (profileError) {
-    log.auth('Erro ao obter perfil', { 
+    log.auth('Erro ao obter perfil', {
       error: profileError.message,
-      userId: session.user.id,
-      pathname 
+      userId: user.id,
+      pathname
     })
   }
 
   if (!profile) {
-    log.middleware('Acesso negado: perfil não encontrado', pathname, { 
-      userId: session.user.id,
-      profileError: profileError?.message 
+    log.middleware('Acesso negado: perfil não encontrado', pathname, {
+      userId: user.id,
+      profileError: profileError?.message
     })
     const loginUrl = new URL('/admin/login', request.url)
     loginUrl.searchParams.set('error', 'unauthorized')
@@ -94,9 +94,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (profile.role !== 'admin') {
-    log.middleware('Acesso negado: usuário não é admin', pathname, { 
-      userId: session.user.id,
-      role: profile.role 
+    log.middleware('Acesso negado: usuário não é admin', pathname, {
+      userId: user.id,
+      role: profile.role
     })
     const loginUrl = new URL('/admin/login', request.url)
     loginUrl.searchParams.set('error', 'unauthorized')
@@ -104,13 +104,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  log.middleware('Perfil verificado com sucesso', pathname, { 
-    userId: session.user.id,
-    role: profile.role 
+  log.middleware('Perfil verificado com sucesso', pathname, {
+    userId: user.id,
+    role: profile.role
   })
 
   // Usuário autorizado
-  log.middleware('Acesso concedido a rota admin', pathname, { userId: session.user.id })
+  log.middleware('Acesso concedido a rota admin', pathname, { userId: user.id })
   return res
 }
 
