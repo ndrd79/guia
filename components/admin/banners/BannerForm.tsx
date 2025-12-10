@@ -177,14 +177,46 @@ export const BannerForm: React.FC<BannerFormProps> = ({
     // Has conflicts?
     const hasConflicts = validateResult && !validateResult.valid && validateResult.conflictingBanners && validateResult.conflictingBanners.length > 0
 
+    // Get all form errors
+    const allErrors = Object.entries(errors)
+    const hasErrors = allErrors.length > 0
+
+    // Handle validation errors
+    const onError = (formErrors: any) => {
+        console.error('Erros de validação:', formErrors)
+        // Scroll to first error
+        const firstErrorField = Object.keys(formErrors)[0]
+        const element = document.querySelector(`[name="${firstErrorField}"]`)
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+    }
+
     return (
         <FormCard
             title={banner ? 'Editar Banner' : 'Novo Banner'}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, onError)}
             onCancel={onCancel}
             isLoading={loading}
         >
             <div className="space-y-6">
+                {/* Bloco de erros de validação */}
+                {hasErrors && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className="w-5 h-5 text-red-600" />
+                            <span className="font-medium text-red-800">Corrija os erros abaixo:</span>
+                        </div>
+                        <ul className="list-disc list-inside space-y-1">
+                            {allErrors.map(([field, error]: [string, any]) => (
+                                <li key={field} className="text-sm text-red-700">
+                                    <strong>{field}:</strong> {error?.message || 'Campo inválido'}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* ===== PASSO 1: NOME ===== */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -36,7 +36,7 @@ export const bannerSchema = z.object({
         .min(1, 'Tempo mínimo é 1 segundo')
         .max(60, 'Tempo máximo é 60 segundos')
         .default(5),
-    local: z.enum(['geral', 'home', 'guia_comercial', 'noticias', 'eventos', 'classificados'])
+    local: z.enum(['geral', 'home', 'guia_comercial', 'noticias', 'eventos', 'classificados', 'contato'])
         .default('geral'),
     ativo: z.boolean(),
     data_inicio: z.string()
