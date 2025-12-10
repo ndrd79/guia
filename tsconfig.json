@@ -38,6 +38,7 @@
   "exclude": [
     "node_modules",
     "_backup_deletados_audit",
+    "scripts",
     "**/*.disabled.tsx",
     "**/*.bak.tsx",
     "src/app/admin/banners/page.disabled.tsx"
