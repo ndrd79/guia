@@ -2,6 +2,27 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../../lib/supabase'
 
+// Função para limpar todos os cookies do Supabase manualmente
+function clearSupabaseCookies() {
+  const cookies = document.cookie.split(';')
+  for (const cookie of cookies) {
+    const cookieName = cookie.split('=')[0].trim()
+    // Limpar cookies que começam com 'sb-' (Supabase)
+    if (cookieName.startsWith('sb-') || cookieName.includes('supabase')) {
+      // Limpar para o domínio atual
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+      // Limpar para o domínio pai (caso seja subdomínio)
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`
+      // Tentar também com .dominio (para cobrir www.dominio.com e dominio.com)
+      const hostParts = window.location.hostname.split('.')
+      if (hostParts.length >= 2) {
+        const parentDomain = hostParts.slice(-2).join('.')
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${parentDomain};`
+      }
+    }
+  }
+}
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -10,10 +31,43 @@ export default function AdminLogin() {
   const [debugInfo, setDebugInfo] = useState('')
   const [isAlreadyAuthenticated, setIsAlreadyAuthenticated] = useState(false)
   const [hasRedirected, setHasRedirected] = useState(false)
+  const [sessionCleared, setSessionCleared] = useState(false)
   const router = useRouter()
 
-  // Verificar conexão com Supabase na inicialização
+  // Limpar sessão e cookies corrompidos na inicialização
   useEffect(() => {
+    const clearAllSessions = async () => {
+      try {
+        // Primeiro: limpar cookies manualmente (resolve o problema de cookies corrompidos)
+        clearSupabaseCookies()
+
+        // Segundo: chamar signOut do Supabase para limpar o estado interno
+        await supabase.auth.signOut({ scope: 'local' })
+
+        // Limpar localStorage também
+        if (typeof window !== 'undefined') {
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-') || key.includes('supabase')) {
+              localStorage.removeItem(key)
+            }
+          })
+        }
+
+        setSessionCleared(true)
+        setDebugInfo('Sessão limpa com sucesso')
+      } catch (err) {
+        console.error('Erro ao limpar sessão:', err)
+        setSessionCleared(true) // Continuar mesmo se houver erro
+      }
+    }
+
+    clearAllSessions()
+  }, [])
+
+  // Verificar conexão com Supabase (apenas após limpar sessão)
+  useEffect(() => {
+    if (!sessionCleared) return
+
     const checkSupabaseConnection = async () => {
       try {
         const { data, error } = await supabase.from('noticias').select('count').limit(1)
@@ -28,14 +82,7 @@ export default function AdminLogin() {
     }
 
     checkSupabaseConnection()
-
-    // Limpar qualquer sessão existente ao carregar a página
-    // Isso resolve problemas de cookies antigos/inválidos
-    const clearSession = async () => {
-      await supabase.auth.signOut()
-    }
-    clearSession()
-  }, [])
+  }, [sessionCleared])
 
   // Verificar se já está autenticado ao carregar a página
   useEffect(() => {
