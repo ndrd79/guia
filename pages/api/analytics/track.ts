@@ -24,10 +24,10 @@ const THROTTLE_TIME = 5000 // 5 segundos
 // Função para obter IP do cliente
 function getClientIP(req: NextApiRequest): string {
   const forwarded = req.headers['x-forwarded-for']
-  const ip = forwarded 
+  const ip = forwarded
     ? (Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0])
     : req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'
-  
+
   return ip.trim()
 }
 
@@ -41,11 +41,11 @@ function isThrottled(ip: string, bannerId: string, tipo: string): boolean {
   const cacheKey = getCacheKey(ip, bannerId, tipo)
   const lastEvent = eventCache.get(cacheKey)
   const now = Date.now()
-  
+
   if (lastEvent && (now - lastEvent) < THROTTLE_TIME) {
     return true
   }
-  
+
   eventCache.set(cacheKey, now)
   return false
 }
@@ -53,9 +53,9 @@ function isThrottled(ip: string, bannerId: string, tipo: string): boolean {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Apenas método POST é permitido
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
+    return res.status(405).json({
       error: 'Método não permitido',
-      message: 'Apenas POST é aceito neste endpoint' 
+      message: 'Apenas POST é aceito neste endpoint'
     })
   }
 
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Obter informações do cliente
     const ip = getClientIP(req)
     const userAgent = req.headers['user-agent'] || 'unknown'
-    
+
     // Verificar throttling
     if (isThrottled(ip, bannerId, tipo)) {
       return res.status(429).json({
@@ -123,9 +123,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         debug: analyticsError
       })
     }
-
-    // Log para debug
-    console.log(`Analytics registrado: ${tipo} para banner ${banner.nome} (${bannerId}) - IP: ${ip}`)
 
     // Resposta de sucesso
     return res.status(201).json({

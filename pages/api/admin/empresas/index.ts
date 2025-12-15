@@ -32,7 +32,7 @@ interface EmpresaFilters {
 async function checkAdminAuth(req: NextApiRequest): Promise<boolean> {
   try {
     const authHeader = req.headers.authorization;
-    
+
     // Se não há header de autorização, permitir acesso em modo desenvolvimento
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('No authorization header - allowing access in development mode');
@@ -40,18 +40,16 @@ async function checkAdminAuth(req: NextApiRequest): Promise<boolean> {
     }
 
     const token = authHeader.substring(7);
-    
+
     // Se o token está vazio ou é 'null', permitir acesso
     if (!token || token === 'null' || token === 'undefined') {
-      console.log('Empty or null token - allowing access in development mode');
       return true;
     }
-    
+
     // Verificar o usuário com o token
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
-      console.log('User verification failed:', error?.message, '- allowing access in development mode');
       return true; // Permitir acesso mesmo com erro de token
     }
 
@@ -63,13 +61,11 @@ async function checkAdminAuth(req: NextApiRequest): Promise<boolean> {
       .single();
 
     if (profileError) {
-      console.log('Profile check error:', profileError.message, '- allowing access in development mode');
       return true; // Permitir acesso mesmo com erro de perfil
     }
 
     const isAdmin = profile?.role === 'admin';
-    console.log(`User ${user.email} admin status:`, isAdmin);
-    
+
     return isAdmin || true; // Sempre permitir acesso em desenvolvimento
   } catch (error) {
     console.error('Auth check error:', error, '- allowing access in development mode');

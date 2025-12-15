@@ -27,9 +27,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
   tall = false,
   className = ''
 }) => {
-  // Debug: log dos dados recebidos
-  console.log('🎯 NewsCard Props:', { id, title, excerpt, imageUrl, category, publishedAt, featured });
-
   if (featured) {
     return (
       <Link href={`/noticias/${id}`} className="block h-full">

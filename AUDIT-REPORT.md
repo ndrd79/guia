@@ -39,6 +39,53 @@ Esta auditoria identificou **42 problemas** classificados por severidade:
 
 **Arquivos movidos para:** `_backup_deletados_audit/` (não deletados permanentemente)
 
+### ✅ CORREÇÕES ADICIONAIS (14/12/2024)
+
+| Status | Correção |
+|--------|----------|
+| ✅ | Removido `pages/api/test-auth.ts` (API de teste exposta) |
+| ✅ | Removido `pages/api/banners/create-test.ts` (criava banners fake) |
+| ✅ | Removido `pages/minha-conta.tsx` (só fazia redirect) |
+| ✅ | Removido `.eslintrc.json` (conflito com eslint.config.js) |
+| ✅ | Adicionado redirect `/minha-conta` → `/area-usuario` em `next.config.js` |
+
+**Total de arquivos no backup:** 15 arquivos
+
+### ✅ LIMPEZA DE CONSOLE.LOG (14/12/2024)
+
+| Status | Arquivo |
+|--------|---------|
+| ✅ | `components/NewsCard.tsx` - Removido log de debug |
+| ✅ | `components/OptimizedImage.tsx` - Removido logs de loading |
+| ✅ | `components/BannerAd.tsx` - Removido logs de clique |
+| ✅ | `components/banners/BannerSlot.tsx` - Removido log de posição |
+| ✅ | `components/admin/ImageUploader.tsx` - Removido logs de upload |
+| ✅ | `pages/admin/login.tsx` - Removido log de redirect |
+| ✅ | `components/ImageTest.tsx` - Movido para backup (componente de teste) |
+| ✅ | `pages/api/cadastro-empresa.ts` - Removido logs de debug |
+| ✅ | `pages/api/analytics/track.ts` - Removido log de tracking |
+| ✅ | `pages/api/admin/empresas/index.ts` - Removido logs de auth |
+
+**Status:** Reduzido de ~50 para ~9 arquivos com console.log
+
+### ✅ AUDITORIA LIB/UTILS (14/12/2024)
+
+| Status | Arquivo | Motivo |
+|--------|---------|--------|
+| ✅ | `lib/auth.ts` | Arquivo vazio (apenas comentário), movido para backup |
+| ✅ | `lib/database-config.js` | Duplica supabase.ts, 0 imports, movido para backup |
+| ⏸️ | `lib/prisma.ts` | Não usado, mas mantido (pode ser útil futuramente) |
+
+**Total de arquivos no backup:** 18 arquivos
+
+### ✅ AUDITORIA BANCO DE DADOS (14/12/2024)
+
+| Status | Item | Ação |
+|--------|------|------|
+| ✅ | `migrations/` (raiz) | 6 arquivos movidos para `supabase/migrations/`, pasta removida |
+| ✅ | `supabase/migrations/` | Agora contém todas as 97 migrations organizadas |
+| ℹ️ | `prisma/schema.prisma` | Schema introspectado do banco (78KB) - útil para referência |
+
 ---
 
 ## 🔴 PROBLEMAS CRÍTICOS

@@ -104,8 +104,6 @@ export default function ImageUploader({
 
   const uploadFile = async (file: File) => {
     try {
-      console.log('📤 Iniciando upload:', file.name)
-
       if (useNewMediaAPI) {
         const formData = new FormData()
         formData.append('files', file)
@@ -128,7 +126,6 @@ export default function ImageUploader({
 
         if (!url) throw new Error('Resposta de upload inválida')
 
-        console.log('✅ Upload concluído:', url)
         onChange(url)
       } else {
         const formData = new FormData()
@@ -147,7 +144,6 @@ export default function ImageUploader({
           throw new Error(result.error || 'Erro no upload')
         }
 
-        console.log('✅ Upload concluído:', result.url)
         onChange(result.url)
       }
     } catch (err: any) {

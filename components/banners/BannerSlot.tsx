@@ -130,7 +130,6 @@ export const BannerSlot: React.FC<BannerSlotProps> = ({
             if (queryError) {
                 // Se não encontrou, não é um erro crítico
                 if (queryError.code === 'PGRST116') {
-                    console.log(`ℹ️ Nenhuma instância ativa encontrada para posição: ${position}`)
                     setInstance(null)
                     return
                 }

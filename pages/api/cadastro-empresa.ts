@@ -13,8 +13,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    console.log('Dados recebidos:', req.body)
-    
     const {
       name,
       category,
@@ -67,11 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Validação de categoria
-    console.log('Categoria recebida:', category)
     const categoriaNormalizada = obterCategoriaValida(category)
-    console.log('Categoria normalizada:', categoriaNormalizada)
     if (!categoriaNormalizada) {
-      console.log('Categorias válidas:', CATEGORIAS_VALIDAS)
       return res.status(400).json({ error: 'Categoria inválida' })
     }
 
@@ -144,7 +139,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Não falha o cadastro se o email não funcionar
     }
 
-    return res.status(201).json({ 
+    return res.status(201).json({
       message: 'Empresa cadastrada com sucesso! Aguarde aprovação.',
       empresa: data[0]
     })
@@ -157,14 +152,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 async function enviarNotificacaoAdmin(empresaData: any) {
   // Esta função pode ser implementada para enviar notificação por email
-  // Por enquanto, apenas logamos a informação
-  console.log('Nova empresa cadastrada:', {
-    nome: empresaData.nome,
-    categoria: empresaData.categoria,
-    telefone: empresaData.telefone,
-    email: empresaData.email,
-    timestamp: new Date().toISOString()
-  })
+  // Por enquanto, apenas preparamos os dados
 
   // Aqui você pode implementar o envio de email usando um serviço como:
   // - Nodemailer

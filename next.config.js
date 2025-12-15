@@ -3,6 +3,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/minha-conta',
+        destination: '/area-usuario',
+        permanent: false,
+      },
+    ]
+  },
   images: {
     domains: ['mlkpnapnijdbskaimquj.supabase.co', 'images.unsplash.com'],
   },

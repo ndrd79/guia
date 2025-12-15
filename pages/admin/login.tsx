@@ -188,7 +188,6 @@ export default function AdminLogin() {
       // Redirecionamento usando window.location para garantir que funciona
       const redirectTo = (router.query.redirect as string) || '/admin'
 
-      console.log('Redirecionando para:', redirectTo)
       window.location.href = redirectTo
 
     } catch (err: any) {

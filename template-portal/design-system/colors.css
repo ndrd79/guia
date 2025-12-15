@@ -1,0 +1,129 @@
+/**
+ * Paleta de Cores - Template Portal
+ * 
+ * COMO PERSONALIZAR:
+ * 1. Altere os valores hexadecimais abaixo
+ * 2. Use um gerador de paletas como https://coolors.co
+ * 3. Mantenha o contraste para acessibilidade
+ */
+
+:root {
+  /* ============================================
+   * CORES PRIMÁRIAS (Azul)
+   * Usadas em: botões, links, destaques
+   * ============================================ */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;   /* Cor principal */
+  --primary-600: #2563eb;   /* Hover */
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+  
+  /* ============================================
+   * CORES DE DESTAQUE (Índigo)
+   * Usadas em: badges, ícones, cards especiais
+   * ============================================ */
+  --indigo-50: #eef2ff;
+  --indigo-100: #e0e7ff;
+  --indigo-200: #c7d2fe;
+  --indigo-300: #a5b4fc;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;   /* Destaque principal */
+  --indigo-700: #4338ca;
+  --indigo-800: #3730a3;
+  --indigo-900: #312e81;
+  
+  /* ============================================
+   * CORES DE FEEDBACK
+   * ============================================ */
+  --success-500: #10b981;  /* Verde - Sucesso */
+  --success-600: #059669;
+  
+  --warning-500: #f59e0b;  /* Laranja - Alerta */
+  --warning-600: #d97706;
+  
+  --error-500: #ef4444;    /* Vermelho - Erro */
+  --error-600: #dc2626;
+  
+  --info-500: #3b82f6;     /* Azul - Informação */
+  --info-600: #2563eb;
+  
+  /* ============================================
+   * CORES DE FUNDO
+   * ============================================ */
+  --bg-page: #f8fafc;      /* Fundo da página */
+  --bg-card: #ffffff;      /* Fundo dos cards */
+  --bg-dark: #1e293b;      /* Fundo escuro (footer) */
+  --bg-darker: #0f172a;    /* Fundo mais escuro */
+  
+  /* ============================================
+   * CORES DE TEXTO
+   * ============================================ */
+  --text-primary: #1e293b;   /* Texto principal */
+  --text-secondary: #64748b; /* Texto secundário */
+  --text-muted: #94a3b8;     /* Texto desabilitado */
+  --text-inverse: #ffffff;   /* Texto em fundo escuro */
+  
+  /* ============================================
+   * BORDAS E DIVISORES
+   * ============================================ */
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-dark: #475569;
+  
+  /* ============================================
+   * GRADIENTES
+   * ============================================ */
+  --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #10b981 100%);
+  --gradient-hero: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #10b981 100%);
+  --gradient-dark: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  
+  /* ============================================
+   * SOMBRAS
+   * ============================================ */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* ============================================
+ * CLASSES UTILITÁRIAS
+ * ============================================ */
+
+/* Gradiente principal para headers */
+.gradient-bg {
+  background: var(--gradient-primary);
+}
+
+/* Gradiente hero para seções especiais */
+.gradient-hero {
+  background: var(--gradient-hero);
+}
+
+/* Texto com efeito neon */
+.neon-text {
+  text-shadow: 0 0 5px rgba(79, 70, 229, 0.5), 0 0 10px rgba(79, 70, 229, 0.3);
+}
+
+/* Botão com animação pulse */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}

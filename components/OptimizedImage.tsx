@@ -52,10 +52,9 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   const handleImageError = useCallback(() => {
     console.warn(`🔄 Erro ao carregar imagem: ${currentSrc}`);
-    
+
     // Try fallback first if available
     if (!hasError && fallbackSrc && currentSrc !== fallbackSrc) {
-      console.log(`🔄 Tentando fallback: ${fallbackSrc}`);
       setCurrentSrc(fallbackSrc);
       setHasError(false);
       setIsLoading(false);
@@ -70,7 +69,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [currentSrc, hasError, fallbackSrc, src, onError]);
 
   const handleImageLoad = useCallback(() => {
-    console.log(`✅ Imagem carregada com sucesso: ${currentSrc}`);
     setIsLoading(false);
     setHasError(false);
     onLoad?.();
@@ -92,7 +90,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     }
 
     return (
-      <div 
+      <div
         style={{ width: width || 'auto', height: height || 'auto' }}
         className={className}
       >

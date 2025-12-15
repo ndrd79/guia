@@ -29,17 +29,9 @@ const BannerAd: React.FC<BannerAdProps> = ({
   const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
-    console.log('🖱️ Banner clicado!', {
-      bannerId,
-      position,
-      title,
-      linkUrl
-    });
-    
     if (bannerId && linkUrl) {
-      console.log('📊 Enviando rastreamento de clique para:', bannerId);
       trackBannerClick(bannerId, position, linkUrl);
-      
+
       // Feedback visual temporário
       const clickFeedback = document.createElement('div');
       clickFeedback.innerHTML = '✅ Clique registrado!';
@@ -57,7 +49,7 @@ const BannerAd: React.FC<BannerAdProps> = ({
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         animation: slideIn 0.3s ease-out;
       `;
-      
+
       // Adicionar animação CSS
       if (!document.querySelector('#click-feedback-styles')) {
         const style = document.createElement('style');
@@ -74,9 +66,9 @@ const BannerAd: React.FC<BannerAdProps> = ({
         `;
         document.head.appendChild(style);
       }
-      
+
       document.body.appendChild(clickFeedback);
-      
+
       // Remover após 3 segundos
       setTimeout(() => {
         clickFeedback.style.animation = 'slideOut 0.3s ease-in';
@@ -86,7 +78,7 @@ const BannerAd: React.FC<BannerAdProps> = ({
           }
         }, 300);
       }, 3000);
-      
+
     } else {
       console.warn('⚠️ Banner clicado mas sem bannerId!');
     }
@@ -94,7 +86,7 @@ const BannerAd: React.FC<BannerAdProps> = ({
   // Se não há imagem ou houve erro, mostra o placeholder
   if (!imageUrl || imageError) {
     return (
-      <div 
+      <div
         className={`ad-space banner-responsive ${className}`}
         role="img"
         aria-label="Espaço publicitário disponível"
@@ -142,9 +134,9 @@ const BannerAd: React.FC<BannerAdProps> = ({
   // Se há link, envolve com link
   if (linkUrl) {
     return (
-      <a 
-        href={linkUrl} 
-        target="_blank" 
+      <a
+        href={linkUrl}
+        target="_blank"
         rel="noopener noreferrer"
         className="block hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg"
         aria-label={`Abrir ${title || altText} em nova aba`}
