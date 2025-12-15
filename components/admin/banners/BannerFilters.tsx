@@ -4,7 +4,7 @@
  * Filtros avançados para lista de banners
  */
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, X, Filter } from 'lucide-react'
 import { BannerFiltersProps } from '../../../types/banner'
 
@@ -15,19 +15,25 @@ export const BannerFilters: React.FC<BannerFiltersProps> = ({
     availablePositions,
     hasActiveFilters
 }) => {
+    // Estado para evitar hydration mismatch - só mostra badge após montar no cliente
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
     return (
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Filter className="h-5 w-5 text-gray-400" />
                     <h3 className="text-sm font-semibold text-gray-900">Filtros</h3>
-                    {hasActiveFilters && (
+                    {mounted && hasActiveFilters && (
                         <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                             Ativos
                         </span>
                     )}
                 </div>
-                {hasActiveFilters && (
+                {mounted && hasActiveFilters && (
                     <button
                         onClick={onClearFilters}
                         className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
@@ -119,8 +125,8 @@ export const BannerFilters: React.FC<BannerFiltersProps> = ({
                     <button
                         onClick={() => onFilterChange('period', 'all')}
                         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.period === 'all'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         Todos
@@ -128,8 +134,8 @@ export const BannerFilters: React.FC<BannerFiltersProps> = ({
                     <button
                         onClick={() => onFilterChange('period', 'week')}
                         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.period === 'week'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         Última semana
@@ -137,8 +143,8 @@ export const BannerFilters: React.FC<BannerFiltersProps> = ({
                     <button
                         onClick={() => onFilterChange('period', 'month')}
                         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filters.period === 'month'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         Último mês

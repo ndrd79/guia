@@ -72,10 +72,12 @@ export default function BannerContainer({
 }
 
 // Componentes específicos para posições estratégicas
+// Usam nomes do catálogo para consistência (API resolve aliases automaticamente)
 export function HeaderBanner({ className = '' }: { className?: string }) {
   return (
     <BannerContainer
-      position="header"
+      position="Header Inferior"
+      local="geral"
       className={`header-banner ${className}`}
       priority={true}
       maxBanners={1}
@@ -83,26 +85,36 @@ export function HeaderBanner({ className = '' }: { className?: string }) {
   )
 }
 
-export function ContentBanner({ 
+export function ContentBanner({
   position = 'content-top',
-  className = '' 
-}: { 
+  local,
+  className = ''
+}: {
   position?: 'content-top' | 'content-middle' | 'content-bottom'
-  className?: string 
+  local?: string
+  className?: string
 }) {
   return (
     <BannerContainer
-      position={position}
+      position="Entre Conteúdo"
+      local={local}
       className={`content-banner my-6 ${className}`}
       maxBanners={1}
     />
   )
 }
 
-export function SidebarBanner({ className = '' }: { className?: string }) {
+export function SidebarBanner({
+  local,
+  className = ''
+}: {
+  local?: string
+  className?: string
+}) {
   return (
     <BannerContainer
-      position="sidebar"
+      position="Sidebar Direita"
+      local={local}
       className={`sidebar-banner ${className}`}
       maxBanners={3}
       layout="vertical"
@@ -113,7 +125,8 @@ export function SidebarBanner({ className = '' }: { className?: string }) {
 export function FooterBanner({ className = '' }: { className?: string }) {
   return (
     <BannerContainer
-      position="footer"
+      position="Footer"
+      local="geral"
       className={`footer-banner ${className}`}
       maxBanners={4}
       layout="grid"
@@ -125,7 +138,8 @@ export function MobileBanner({ className = '' }: { className?: string }) {
   return (
     <div className={`mobile-banner block md:hidden ${className}`}>
       <BannerContainer
-        position="mobile"
+        position="Mobile Banner"
+        local="geral"
         maxBanners={1}
         priority={true}
       />

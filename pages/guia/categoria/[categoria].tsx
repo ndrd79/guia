@@ -13,7 +13,7 @@ interface CategoriaPageProps {
 
 const categorias = [
   'Restaurante',
-  'Automotivo', 
+  'Automotivo',
   'Saúde',
   'Alimentação',
   'Beleza',
@@ -37,7 +37,7 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
     if (filtroPlano === 'todos') return true
     if (filtroPlano === 'basic') return empresa.plan_type === 'basic'
     if (filtroPlano === 'premium') {
-      return empresa.plan_type === 'premium' && 
+      return empresa.plan_type === 'premium' &&
         (!empresa.premium_expires_at || new Date(empresa.premium_expires_at) > new Date())
     }
     return true
@@ -69,8 +69,8 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
   const stats = {
     total: empresas.length,
     basic: empresas.filter(e => e.plan_type === 'basic').length,
-    premium: empresas.filter(e => 
-      e.plan_type === 'premium' && 
+    premium: empresas.filter(e =>
+      e.plan_type === 'premium' &&
       (!e.premium_expires_at || new Date(e.premium_expires_at) > new Date())
     ).length
   }
@@ -78,7 +78,7 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
   return (
     <>
       <Head>
-        <title>{categoria} - Guia Comercial</title>
+        <title>{`${categoria} - Guia Comercial`}</title>
         <meta name="description" content={`Empresas da categoria ${categoria} no Guia Comercial`} />
       </Head>
 
@@ -149,11 +149,10 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
                     <Link
                       key={cat}
                       href={`/guia/categoria/${encodeURIComponent(cat)}`}
-                      className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        cat === categoria
+                      className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${cat === categoria
                           ? 'bg-blue-100 text-blue-700'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                      }`}
+                        }`}
                     >
                       {cat}
                     </Link>
@@ -195,7 +194,7 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Filtros e Ordenação */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Filtro por Plano */}
@@ -247,7 +246,7 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
                           />
                         </div>
                       )}
-                      
+
                       <div className="p-6">
                         {/* Nome e Badges */}
                         <div className="flex items-start justify-between mb-3">
@@ -255,7 +254,7 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
                             {empresa.name}
                           </h3>
                           <div className="flex flex-col gap-1 ml-2">
-                            <PlanBadge 
+                            <PlanBadge
                               planType={empresa.plan_type}
                               expiresAt={empresa.premium_expires_at}
                               size="sm"
@@ -321,9 +320,9 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
                           {empresa.website && (
                             <div className="flex items-center text-sm text-gray-600">
                               <span className="mr-2">🌐</span>
-                              <a 
-                                href={empresa.website} 
-                                target="_blank" 
+                              <a
+                                href={empresa.website}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-blue-600"
                               >
@@ -335,8 +334,8 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
 
                         {/* Botão de Ação baseado no Plano */}
                         <div className="pt-3 border-t border-gray-200">
-                          {empresa.plan_type === 'premium' && 
-                           (!empresa.premium_expires_at || new Date(empresa.premium_expires_at) > new Date()) ? (
+                          {empresa.plan_type === 'premium' &&
+                            (!empresa.premium_expires_at || new Date(empresa.premium_expires_at) > new Date()) ? (
                             <Link
                               href={`/guia/${empresa.id}`}
                               className="w-full inline-flex justify-center items-center px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 transition-colors"
@@ -367,7 +366,7 @@ export default function CategoriaPage({ empresas, categoria, categorias: todasCa
                     Nenhuma empresa encontrada
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    {filtroPlano === 'todos' 
+                    {filtroPlano === 'todos'
                       ? `Não há empresas cadastradas na categoria "${categoria}" no momento.`
                       : `Não há empresas com plano ${filtroPlano === 'basic' ? 'básico' : 'premium'} na categoria "${categoria}".`
                     }

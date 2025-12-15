@@ -53,6 +53,9 @@ export interface BannerPositionInfo {
     paginas?: string[]
 }
 
+// Tipo centralizado para local de banner
+export type BannerLocal = 'geral' | 'home' | 'guia_comercial' | 'noticias' | 'eventos' | 'classificados' | 'contato'
+
 // Form data (matches zod schema)
 export interface BannerFormData {
     nome: string
@@ -63,7 +66,7 @@ export interface BannerFormData {
     altura: number
     ordem?: number
     tempo_exibicao: number
-    local: 'geral' | 'home' | 'guia_comercial' | 'noticias' | 'eventos' | 'classificados'
+    local: BannerLocal
     ativo: boolean
     data_inicio?: string
     data_fim?: string

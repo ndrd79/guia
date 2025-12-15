@@ -14,9 +14,13 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // Bypass de desenvolvimento (apenas fora de produção): permitir acesso às rotas admin sem sessão
-  if (process.env.NEXT_PUBLIC_ADMIN_DEV_BYPASS === 'true' && process.env.NODE_ENV !== 'production') {
-    log.middleware('DEV_BYPASS ativo em ambiente não-produção: liberando rota admin sem autenticação', pathname)
+  // Bypass de desenvolvimento: APENAS em localhost E ambiente não-produção
+  const isLocalhost = request.headers.get('host')?.includes('localhost') ||
+    request.headers.get('host')?.includes('127.0.0.1')
+  if (process.env.NEXT_PUBLIC_ADMIN_DEV_BYPASS === 'true' &&
+    process.env.NODE_ENV !== 'production' &&
+    isLocalhost) {
+    log.middleware('DEV_BYPASS ativo em localhost: liberando rota admin', pathname)
     return res
   }
 
@@ -67,12 +71,8 @@ export async function middleware(request: NextRequest) {
     email: session.user.email
   })
 
-  // BYPASS TEMPORÁRIO: Permitir admin@portal.com sem verificar perfil
-  // Isso confirma se o problema está na política RLS da tabela profiles
-  if (session.user.email === 'admin@portal.com') {
-    log.middleware('BYPASS: Acesso concedido para admin@portal.com', pathname)
-    return res
-  }
+  // REMOVIDO: Bypass hardcoded para admin@portal.com (vulnerabilidade de segurança)
+  // Todos os usuários agora passam pela verificação normal de perfil
 
   // Verificar perfil com role admin
   const { data: profile, error: profileError } = await supabase

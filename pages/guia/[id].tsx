@@ -56,12 +56,11 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
 
   const renderStars = (rating: number) => {
     return [...Array(5)].map((_, i) => (
-      <i 
-        key={i} 
-        className={`fas fa-star${
-          i < Math.floor(rating) ? '' : 
-          i < rating ? '-half-alt' : ' far'
-        } text-yellow-400`}
+      <i
+        key={i}
+        className={`fas fa-star${i < Math.floor(rating) ? '' :
+            i < rating ? '-half-alt' : ' far'
+          } text-yellow-400`}
       ></i>
     ));
   };
@@ -69,7 +68,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
   return (
     <>
       <Head>
-        <title>{business.name} - Portal Maria Helena</title>
+        <title>{`${business.name} - Portal Maria Helena`}</title>
         <meta name="description" content={business.description} />
       </Head>
 
@@ -99,7 +98,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
-                  
+
                   {/* Badges */}
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
                     {business.featured && (
@@ -119,7 +118,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
               {/* Business Info */}
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 mb-4">{business.name}</h1>
-                
+
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   <div className="flex mr-2">
@@ -145,7 +144,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                     <i className="fas fa-map-marker-alt text-indigo-600 w-5 mr-3"></i>
                     <span>{business.location}</span>
                   </div>
-                  
+
                   {business.phone && (
                     <div className="flex items-center text-gray-700">
                       <i className="fas fa-phone text-indigo-600 w-5 mr-3"></i>
@@ -154,7 +153,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                       </a>
                     </div>
                   )}
-                  
+
                   {business.email && (
                     <div className="flex items-center text-gray-700">
                       <i className="fas fa-envelope text-indigo-600 w-5 mr-3"></i>
@@ -163,7 +162,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                       </a>
                     </div>
                   )}
-                  
+
                   {business.website && (
                     <div className="flex items-center text-gray-700">
                       <i className="fas fa-globe text-indigo-600 w-5 mr-3"></i>
@@ -172,7 +171,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                       </a>
                     </div>
                   )}
-                  
+
                   {business.hours && (
                     <div className="flex items-center text-gray-700">
                       <i className="fas fa-clock text-indigo-600 w-5 mr-3"></i>
@@ -184,16 +183,16 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 mt-6">
                   {business.phone && (
-                    <a 
+                    <a
                       href={`tel:${business.phone}`}
                       className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition flex items-center"
                     >
                       <i className="fas fa-phone mr-2"></i> Ligar
                     </a>
                   )}
-                  
+
                   {business.phone && (
-                    <a 
+                    <a
                       href={`https://wa.me/55${business.phone.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -202,7 +201,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                       <i className="fab fa-whatsapp mr-2"></i> WhatsApp
                     </a>
                   )}
-                  
+
                   <button className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition flex items-center">
                     <i className="fas fa-share-alt mr-2"></i> Compartilhar
                   </button>
@@ -215,11 +214,11 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
         {/* Banner - Topo da Empresa (Carrossel estilo Hero) */}
         <section className="py-6">
           <div className="container mx-auto px-4">
-            <BannerCarousel 
-              position="Empresa - Topo" 
+            <BannerCarousel
+              position="Empresa - Topo"
               interval={6000}
               autoRotate={true}
-              className="w-full rounded-lg mx-auto max-w-4xl" 
+              className="w-full rounded-lg mx-auto max-w-4xl"
             />
           </div>
         </section>
@@ -268,21 +267,21 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                       <i className="fas fa-map-marker-alt text-indigo-600 w-5 mr-3"></i>
                       <span className="text-gray-700">{business.location}</span>
                     </div>
-                    
+
                     {business.phone && (
                       <div className="flex items-center">
                         <i className="fas fa-phone text-indigo-600 w-5 mr-3"></i>
                         <span className="text-gray-700">{business.phone}</span>
                       </div>
                     )}
-                    
+
                     {business.email && (
                       <div className="flex items-center">
                         <i className="fas fa-envelope text-indigo-600 w-5 mr-3"></i>
                         <span className="text-gray-700">{business.email}</span>
                       </div>
                     )}
-                    
+
                     {business.hours && (
                       <div className="flex items-center">
                         <i className="fas fa-clock text-indigo-600 w-5 mr-3"></i>
@@ -291,7 +290,7 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
                     )}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="font-bold text-lg mb-4">Localização</h3>
                   <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center">
@@ -309,11 +308,11 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
         {/* Banner - Rodapé da Empresa (Carrossel estilo Hero) */}
         <section className="py-6">
           <div className="container mx-auto px-4">
-            <BannerCarousel 
-              position="Empresa - Rodapé" 
+            <BannerCarousel
+              position="Empresa - Rodapé"
               interval={6000}
               autoRotate={true}
-              className="w-full rounded-lg mx-auto max-w-4xl" 
+              className="w-full rounded-lg mx-auto max-w-4xl"
             />
           </div>
         </section>
@@ -326,10 +325,10 @@ const BusinessPage: React.FC<BusinessPageProps> = ({ business }) => {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
-  
+
   try {
     const supabase = createServerSupabaseClient();
-    
+
     // Buscar empresa real do banco de dados
     const { data: empresa, error } = await supabase
       .from('empresas')
@@ -337,7 +336,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .eq('id', id)
       .eq('ativo', true)
       .single();
-    
+
     if (error || !empresa) {
       console.error('Erro ao buscar empresa:', error);
       return {
@@ -361,7 +360,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     if (empresa.plan_type === 'premium' && empresa.premium_expires_at) {
       const expirationDate = new Date(empresa.premium_expires_at);
       const now = new Date();
-      
+
       if (expirationDate < now) {
         // Plano expirado - redirecionar para página de categoria
         return {
@@ -372,7 +371,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         };
       }
     }
-    
+
     // Mapear dados da empresa para o formato esperado pelo componente
     const business = {
       id: empresa.id,
@@ -392,7 +391,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       about: empresa.description || 'Informações sobre a empresa em breve.',
       services: [] // Pode ser expandido futuramente
     };
-    
+
     return {
       props: {
         business

@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '../../lib/supabase'
 import { logger } from '../../lib/logger'
+import { bannerCatalog } from '../../lib/banners/catalog'
 
-// Mapeamento de posições para compatibilidade
+// Mapeamento de posições para compatibilidade (legado - será removido no futuro)
 const positionMapping: Record<string, string> = {
   header: 'Header Inferior',
   footer: 'Footer',
@@ -22,6 +23,28 @@ const positionMapping: Record<string, string> = {
   cta_banner: 'CTA Banner'
 }
 
+/**
+ * Resolve uma posição de banner para o nome correto no banco
+ * Busca primeiro no catálogo por ID, depois por nome, e finalmente no mapeamento legado
+ */
+const resolvePosition = (input: string): string => {
+  const lower = input.toLowerCase().trim()
+
+  // 1. Buscar por ID no catálogo (ex: 'home_hero', 'noticias_sidebar_dir')
+  const byId = bannerCatalog.find(p => p.id.toLowerCase() === lower)
+  if (byId) return byId.nome
+
+  // 2. Buscar por nome exato no catálogo
+  const byName = bannerCatalog.find(p => p.nome.toLowerCase() === lower)
+  if (byName) return byName.nome
+
+  // 3. Fallback para mapeamento legado
+  if (positionMapping[lower]) return positionMapping[lower]
+
+  // 4. Retornar input original se nada encontrado
+  return input
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -35,11 +58,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('banners')
       .select('*')
 
-    // Se uma posição foi especificada, aplicar filtro
+    // Se uma posição foi especificada, aplicar filtro usando resolução inteligente
     if (position && typeof position === 'string') {
-      const posLower = position.toLowerCase().trim()
-      const mappedPosition = positionMapping[posLower] || position
-      query = query.eq('posicao', mappedPosition)
+      const resolvedPosition = resolvePosition(position)
+      query = query.eq('posicao', resolvedPosition)
     }
 
     // Filtrar por status ativo se especificado
@@ -67,10 +89,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       logger.error('Erro ao buscar banners', { error: error.message })
-      return res.status(500).json({ 
-        success: false, 
+      return res.status(500).json({
+        success: false,
         error: 'Erro interno do servidor',
-        details: error.message 
+        details: error.message
       })
     }
 
@@ -91,8 +113,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error) {
     logger.error('Erro na API de banners', { error: error instanceof Error ? error.message : String(error) })
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       error: 'Erro interno do servidor',
       details: error instanceof Error ? error.message : 'Erro desconhecido'
     })

@@ -5,7 +5,7 @@
  * Quando não há banners cadastrados para a posição, não exibe nada.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { supabase, Banner } from '../lib/supabase'
@@ -27,6 +27,32 @@ export default function PageBanner({
     const [loading, setLoading] = useState(true)
     const [currentIndex, setCurrentIndex] = useState(0)
 
+    // Funções de tracking definidas antes dos useEffects
+    const trackImpression = useCallback(async (bannerId: string) => {
+        try {
+            await fetch('/api/analytics/banner-view', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ banner_id: bannerId }),
+            })
+        } catch {
+            // Silently fail
+        }
+    }, [])
+
+    const trackClick = useCallback(async (bannerId: string) => {
+        try {
+            await fetch('/api/analytics/banner-click', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ banner_id: bannerId }),
+            })
+        } catch {
+            // Silently fail
+        }
+    }, [])
+
+    // Fetch banners
     useEffect(() => {
         async function fetchBanners() {
             if (!supabase) {
@@ -35,8 +61,6 @@ export default function PageBanner({
             }
 
             try {
-                const now = new Date().toISOString()
-
                 let query = supabase
                     .from('banners')
                     .select('*')
@@ -91,45 +115,19 @@ export default function PageBanner({
         return () => clearInterval(interval)
     }, [banners.length])
 
+    // Track impression quando banner muda
+    useEffect(() => {
+        if (banners.length > 0 && banners[currentIndex]?.id) {
+            trackImpression(banners[currentIndex].id)
+        }
+    }, [currentIndex, banners, trackImpression])
+
     // Se está carregando ou não tem banners, não mostra nada
     if (loading || banners.length === 0) {
         return null
     }
 
     const currentBanner = banners[currentIndex]
-
-    // Track impression
-    const trackImpression = async (bannerId: string) => {
-        try {
-            await fetch('/api/analytics/banner-view', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ banner_id: bannerId }),
-            })
-        } catch {
-            // Silently fail
-        }
-    }
-
-    // Track click
-    const trackClick = async (bannerId: string) => {
-        try {
-            await fetch('/api/analytics/banner-click', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ banner_id: bannerId }),
-            })
-        } catch {
-            // Silently fail
-        }
-    }
-
-    // Track impression on mount
-    useEffect(() => {
-        if (currentBanner?.id) {
-            trackImpression(currentBanner.id)
-        }
-    }, [currentBanner?.id])
 
     const bannerContent = (
         <div
@@ -160,8 +158,8 @@ export default function PageBanner({
                                 setCurrentIndex(index)
                             }}
                             className={`w-2 h-2 rounded-full transition-all ${index === currentIndex
-                                    ? 'bg-white w-4'
-                                    : 'bg-white/50 hover:bg-white/75'
+                                ? 'bg-white w-4'
+                                : 'bg-white/50 hover:bg-white/75'
                                 }`}
                             aria-label={`Banner ${index + 1}`}
                         />
@@ -188,3 +186,4 @@ export default function PageBanner({
 
     return bannerContent
 }
+

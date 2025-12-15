@@ -52,7 +52,7 @@ const getCategoryColor = (cat: string) => {
   return colors[cat] || 'bg-indigo-600';
 };
 
- 
+
 
 export default function NewsPage({ news, relatedNews, banner, popular, latest, events, classifieds, businesses, formattedHtml, formattedDek }: NewsPageProps) {
   if (!news) {
@@ -81,7 +81,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
   return (
     <>
       <Head>
-        <title>{news.titulo} - Portal Maria Helena</title>
+        <title>{`${news.titulo} - Portal Maria Helena`}</title>
         <meta name="description" content={news.descricao} />
         <meta property="og:title" content={news.titulo} />
         <meta property="og:description" content={news.descricao} />
@@ -109,7 +109,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
             {/* Main Content */}
             <article className="lg:w-2/3">
               <div className="mb-8">
-                <BannerCarousel 
+                <BannerCarousel
                   position="hero"
                   local={topLocal}
                   maxBanners={1}
@@ -125,16 +125,16 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
                     {news.categoria}
                   </span>
                 </div>
-                
+
                 <h1 className="text-4xl font-bold mb-4 leading-tight">{news.titulo}</h1>
-                
+
                 <div className="flex items-center text-gray-600 text-sm mb-6">
                   <span className="flex items-center mr-6">
                     <i className="far fa-calendar-alt mr-2"></i>
                     {formatDate(news.data)}
                   </span>
                 </div>
-                
+
                 <p className="text-xl text-gray-700 leading-relaxed">{news.descricao}</p>
               </header>
 
@@ -165,7 +165,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
                 </div>
               ) : null}
 
-              <div 
+              <div
                 className="prose prose-lg max-w-none mb-8"
                 dangerouslySetInnerHTML={{ __html: formattedHtml || news.conteudo }}
               />
@@ -179,7 +179,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
               )}
 
               <div className="my-8">
-                <BannerCarousel 
+                <BannerCarousel
                   position="hero"
                   local={bottomLocal}
                   maxBanners={1}
@@ -221,7 +221,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
                       if (navigator.share) {
                         try {
                           await navigator.share({ title: news.titulo, text: news.descricao || news.titulo, url })
-                        } catch {}
+                        } catch { }
                       } else if (navigator.clipboard && navigator.clipboard.writeText) {
                         try {
                           await navigator.clipboard.writeText(text)
@@ -252,7 +252,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
               {popular?.length ? <PopularNewsSidebar items={popular as any} /> : null}
 
               <div className="hidden lg:block">
-                <BannerCarousel 
+                <BannerCarousel
                   position="sidebar"
                   local="noticia-sidebar-1"
                   interval={6000}
@@ -274,7 +274,7 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
 
               {/* Publicidade - Carrossel 2 (300x250) */}
               <div className="hidden lg:block">
-                <BannerCarousel 
+                <BannerCarousel
                   position="sidebar"
                   local="noticia-sidebar-2"
                   interval={5000}
@@ -290,8 +290,8 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
 
       {/* Banner Publicitário 3 - Antes do Newsletter */}
       <section className="container mx-auto px-4 py-8">
-        <BannerContainer 
-          position="Notícia - Antes Newsletter" 
+        <BannerContainer
+          position="Notícia - Antes Newsletter"
           className="w-full rounded-lg mx-auto max-w-4xl"
         />
       </section>
@@ -304,10 +304,10 @@ export default function NewsPage({ news, relatedNews, banner, popular, latest, e
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { params } = context;
   const id = params?.id as string;
-  
+
   try {
     const supabase = createServerSupabaseClient(context);
-    
+
     // Buscar a notícia
     const { data: news } = await supabase
       .from('noticias')
@@ -315,7 +315,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .eq('id', id)
       .eq('workflow_status', 'published')
       .single();
-    
+
     if (!news) {
       return {
         props: {
@@ -325,7 +325,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       };
     }
-    
+
     let banner = null;
     if (news.banner_id) {
       const { data: bannerData } = await supabase

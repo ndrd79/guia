@@ -94,7 +94,7 @@ export interface Banner {
   data_fim?: string | null
   ordem?: number
   tempo_exibicao?: number
-  local?: 'geral' | 'home' | 'guia_comercial' | 'noticias' | 'eventos' | 'classificados'
+  local?: 'geral' | 'home' | 'guia_comercial' | 'noticias' | 'eventos' | 'classificados' | 'contato'
   clicks?: number
   views?: number
   impressions?: number
