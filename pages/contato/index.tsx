@@ -351,7 +351,7 @@ const ContatoPage = () => {
           local="contato"
           interval={6000}
           autoRotate={true}
-          maxBanners={3}
+          maxBanners={5}
           className="mx-auto rounded-xl"
         />
       </div>
@@ -417,7 +417,7 @@ const ContatoPage = () => {
           local="contato"
           interval={5000}
           autoRotate={true}
-          maxBanners={1}
+          maxBanners={5}
           className="mx-auto rounded-xl"
         />
       </div>

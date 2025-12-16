@@ -12,7 +12,7 @@ import { Plus, BarChart3 } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import BannerForm from '../../components/admin/banners/BannerForm'
 import BannerFilters from '../../components/admin/banners/BannerFilters'
-import BannerCreationWizard from '../../components/admin/banners/BannerCreationWizard'
+import BannerWizard from '../../components/admin/banners/BannerWizard'
 import AnalyticsDashboard from '../../components/admin/AnalyticsDashboard'
 
 // Dynamic import para evitar hydration mismatch
@@ -53,6 +53,8 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
     const [bannerStats, setBannerStats] = useState<Record<string, BannerStats>>({})
     const [activeTab, setActiveTab] = useState<'banners' | 'analytics'>('banners')
     const [showWizard, setShowWizard] = useState(false)
+    const [wizardBanner, setWizardBanner] = useState<Banner | null>(null) // Banner para editar
+    const [duplicateBanner, setDuplicateBanner] = useState<Banner | null>(null) // Banner para duplicar
     const [accessToken, setAccessToken] = useState<string | null>(serverAccessToken || null)
 
     // Filters - carrega do localStorage se disponível
@@ -301,8 +303,15 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
     }, [])
 
     const handleEdit = useCallback((banner: Banner) => {
-        setEditingBanner(banner)
-        setShowForm(true)
+        setWizardBanner(banner)
+        setDuplicateBanner(null)
+        setShowWizard(true)
+    }, [])
+
+    const handleDuplicate = useCallback((banner: Banner) => {
+        setWizardBanner(null)
+        setDuplicateBanner(banner)
+        setShowWizard(true)
     }, [])
 
     const handleDelete = async (id: string) => {
@@ -523,6 +532,7 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
                                 onToggleStatus={handleToggleStatus}
+                                onDuplicate={handleDuplicate}
                                 deletingId={deletingId}
                                 togglingId={togglingId}
                             />
@@ -533,16 +543,24 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
                 )}
             </div>
 
-            {/* Wizard de Criação de Banner */}
-            <BannerCreationWizard
+            {/* Wizard de Criação/Edição/Duplicação de Banner */}
+            <BannerWizard
                 isOpen={showWizard}
-                onClose={() => setShowWizard(false)}
+                onClose={() => {
+                    setShowWizard(false)
+                    setWizardBanner(null)
+                    setDuplicateBanner(null)
+                }}
                 onSuccess={() => {
                     setShowWizard(false)
+                    setWizardBanner(null)
+                    setDuplicateBanner(null)
                     loadBanners()
-                    showSuccess('Banner criado com sucesso!')
+                    showSuccess(wizardBanner ? 'Banner atualizado com sucesso!' : duplicateBanner ? 'Banner duplicado com sucesso!' : 'Banner criado com sucesso!')
                 }}
                 accessToken={accessToken}
+                editingBanner={wizardBanner}
+                duplicatingBanner={duplicateBanner}
             />
         </AdminLayout>
     )

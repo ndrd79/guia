@@ -14,6 +14,7 @@ export const BannerList: React.FC<BannerListProps> = ({
     onEdit,
     onDelete,
     onToggleStatus,
+    onDuplicate,
     deletingId = null,
     togglingId = null
 }) => {
@@ -68,6 +69,7 @@ export const BannerList: React.FC<BannerListProps> = ({
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onToggleStatus={onToggleStatus}
+                    onDuplicate={onDuplicate}
                     isDeleting={deletingId === banner.id}
                     isToggling={togglingId === banner.id}
                 />

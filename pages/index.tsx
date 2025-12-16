@@ -14,25 +14,28 @@ import FooterBanner from '../components/FooterBanner';
 import WeatherSlider from '../components/WeatherSlider';
 import HeroBanner from '../components/HeroBanner';
 import BannerContainer from '../components/BannerContainer';
+import UpcomingEventsCarousel from '../components/UpcomingEventsCarousel';
 import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Banner } from '../lib/supabase';
 
 interface HomePageProps {
   noticias: Noticia[];
   empresas: Empresa[];
   classificados: Classificado[];
+  eventos: Evento[];
 }
 
-const HomePage: React.FC<HomePageProps> = ({ 
-  noticias, 
-  empresas, 
-  classificados
+const HomePage: React.FC<HomePageProps> = ({
+  noticias,
+  empresas,
+  classificados,
+  eventos
 }) => {
   // Usar dados reais do banco em vez de dados mockados
   const safeNoticias = Array.isArray(noticias) ? noticias : [];
   const safeEmpresas = Array.isArray(empresas) ? empresas : [];
   const safeClassificados = Array.isArray(classificados) ? classificados : [];
   const featuredNews = safeNoticias.find(n => n.destaque) ?? safeNoticias[0];
-  const recentNews = (featuredNews 
+  const recentNews = (featuredNews
     ? safeNoticias.filter(n => n.id !== featuredNews.id)
     : safeNoticias
   ).slice(0, 7);
@@ -79,15 +82,15 @@ const HomePage: React.FC<HomePageProps> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-  <Header />
-  <Nav />
+      <Header />
+      <Nav />
 
-  <main>
+      <main>
         {/* Carrossel Hero abaixo da navegação (sem bloco de texto) */}
-        <section className="py-4 bg-white">
+        <section className="py-8 bg-white">
           <div className="container mx-auto px-4">
-            <BannerCarousel 
-              position="Hero Carousel" 
+            <BannerCarousel
+              position="Hero Carousel"
               local="home"
               interval={6000}
               autoRotate={true}
@@ -109,14 +112,14 @@ const HomePage: React.FC<HomePageProps> = ({
                 Ver todas <i className="fas fa-arrow-right ml-1 text-[10px] md:ml-2 md:text-xs"></i>
               </Link>
             </div>
-            
+
             {safeNoticias.length > 0 ? (
               <div className="space-y-4 md:space-y-8">
                 {/* Linha com destaque (2/3) e uma notícia ao lado (1/3) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-stretch">
                   <div className="md:col-span-2 rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5">
                     {featuredNews && (
-                      <NewsCard 
+                      <NewsCard
                         id={featuredNews.id}
                         title={featuredNews.titulo}
                         excerpt={featuredNews.descricao}
@@ -130,7 +133,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   </div>
                   {companionNews && (
                     <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5 flex">
-                      <NewsCard 
+                      <NewsCard
                         key={companionNews.id}
                         id={companionNews.id}
                         title={companionNews.titulo}
@@ -150,7 +153,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 md:p-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {gridNews.map((news) => (
-                      <NewsCard 
+                      <NewsCard
                         key={news.id}
                         id={news.id}
                         title={news.titulo}
@@ -175,13 +178,14 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
 
-        
 
-        {/* CTA - Explore Itaperuçu */}
+
+        {/* CTA - Explore Maria Helena + Próximos Eventos */}
         <section className="py-8 md:py-16 bg-[#0D1321]">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-center">
-              <div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-10 items-start">
+              {/* Texto CTA - 2 colunas */}
+              <div className="lg:col-span-2">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                   Descubra o melhor de Maria Helena
                 </h2>
@@ -197,14 +201,14 @@ const HomePage: React.FC<HomePageProps> = ({
                   </Link>
                 </div>
               </div>
-              <div>
-                <BannerCarousel
-                  position="CTA Banner"
-                  local="home"
-                  interval={5000}
+
+              {/* Carrossel de Eventos - 3 colunas (maior) */}
+              <div className="lg:col-span-3">
+                <UpcomingEventsCarousel
+                  eventos={eventos}
+                  interval={6000}
                   autoRotate={true}
-                  maxBanners={0}
-                  className="rounded-lg p-0 shadow-none max-h-[360px] bg-transparent"
+                  maxEvents={5}
                 />
               </div>
             </div>
@@ -214,8 +218,8 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Banner acima das Categorias - usando o mesmo carrossel do Hero */}
         <section className="py-4 bg-white">
           <div className="container mx-auto px-4">
-            <BannerCarousel 
-              position="Categorias Banner" 
+            <BannerCarousel
+              position="Categorias Banner"
               local="home"
               interval={6000}
               autoRotate={true}
@@ -264,7 +268,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 Ver todos <i className="fas fa-arrow-right ml-1"></i>
               </Link>
             </div>
-            
+
             {safeClassificados && safeClassificados.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {safeClassificados.map((classificado) => (
@@ -286,17 +290,17 @@ const HomePage: React.FC<HomePageProps> = ({
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="p-4">
                       <h3 className="font-bold text-lg mb-2 line-clamp-2">{classificado.titulo}</h3>
                       <p className="text-gray-600 text-sm mb-3 line-clamp-2">{classificado.descricao}</p>
-                      
+
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-2xl font-bold text-indigo-600">
                           R$ {classificado.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
                         <span className="flex items-center">
                           <i className="fas fa-map-marker-alt mr-1"></i>
@@ -306,8 +310,8 @@ const HomePage: React.FC<HomePageProps> = ({
                           {new Date(classificado.created_at).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
-                      
-                      <Link 
+
+                      <Link
                         href={`/classificados/${classificado.id}`}
                         className="block w-full bg-indigo-600 text-white text-center py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
                       >
@@ -342,7 +346,7 @@ const HomePage: React.FC<HomePageProps> = ({
                   </span>
                 </Link>
               ))}
-              
+
               {/* WeatherSlider com o mesmo estilo dos outros cards */}
               <WeatherSlider />
             </div>
@@ -352,8 +356,8 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Banner abaixo dos Serviços Úteis - usando carrossel igual ao Hero */}
         <section className="py-4 bg-white">
           <div className="container mx-auto px-4">
-            <BannerCarousel 
-              position="Serviços Banner" 
+            <BannerCarousel
+              position="Serviços Banner"
               local="home"
               interval={6000}
               autoRotate={true}
@@ -372,12 +376,13 @@ const HomePage: React.FC<HomePageProps> = ({
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const supabase = createServerSupabaseClient();
-    
+
     // Otimização: Executar consultas em paralelo em vez de sequencial
     const [
       noticiasResult,
       empresasResult,
       classificadosResult,
+      eventosResult,
     ] = await Promise.all([
       supabase
         .from('noticias')
@@ -385,7 +390,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
         .eq('workflow_status', 'published')
         .order('created_at', { ascending: false })
         .limit(12),
-      
+
       supabase
         .from('empresas')
         .select('id,name,description,category,rating,reviews,location,image,featured,is_new,plan_type,premium_expires_at,created_at')
@@ -394,11 +399,18 @@ export const getServerSideProps: GetServerSideProps = async () => {
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(24),
-      
+
       supabase
         .from('classificados')
         .select('id,titulo,categoria,preco,imagem,localizacao,descricao,created_at')
         .order('created_at', { ascending: false })
+        .limit(8),
+
+      supabase
+        .from('eventos')
+        .select('id,titulo,descricao,data_hora,tipo,local,imagem')
+        .gte('data_hora', new Date().toISOString())
+        .order('data_hora', { ascending: true })
         .limit(8),
     ]);
 
@@ -430,7 +442,8 @@ export const getServerSideProps: GetServerSideProps = async () => {
       props: {
         noticias: noticiasResult.data || [],
         empresas: empresasFiltradas,
-        classificados: classificadosResult.data || []
+        classificados: classificadosResult.data || [],
+        eventos: eventosResult.data || []
       }
     };
   } catch (error) {
@@ -439,7 +452,8 @@ export const getServerSideProps: GetServerSideProps = async () => {
       props: {
         noticias: [],
         empresas: [],
-        classificados: []
+        classificados: [],
+        eventos: []
       }
     };
   }

@@ -86,6 +86,7 @@ export interface BannerCardProps {
     onEdit: (banner: Banner) => void
     onDelete: (id: string) => void
     onToggleStatus: (id: string, currentStatus: boolean) => void
+    onDuplicate?: (banner: Banner) => void
     isDeleting?: boolean
     isToggling?: boolean
 }
@@ -97,6 +98,7 @@ export interface BannerListProps {
     onEdit: (banner: Banner) => void
     onDelete: (id: string) => void
     onToggleStatus: (id: string, currentStatus: boolean) => void
+    onDuplicate?: (banner: Banner) => void
     deletingId?: string | null
     togglingId?: string | null
 }

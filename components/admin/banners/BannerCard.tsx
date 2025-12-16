@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Edit, Trash2, Eye, EyeOff, ExternalLink, Clock } from 'lucide-react'
+import { Edit, Trash2, Eye, EyeOff, ExternalLink, Clock, Copy } from 'lucide-react'
 import { BannerCardProps } from '../../../types/banner'
 import { getBannerScheduleStatus, getTimeRemaining } from '../../../lib/banners/utils'
 import { formatDate } from '../../../lib/formatters'
@@ -54,8 +54,8 @@ const CountdownTimer: React.FC<{ banner: any }> = ({ banner }) => {
 
     return (
         <div className={`text-xs px-2 py-1 rounded-full ${countdownType === 'start'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : 'bg-orange-50 text-orange-700 border border-orange-200'
+            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+            : 'bg-orange-50 text-orange-700 border border-orange-200'
             }`}>
             <Clock className="h-3 w-3 inline mr-1" />
             {countdownType === 'start' ? 'Inicia em' : 'Expira em'} {timeRemaining}
@@ -68,6 +68,7 @@ export const BannerCard: React.FC<BannerCardProps> = ({
     onEdit,
     onDelete,
     onToggleStatus,
+    onDuplicate,
     isDeleting = false,
     isToggling = false
 }) => {
@@ -163,12 +164,23 @@ export const BannerCard: React.FC<BannerCardProps> = ({
                     <span>Editar</span>
                 </button>
 
+                {onDuplicate && (
+                    <button
+                        onClick={() => onDuplicate(banner)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
+                        title="Duplicar banner"
+                    >
+                        <Copy className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Duplicar</span>
+                    </button>
+                )}
+
                 <button
                     onClick={() => onToggleStatus(banner.id, banner.ativo)}
                     disabled={isToggling}
                     className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${banner.ativo
-                            ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
-                            : 'text-green-600 bg-green-50 hover:bg-green-100'
+                        ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
+                        : 'text-green-600 bg-green-50 hover:bg-green-100'
                         } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {banner.ativo ? (
