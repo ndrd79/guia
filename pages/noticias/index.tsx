@@ -126,8 +126,8 @@ const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean 
           <h2 className="text-2xl md:text-3xl font-bold mb-4">{news.titulo}</h2>
           <p className="text-gray-600 mb-6">{news.descricao}</p>
           <div className="flex items-center justify-between">
-            <Link 
-              href={`/noticias/${news.id}`} 
+            <Link
+              href={`/noticias/${news.id}`}
               className="text-indigo-600 font-medium hover:text-indigo-800 flex items-center"
             >
               Leia a matéria completa <i className="fas fa-arrow-right ml-2"></i>
@@ -170,8 +170,8 @@ const NewsCard = ({ news, isLarge = false }: { news: Noticia; isLarge?: boolean 
           <span className="text-gray-500">
             <i className="far fa-calendar mr-1"></i> {formatDate(news.data || news.created_at)}
           </span>
-          <Link 
-            href={`/noticias/${news.id}`} 
+          <Link
+            href={`/noticias/${news.id}`}
             className="text-indigo-600 hover:text-indigo-800 font-medium"
           >
             Ler mais
@@ -187,7 +187,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
   const [currentPage, setCurrentPage] = useState(1)
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const itemsPerPage = 8
 
   // Memoizar notícias filtradas
@@ -258,16 +258,15 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Notícias de Maria Helena</h1>
           <p className="text-xl max-w-3xl mx-auto">Fique por dentro de tudo o que acontece na nossa cidade. Informações atualizadas sobre política, eventos, economia e muito mais.</p>
-          
+
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {['Todas', ...categorias].map(category => (
-              <button 
+              <button
                 key={category}
-                className={`px-5 py-2 rounded-full font-medium transition ${
-                  selectedCategory === category 
-                    ? 'bg-white text-indigo-700' 
+                className={`px-5 py-2 rounded-full font-medium transition ${selectedCategory === category
+                    ? 'bg-white text-indigo-700'
                     : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                }`}
+                  }`}
                 onClick={() => handleCategoryFilter(category)}
               >
                 {category}
@@ -280,8 +279,8 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
       <section className="py-8 bg-gray-50">
         <div className="container mx-auto px-4">
           <BannerCarousel
-            position="hero"
-            local="noticias-top"
+            position="Banner Grande - Topo"
+            local="noticias"
             interval={5000}
             autoRotate={true}
             maxBanners={4}
@@ -309,7 +308,7 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
               <h2 className="text-3xl font-bold mb-4 md:mb-8">
                 {selectedCategory === 'Todas' ? 'Últimas Notícias' : `Notícias - ${selectedCategory}`}
               </h2>
-              
+
               {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-8">
                   {Array.from({ length: 6 }, (_, i) => (
@@ -329,38 +328,47 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
                 </div>
               )}
 
-              {/* Removido banner de conteúdo do meio conforme solicitação */}
+              {/* Banner Meio */}
+              <div className="my-8">
+                <BannerCarousel
+                  position="Banner Grande - Meio"
+                  local="noticias"
+                  interval={6000}
+                  autoRotate={true}
+                  maxBanners={3}
+                  className="mx-auto rounded-xl"
+                />
+              </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-6 md:mt-12 flex justify-center">
                   <nav className="flex space-x-2">
-                    <button 
+                    <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <i className="fas fa-chevron-left"></i>
                     </button>
-                    
+
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       const page = i + 1
                       return (
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
-                          className={`px-3 py-2 rounded-lg ${
-                            currentPage === page
+                          className={`px-3 py-2 rounded-lg ${currentPage === page
                               ? 'bg-indigo-600 text-white'
                               : 'border border-gray-300 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           {page}
                         </button>
                       )
                     })}
-                    
-                    <button 
+
+                    <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -417,8 +425,8 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
       <section className="py-8 bg-gray-50">
         <div className="container mx-auto px-4">
           <BannerCarousel
-            position="hero"
-            local="noticias-bottom"
+            position="Banner Grande - Final"
+            local="noticias"
             interval={5000}
             autoRotate={true}
             maxBanners={1}
@@ -435,9 +443,9 @@ export default function Noticias({ noticias, categorias, totalNoticias, events, 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const supabase = createServerSupabaseClient()
-    
+
     // Buscar notícias ativas ordenadas por data
-  const { data: noticias, error } = await supabase
+    const { data: noticias, error } = await supabase
       .from('noticias')
       .select('id,titulo,descricao,imagem,categoria,data,destaque,created_at')
       .eq('workflow_status', 'published')
@@ -457,7 +465,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     }
 
     const noticiasData = noticias || []
-    
+
     // Extrair categorias únicas
     const categorias = Array.from(new Set(noticiasData.map(n => n.categoria)))
       .filter(Boolean)

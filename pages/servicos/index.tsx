@@ -4,6 +4,7 @@ import Header from '../../components/Header';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
+import BannerCarousel from '../../components/BannerCarousel';
 
 const ServicosPage: React.FC = () => {
   const servicos = [
@@ -92,10 +93,10 @@ const ServicosPage: React.FC = () => {
         <meta name="description" content="Conectamos sua empresa a milhares de clientes potenciais em Maria Helena. Conheça nossos serviços de marketing digital e publicidade local." />
         <meta name="keywords" content="marketing digital, publicidade, Maria Helena, guia comercial, banners, classificados" />
       </Head>
-      
+
       <Header />
       <Nav />
-      
+
       <main className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <section className="gradient-bg text-white py-20">
@@ -104,7 +105,7 @@ const ServicosPage: React.FC = () => {
               Conectamos Sua Empresa aos Clientes Certos
             </h1>
             <p className="text-xl mb-8 max-w-3xl mx-auto leading-relaxed">
-              Mais de 15.000 pessoas visitam nosso portal mensalmente. 
+              Mais de 15.000 pessoas visitam nosso portal mensalmente.
               Seja encontrado pelos seus clientes ideais em Maria Helena e região!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -121,6 +122,20 @@ const ServicosPage: React.FC = () => {
                 </button>
               </Link>
             </div>
+          </div>
+        </section>
+
+        {/* Banner Grande - Topo */}
+        <section className="py-6 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <BannerCarousel
+              position="Banner Grande - Topo"
+              local="geral"
+              interval={5000}
+              autoRotate={true}
+              maxBanners={3}
+              className="mx-auto rounded-xl"
+            />
           </div>
         </section>
 
@@ -149,22 +164,22 @@ const ServicosPage: React.FC = () => {
                 Soluções completas para aumentar a visibilidade da sua empresa e atrair mais clientes
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {servicos.map((servico, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
                   <div className={`bg-${servico.color}-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto`}>
                     <i className={`${servico.icon} text-${servico.color}-600 text-2xl`}></i>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
                     {servico.title}
                   </h3>
-                  
+
                   <p className="text-gray-600 mb-6 text-center leading-relaxed">
                     {servico.description}
                   </p>
-                  
+
                   <ul className="space-y-2 mb-6 flex-grow">
                     {servico.features.map((feature, idx) => (
                       <li key={idx} className="flex items-center text-sm text-gray-700">
@@ -173,7 +188,7 @@ const ServicosPage: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                  
+
                   <div className="text-center mt-auto">
                     <button className={`bg-${servico.color}-600 text-white px-6 py-3 rounded-full hover:bg-${servico.color}-700 transition w-full font-medium`}>
                       Contratar Agora
@@ -182,6 +197,20 @@ const ServicosPage: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Banner Grande - Meio */}
+        <section className="py-6 bg-white">
+          <div className="container mx-auto px-4">
+            <BannerCarousel
+              position="Banner Grande - Meio"
+              local="geral"
+              interval={6000}
+              autoRotate={true}
+              maxBanners={3}
+              className="mx-auto rounded-xl"
+            />
           </div>
         </section>
 
@@ -196,7 +225,7 @@ const ServicosPage: React.FC = () => {
                 Processo simples e eficiente para começar a atrair mais clientes
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="bg-indigo-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -207,7 +236,7 @@ const ServicosPage: React.FC = () => {
                   Selecione o serviço que melhor atende às necessidades da sua empresa
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-2xl font-bold text-green-600">2</span>
@@ -217,7 +246,7 @@ const ServicosPage: React.FC = () => {
                   Nossa equipe ajuda você a criar um perfil atrativo e otimizado
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-2xl font-bold text-purple-600">3</span>
@@ -242,7 +271,7 @@ const ServicosPage: React.FC = () => {
                 Empresas que já cresceram conosco
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-lg p-8">
@@ -273,7 +302,7 @@ const ServicosPage: React.FC = () => {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Entre em contato conosco e descubra como podemos ajudar sua empresa a alcançar mais clientes
             </p>
-            
+
             <div className="grid md:grid-cols-3 gap-8 mb-12">
               <div className="text-center">
                 <div className="bg-white bg-opacity-20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -282,7 +311,7 @@ const ServicosPage: React.FC = () => {
                 <h3 className="font-bold mb-2">Telefone</h3>
                 <p>(44) 98435-5545</p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-white bg-opacity-20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <i className="fas fa-envelope text-2xl"></i>
@@ -290,7 +319,7 @@ const ServicosPage: React.FC = () => {
                 <h3 className="font-bold mb-2">E-mail</h3>
                 <p>contato@portalmariahelena.com.br</p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-white bg-opacity-20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <i className="fab fa-whatsapp text-2xl"></i>
@@ -299,7 +328,7 @@ const ServicosPage: React.FC = () => {
                 <p>Atendimento rápido</p>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contato">
                 <button className="bg-white text-indigo-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition">
@@ -316,8 +345,22 @@ const ServicosPage: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* Banner Grande - Final */}
+        <section className="py-6 bg-gray-100">
+          <div className="container mx-auto px-4">
+            <BannerCarousel
+              position="Banner Grande - Final"
+              local="geral"
+              interval={5000}
+              autoRotate={true}
+              maxBanners={1}
+              className="mx-auto rounded-xl"
+            />
+          </div>
+        </section>
       </main>
-      
+
       <Footer />
     </>
   );

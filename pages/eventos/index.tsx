@@ -272,10 +272,11 @@ export default function Eventos() {
             </div>
           </div>
 
-          {/* Espaço publicitário - usando carrossel igual ao Hero */}
+          {/* Banner Grande - Topo */}
           <section className="py-2">
             <BannerCarousel
-              position="content"
+              position="Banner Grande - Topo"
+              local="eventos"
               interval={6000}
               autoRotate={true}
               className="rounded-xl mb-8"
@@ -397,10 +398,10 @@ export default function Eventos() {
                     <div
                       key={index}
                       className={`h-12 flex items-center justify-center relative ${!day.isCurrentMonth
-                          ? 'text-gray-400'
-                          : day.hasEvent
-                            ? 'bg-indigo-100 rounded-full text-indigo-600 font-bold'
-                            : ''
+                        ? 'text-gray-400'
+                        : day.hasEvent
+                          ? 'bg-indigo-100 rounded-full text-indigo-600 font-bold'
+                          : ''
                         }`}
                     >
                       {day.day}

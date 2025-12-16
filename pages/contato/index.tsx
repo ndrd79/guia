@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import PageBanner from '../../components/PageBanner';
+import BannerCarousel from '../../components/BannerCarousel';
 
 const ContatoPage = () => {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -158,12 +159,15 @@ const ContatoPage = () => {
         </div>
       </div>
 
-      {/* Banner - Topo da Página */}
+      {/* Banner Grande - Topo */}
       <div className="container mx-auto px-4 py-8">
-        <PageBanner
-          posicao="Banner - Topo"
+        <BannerCarousel
+          position="Banner Grande - Topo"
           local="contato"
-          className="max-w-5xl mx-auto"
+          interval={6000}
+          autoRotate={true}
+          maxBanners={3}
+          className="mx-auto rounded-xl"
         />
       </div>
 
@@ -340,6 +344,18 @@ const ContatoPage = () => {
         </div>
       </section>
 
+      {/* Banner Grande - Meio */}
+      <div className="container mx-auto px-4 py-8">
+        <BannerCarousel
+          position="Banner Grande - Meio"
+          local="contato"
+          interval={6000}
+          autoRotate={true}
+          maxBanners={3}
+          className="mx-auto rounded-xl"
+        />
+      </div>
+
       {/* FAQ Section */}
       <section className="py-16 bg-gray-50 border-t border-gray-200">
         <div className="container mx-auto px-4">
@@ -393,6 +409,18 @@ const ContatoPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Banner Grande - Final */}
+      <div className="container mx-auto px-4 pb-8">
+        <BannerCarousel
+          position="Banner Grande - Final"
+          local="contato"
+          interval={5000}
+          autoRotate={true}
+          maxBanners={1}
+          className="mx-auto rounded-xl"
+        />
+      </div>
 
       {/* Footer padrão */}
       <Footer />

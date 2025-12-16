@@ -7,12 +7,19 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { GetServerSideProps } from 'next'
+import dynamic from 'next/dynamic'
 import { Plus, BarChart3 } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import BannerForm from '../../components/admin/banners/BannerForm'
-import BannerList from '../../components/admin/banners/BannerList'
 import BannerFilters from '../../components/admin/banners/BannerFilters'
+import BannerCreationWizard from '../../components/admin/banners/BannerCreationWizard'
 import AnalyticsDashboard from '../../components/admin/AnalyticsDashboard'
+
+// Dynamic import para evitar hydration mismatch
+const BannerList = dynamic(
+    () => import('../../components/admin/banners/BannerList'),
+    { ssr: false, loading: () => <div className="p-8 text-center text-gray-500">Carregando banners...</div> }
+)
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
 import { bannerCatalog } from '../../lib/banners/catalog'
 import { useToastActions } from '../../components/admin/ToastProvider'
@@ -31,7 +38,7 @@ const posicoesBanner = bannerCatalog.map(p => ({
     tamanhoRecomendado: p.larguraRecomendada && p.alturaRecomendada ? `${p.larguraRecomendada}x${p.alturaRecomendada}` : undefined,
 }))
 
-export default function BannersPage({ initialBanners }: BannersPageProps) {
+export default function BannersPage({ initialBanners, serverAccessToken }: BannersPageProps & { serverAccessToken?: string | null }) {
     const loadedOnceRef = useRef(false)
     const { success: showSuccess, error: showError } = useToastActions()
 
@@ -45,6 +52,8 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
     const [togglingId, setTogglingId] = useState<string | null>(null)
     const [bannerStats, setBannerStats] = useState<Record<string, BannerStats>>({})
     const [activeTab, setActiveTab] = useState<'banners' | 'analytics'>('banners')
+    const [showWizard, setShowWizard] = useState(false)
+    const [accessToken, setAccessToken] = useState<string | null>(serverAccessToken || null)
 
     // Filters - carrega do localStorage se disponível
     const [filters, setFilters] = useState<BannerFilterState>(() => {
@@ -87,6 +96,11 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
             if (!session?.user) {
                 log.warn('[Admin] Usuário não autenticado')
                 return
+            }
+
+            // Armazenar token para usar no wizard
+            if (session.access_token) {
+                setAccessToken(session.access_token)
             }
 
             const { data, error } = await supabase
@@ -151,16 +165,38 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
         }
     }
 
-    // Initial load
+    // Initial load - only load stats, banners come from SSR
     useEffect(() => {
         if (loadedOnceRef.current) return
         loadedOnceRef.current = true
 
         const controller = new AbortController()
-        loadBanners()
         loadBannerStats(controller.signal)
 
         return () => controller.abort()
+    }, [])
+
+    // Listener de autenticação para obter token de forma confiável
+    useEffect(() => {
+        if (!supabase) return
+
+        // Tentar obter sessão inicial
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.access_token) {
+                setAccessToken(session.access_token)
+            }
+        })
+
+        // Listener para mudanças de auth (mais confiável)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.access_token) {
+                setAccessToken(session.access_token)
+            } else {
+                setAccessToken(null)
+            }
+        })
+
+        return () => subscription.unsubscribe()
     }, [])
 
     // Debounce search
@@ -421,7 +457,7 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     </div>
                     {!showForm && (
                         <button
-                            onClick={() => setShowForm(true)}
+                            onClick={() => setShowWizard(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
                         >
                             <Plus className="h-5 w-5" />
@@ -496,6 +532,18 @@ export default function BannersPage({ initialBanners }: BannersPageProps) {
                     <AnalyticsDashboard />
                 )}
             </div>
+
+            {/* Wizard de Criação de Banner */}
+            <BannerCreationWizard
+                isOpen={showWizard}
+                onClose={() => setShowWizard(false)}
+                onSuccess={() => {
+                    setShowWizard(false)
+                    loadBanners()
+                    showSuccess('Banner criado com sucesso!')
+                }}
+                accessToken={accessToken}
+            />
         </AdminLayout>
     )
 }
@@ -520,10 +568,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         .select('*')
         .order('created_at', { ascending: false })
         .order('ordem', { ascending: true })
+        .order('id', { ascending: true }) // Desempate final para ordem determinística
 
     return {
         props: {
             initialBanners: banners || [],
+            serverAccessToken: session.access_token || null,
         },
     }
 }

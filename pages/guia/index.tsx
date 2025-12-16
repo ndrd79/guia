@@ -179,6 +179,20 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
         </div>
       </section>
 
+      {/* Banner Grande - Topo */}
+      <section className="py-6 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <BannerCarousel
+            position="Banner Grande - Topo"
+            local="guia_comercial"
+            interval={5000}
+            autoRotate={true}
+            maxBanners={3}
+            className="mx-auto rounded-xl"
+          />
+        </div>
+      </section>
+
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -351,6 +365,18 @@ export default function GuiaComercial({ businesses: initialBusinesses, categorie
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Banner Meio */}
+                <div className="my-8">
+                  <BannerCarousel
+                    position="Banner Grande - Meio"
+                    local="guia_comercial"
+                    interval={6000}
+                    autoRotate={true}
+                    maxBanners={3}
+                    className="mx-auto rounded-xl"
+                  />
                 </div>
 
                 {/* Pagination */}
