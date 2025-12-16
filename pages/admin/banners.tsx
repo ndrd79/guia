@@ -270,6 +270,30 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
         return filtered
     }, [banners, searchDebounced, filters.status, filters.position, filters.period, filters.schedule])
 
+    // Auto-clear filters if no results but banners exist
+    useEffect(() => {
+        const hasFiltersActive = filters.search.trim() !== '' ||
+            filters.status !== 'all' ||
+            filters.position !== 'all' ||
+            filters.period !== 'all' ||
+            filters.schedule !== 'all'
+
+        // Se não há resultados filtrados mas há banners no total, limpar filtros
+        if (filteredBanners.length === 0 && banners.length > 0 && hasFiltersActive) {
+            // Limpar localStorage também
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('bannerFilters')
+            }
+            setFilters({
+                search: '',
+                status: 'all',
+                position: 'all',
+                period: 'all',
+                schedule: 'all'
+            })
+        }
+    }, [filteredBanners.length, banners.length])
+
     // Has active filters
     const hasActiveFilters = useMemo(() => {
         return filters.search.trim() !== '' ||

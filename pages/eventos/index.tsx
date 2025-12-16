@@ -1,432 +1,540 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import { useState } from 'react'
+import Image from 'next/image'
+import { useState, useEffect, useRef } from 'react'
+import { GetServerSideProps } from 'next'
 import Header from '../../components/Header'
 import Nav from '../../components/Nav'
 import Footer from '../../components/Footer'
 import BannerCarousel from '../../components/BannerCarousel'
-import PageBanner from '../../components/PageBanner'
+import { createServerSupabaseClient, Evento } from '../../lib/supabase'
+import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react'
 
-interface Event {
-  id: number
-  title: string
-  description: string
-  date: string
-  time: string
-  location: string
-  price: string
-  category: string
-  icon: string
-  gradient: string
-  tag?: string
-  tagColor?: string
-  isFeatured: boolean
+interface EventosPageProps {
+  eventos: Evento[]
+  categorias: string[]
 }
 
-// Função para obter a próxima terça-feira
-const getNextTuesday = () => {
-  const today = new Date();
-  const daysUntilTuesday = (2 - today.getDay() + 7) % 7;
-  const nextTuesday = new Date(today);
-  nextTuesday.setDate(today.getDate() + (daysUntilTuesday === 0 ? 7 : daysUntilTuesday));
-  return nextTuesday;
-};
+export default function EventosPage({ eventos, categorias }: EventosPageProps) {
+  const [filtroCategoria, setFiltroCategoria] = useState('Todos')
+  const [buscaTexto, setBuscaTexto] = useState('')
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const timerRef = useRef<number | null>(null)
 
-const nextTuesday = getNextTuesday();
-const nextTuesdayFormatted = `${nextTuesday.getDate()} ${nextTuesday.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}`;
+  // Eventos em destaque para o hero (primeiros 5)
+  const eventosDestaque = eventos.slice(0, 5)
 
-const mockEvents: Event[] = [
-  {
-    id: 0,
-    title: "Feira do Produtor",
-    description: "Produtos frescos direto do campo. Frutas, verduras, legumes e produtos artesanais dos produtores locais. Toda terça-feira na Praça Central.",
-    date: nextTuesdayFormatted,
-    time: "06:00 - 12:00",
-    location: "Praça Central - Maria Helena",
-    price: "Gratuito",
-    category: "Feira",
-    icon: "fas fa-seedling",
-    gradient: "from-green-500 to-emerald-400",
-    tag: "Toda Terça",
-    tagColor: "text-green-600",
-    isFeatured: true
-  },
-  {
-    id: 1,
-    title: "Festival de Música",
-    description: "Festival com bandas locais na praça central. Traga sua família e amigos para uma noite de música e diversão.",
-    date: "15 JUN",
-    time: "19:00 - 23:00",
-    location: "Praça Central - Maria Helena",
-    price: "Gratuito",
-    category: "Música",
-    icon: "fas fa-music",
-    gradient: "from-purple-500 to-pink-500",
-    tag: "Destaque",
-    tagColor: "text-purple-600",
-    isFeatured: true
-  },
-  {
-    id: 2,
-    title: "Feira Gastronômica",
-    description: "Degustação dos melhores pratos da região com chefs locais. Uma experiência gastronômica imperdível.",
-    date: "16 JUN",
-    time: "10:00 - 22:00",
-    location: "Av. Principal - Centro",
-    price: "R$ 10,00",
-    category: "Gastronomia",
-    icon: "fas fa-utensils",
-    gradient: "from-blue-500 to-teal-400",
-    tag: "Popular",
-    tagColor: "text-blue-600",
-    isFeatured: true
-  },
-  {
-    id: 3,
-    title: "Corrida da Saúde",
-    description: "5km e 10km com premiação para os vencedores. Evento beneficente para o hospital municipal.",
-    date: "18 JUN",
-    time: "07:00 - 12:00",
-    location: "Parque Municipal",
-    price: "Inscrições",
-    category: "Esporte",
-    icon: "fas fa-running",
-    gradient: "from-orange-500 to-yellow-400",
-    tag: "Novo",
-    tagColor: "text-orange-600",
-    isFeatured: true
-  },
-  {
-    id: 4,
-    title: "Feira de Artesanato",
-    description: "Produtos artesanais feitos por moradores locais.",
-    date: "20 JUN",
-    time: "09:00 - 18:00",
-    location: "Centro Cultural",
-    price: "Gratuito",
-    category: "Artesanato",
-    icon: "fas fa-leaf",
-    gradient: "from-green-500 to-emerald-400",
-    isFeatured: false
-  },
-  {
-    id: 5,
-    title: "Peça Teatral",
-    description: "\"O Auto da Compadecida\" pelo grupo local.",
-    date: "22 JUN",
-    time: "20:00 - 22:00",
-    location: "Teatro Municipal",
-    price: "R$ 15,00",
-    category: "Teatro",
-    icon: "fas fa-theater-masks",
-    gradient: "from-red-500 to-pink-400",
-    isFeatured: false
-  },
-  {
-    id: 6,
-    title: "Feira do Livro",
-    description: "Lançamentos e descontos em livros de diversos gêneros.",
-    date: "25 JUN",
-    time: "10:00 - 20:00",
-    location: "Biblioteca Municipal",
-    price: "Gratuito",
-    category: "Literatura",
-    icon: "fas fa-book",
-    gradient: "from-blue-600 to-indigo-400",
-    isFeatured: false
-  },
-  {
-    id: 7,
-    title: "Torneio de Xadrez",
-    description: "Para todas as idades e níveis de habilidade.",
-    date: "28 JUN",
-    time: "14:00 - 18:00",
-    location: "Clube de Xadrez",
-    price: "R$ 5,00",
-    category: "Jogos",
-    icon: "fas fa-chess",
-    gradient: "from-yellow-500 to-amber-400",
-    isFeatured: false
-  }
-]
+  // Filtrar eventos
+  const eventosFiltrados = eventos.filter(evento => {
+    const matchCategoria = filtroCategoria === 'Todos' || evento.tipo === filtroCategoria
+    const matchBusca = evento.titulo.toLowerCase().includes(buscaTexto.toLowerCase()) ||
+      evento.local?.toLowerCase().includes(buscaTexto.toLowerCase())
+    return matchCategoria && matchBusca
+  })
 
-const filterOptions = [
-  'Todos',
-  'Próximos 7 dias',
-  'Este mês',
-  'Gratuitos',
-  'Culturais',
-  'Esportivos',
-  'Feiras'
-]
+  // Auto-rotação do hero
+  useEffect(() => {
+    if (eventosDestaque.length <= 1 || isPaused) return
 
-export default function Eventos() {
-  const [selectedFilter, setSelectedFilter] = useState('Todos')
-  const [filteredEvents, setFilteredEvents] = useState(mockEvents)
+    timerRef.current = window.setInterval(() => {
+      setCurrentHeroIndex(prev => (prev + 1) % eventosDestaque.length)
+    }, 6000)
 
-  const handleFilter = (filter: string) => {
-    setSelectedFilter(filter)
-
-    let filtered = mockEvents
-
-    switch (filter) {
-      case 'Gratuitos':
-        filtered = mockEvents.filter(event => event.price === 'Gratuito')
-        break
-      case 'Culturais':
-        filtered = mockEvents.filter(event =>
-          ['Música', 'Teatro', 'Literatura', 'Artesanato'].includes(event.category)
-        )
-        break
-      case 'Esportivos':
-        filtered = mockEvents.filter(event => event.category === 'Esporte')
-        break
-      case 'Feiras':
-        filtered = mockEvents.filter(event => event.category === 'Feira')
-        break
-      default:
-        filtered = mockEvents
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current)
     }
+  }, [eventosDestaque.length, isPaused])
 
-    setFilteredEvents(filtered)
+  const goToPreviousHero = () => {
+    setCurrentHeroIndex(prev => prev === 0 ? eventosDestaque.length - 1 : prev - 1)
   }
 
-  const featuredEvents = filteredEvents.filter(event => event.isFeatured)
-  const regularEvents = filteredEvents.filter(event => !event.isFeatured)
+  const goToNextHero = () => {
+    setCurrentHeroIndex(prev => (prev + 1) % eventosDestaque.length)
+  }
 
-  const calendarDays = [
-    { day: 28, isCurrentMonth: false },
-    { day: 29, isCurrentMonth: false },
-    { day: 30, isCurrentMonth: false },
-    { day: 31, isCurrentMonth: false },
-    { day: 1, isCurrentMonth: true },
-    { day: 2, isCurrentMonth: true },
-    { day: 3, isCurrentMonth: true },
-    { day: 4, isCurrentMonth: true },
-    { day: 5, isCurrentMonth: true },
-    { day: 6, isCurrentMonth: true },
-    { day: 7, isCurrentMonth: true },
-    { day: 8, isCurrentMonth: true },
-    { day: 9, isCurrentMonth: true },
-    { day: 10, isCurrentMonth: true },
-    { day: 11, isCurrentMonth: true },
-    { day: 12, isCurrentMonth: true },
-    { day: 13, isCurrentMonth: true },
-    { day: 14, isCurrentMonth: true },
-    { day: 15, isCurrentMonth: true, hasEvent: true },
-    { day: 16, isCurrentMonth: true, hasEvent: true },
-    { day: 17, isCurrentMonth: true },
-    { day: 18, isCurrentMonth: true, hasEvent: true },
-    { day: 19, isCurrentMonth: true },
-    { day: 20, isCurrentMonth: true, hasEvent: true },
-    { day: 21, isCurrentMonth: true },
-    { day: 22, isCurrentMonth: true, hasEvent: true },
-    { day: 23, isCurrentMonth: true },
-    { day: 24, isCurrentMonth: true },
-    { day: 25, isCurrentMonth: true, hasEvent: true },
-    { day: 26, isCurrentMonth: true },
-    { day: 27, isCurrentMonth: true },
-    { day: 28, isCurrentMonth: true, hasEvent: true },
-    { day: 29, isCurrentMonth: true },
-    { day: 30, isCurrentMonth: true }
-  ]
+  const getDateParts = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return {
+      day: date.getDate().toString().padStart(2, '0'),
+      month: date.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase().replace('.', ''),
+      weekday: date.toLocaleDateString('pt-BR', { weekday: 'long' }),
+      time: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      full: date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    }
+  }
+
+  const currentHeroEvent = eventosDestaque[currentHeroIndex]
 
   return (
     <>
       <Head>
         <title>Eventos - Portal Maria Helena</title>
-        <meta name="description" content="Confira os próximos eventos em Maria Helena. Festivais, shows, feiras e muito mais!" />
+        <meta name="description" content="Confira os próximos eventos em Maria Helena. Shows, festas, feiras e muito mais." />
       </Head>
 
       <Header />
       <Nav />
 
-      {/* Events Page */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold">Agenda de Eventos</h1>
-              <p className="text-gray-600">Confira os próximos eventos em Maria Helena</p>
+      <main className="min-h-screen bg-gray-50">
+
+        {/* Hero Carrossel Full-Width */}
+        {eventosDestaque.length > 0 && currentHeroEvent && (
+          <section
+            className="relative h-[50vh] md:h-[60vh] lg:h-[70vh] overflow-hidden"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              {currentHeroEvent.imagem ? (
+                <Image
+                  src={currentHeroEvent.imagem}
+                  alt={currentHeroEvent.titulo}
+                  fill
+                  className="object-cover transition-all duration-700"
+                  priority
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700" />
+              )}
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
             </div>
-            <div className="mt-4 md:mt-0">
-              <div className="flex space-x-2">
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition">
-                  <i className="fas fa-calendar-plus mr-2"></i> Adicionar Evento
+
+            {/* Content */}
+            <div className="relative h-full container mx-auto px-4 flex flex-col justify-end pb-12 md:pb-16">
+              <div className="max-w-3xl">
+                {/* Badge */}
+                <span className="inline-block px-4 py-1.5 bg-indigo-600 text-white text-sm font-semibold rounded-full mb-4">
+                  {currentHeroEvent.tipo || 'Evento'}
+                </span>
+
+                {/* Title */}
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                  {currentHeroEvent.titulo}
+                </h1>
+
+                {/* Info */}
+                <div className="flex flex-wrap items-center gap-4 md:gap-6 text-white/90 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>{getDateParts(currentHeroEvent.data_hora).full}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    <span>{getDateParts(currentHeroEvent.data_hora).time}</span>
+                  </div>
+                  {currentHeroEvent.local && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      <span>{currentHeroEvent.local}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* CTA */}
+                <Link
+                  href={`/eventos`}
+                  className="inline-flex items-center px-6 py-3 bg-white text-indigo-600 font-semibold rounded-full hover:bg-indigo-50 transition-colors"
+                >
+                  Ver Detalhes
+                </Link>
+              </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            {eventosDestaque.length > 1 && (
+              <>
+                <button
+                  onClick={goToPreviousHero}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm p-3 rounded-full transition-colors"
+                  aria-label="Evento anterior"
+                >
+                  <ChevronLeft className="w-6 h-6 text-white" />
                 </button>
-                <div className="relative">
-                  <select
-                    className="appearance-none bg-gray-100 border border-gray-300 rounded-full py-2 px-4 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    value={selectedFilter}
-                    onChange={(e) => handleFilter(e.target.value)}
-                  >
-                    {filterOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <i className="fas fa-chevron-down"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                <button
+                  onClick={goToNextHero}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm p-3 rounded-full transition-colors"
+                  aria-label="Próximo evento"
+                >
+                  <ChevronRight className="w-6 h-6 text-white" />
+                </button>
+              </>
+            )}
 
-          {/* Banner Grande - Topo */}
-          <section className="py-2">
-            <BannerCarousel
-              position="Banner Grande - Topo"
-              local="eventos"
-              interval={6000}
-              autoRotate={true}
-              className="rounded-xl mb-8"
-            />
+            {/* Indicators */}
+            {eventosDestaque.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                {eventosDestaque.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentHeroIndex(index)}
+                    className={`h-2 rounded-full transition-all ${index === currentHeroIndex
+                      ? 'w-8 bg-white'
+                      : 'w-2 bg-white/50 hover:bg-white/70'
+                      }`}
+                    aria-label={`Ir para evento ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </section>
+        )}
 
-          {/* Featured Events */}
-          {featuredEvents.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Eventos em Destaque</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredEvents.map(event => (
-                  <div key={event.id} className="bg-white rounded-xl shadow-lg overflow-hidden event-card border border-gray-100">
-                    <div className={`relative h-48 bg-gradient-to-r ${event.gradient} flex items-center justify-center`}>
-                      {event.tag && (
-                        <div className={`event-tag ${event.tagColor}`}>{event.tag}</div>
-                      )}
-                      <i className={`${event.icon} text-white text-5xl`}></i>
-                    </div>
-                    <div className="p-5">
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="font-bold text-xl">{event.title}</h3>
-                        <div className="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded">
-                          {event.price}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 mb-4">{event.description}</p>
-                      <div className="flex items-center text-sm text-gray-500 mb-3">
-                        <i className="fas fa-map-marker-alt mr-2"></i>
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <div className="event-date mr-3">
-                            <div className="text-xl font-bold">{event.date.split(' ')[0]}</div>
-                            <div className="text-xs">{event.date.split(' ')[1]}</div>
-                          </div>
-                          <div>
-                            <div className="font-medium">{event.time}</div>
-                            <div className="text-xs text-gray-500">{event.category}</div>
-                          </div>
-                        </div>
-                        <Link href={event.id === 0 ? '/eventos/feira-do-produtor' : `/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
-                          Detalhes
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+        {/* Filtros */}
+        <section className="py-6 bg-white border-b sticky top-0 z-20">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              {/* Categorias */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFiltroCategoria('Todos')}
+                  className={`px-4 py-2 rounded-full font-medium transition-colors ${filtroCategoria === 'Todos'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                  Todos
+                </button>
+                {categorias.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setFiltroCategoria(cat)}
+                    className={`px-4 py-2 rounded-full font-medium transition-colors ${filtroCategoria === cat
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                  >
+                    {cat}
+                  </button>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* Banner Grande - Meio da Página */}
-          <div className="mb-12">
-            <PageBanner
-              posicao="Banner Grande - Meio"
-              local="eventos"
-              className="max-w-5xl mx-auto"
-            />
-          </div>
-
-          {/* All Events */}
-          {regularEvents.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Todos os Eventos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {regularEvents.map(event => (
-                  <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden event-card">
-                    <div className={`relative h-32 bg-gradient-to-r ${event.gradient} flex items-center justify-center`}>
-                      <i className={`${event.icon} text-white text-3xl`}></i>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-bold text-base mb-1">{event.title}</h3>
-                      <p className="text-gray-600 text-xs mb-2">{event.description}</p>
-                      <div className="flex justify-between items-center text-xs">
-                        <div>
-                          <div className="text-gray-500">
-                            <i className="far fa-calendar-alt mr-1"></i> {event.date}
-                          </div>
-                          <div className="text-gray-500">
-                            <i className="far fa-clock mr-1"></i> {event.time}
-                          </div>
-                        </div>
-                        <Link href={event.id === 0 ? '/eventos/feira-do-produtor' : `/eventos/${event.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
-                          Ver mais
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Event Calendar */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Calendário de Eventos</h2>
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="p-4 border-b flex justify-between items-center">
-                <h3 className="font-bold text-lg">Junho 2023</h3>
-                <div className="flex space-x-2">
-                  <button className="p-2 rounded-full hover:bg-gray-100">
-                    <i className="fas fa-chevron-left"></i>
-                  </button>
-                  <button className="p-2 rounded-full hover:bg-gray-100">
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="grid grid-cols-7 gap-2 mb-2">
-                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                    <div key={day} className="text-center font-medium text-gray-500">{day}</div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {calendarDays.map((day, index) => (
-                    <div
-                      key={index}
-                      className={`h-12 flex items-center justify-center relative ${!day.isCurrentMonth
-                        ? 'text-gray-400'
-                        : day.hasEvent
-                          ? 'bg-indigo-100 rounded-full text-indigo-600 font-bold'
-                          : ''
-                        }`}
-                    >
-                      {day.day}
-                      {day.hasEvent && (
-                        <span className="absolute bottom-1 w-1 h-1 bg-indigo-600 rounded-full"></span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+              {/* Busca */}
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar evento..."
+                  value={buscaTexto}
+                  onChange={e => setBuscaTexto(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Banner Topo - Condicional */}
+        <div className="py-8">
+          <BannerCarousel
+            position="Banner Grande - Topo"
+            local="eventos"
+            interval={6000}
+            autoRotate={true}
+            maxBanners={5}
+            className="container mx-auto px-4"
+          />
         </div>
-      </section>
 
-      {/* Banner Grande - Final da Página */}
-      <div className="container mx-auto px-4 pb-12">
-        <PageBanner
-          posicao="Banner Grande - Final"
-          local="eventos"
-          className="max-w-5xl mx-auto"
-        />
-      </div>
+        {/* Conteúdo Principal com Sidebar */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row gap-8">
+
+              {/* Grid de Eventos */}
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {filtroCategoria === 'Todos' ? 'Todos os Eventos' : filtroCategoria}
+                  </h2>
+                  <span className="text-gray-500">
+                    {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {eventosFiltrados.length === 0 ? (
+                  <div className="text-center py-16 bg-white rounded-2xl">
+                    <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-xl font-semibold text-gray-500 mb-2">
+                      Nenhum evento encontrado
+                    </h3>
+                    <p className="text-gray-400">
+                      Tente ajustar os filtros ou a busca
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {eventosFiltrados.map(evento => (
+                      <EventCard key={evento.id} evento={evento} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Banner Meio - Condicional */}
+                <div className="mt-8">
+                  <BannerCarousel
+                    position="Banner Grande - Meio"
+                    local="eventos"
+                    interval={6000}
+                    autoRotate={true}
+                    maxBanners={5}
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Sidebar - só aparece se tiver banners */}
+              <aside className="lg:w-80 space-y-6">
+                {/* Banner Sidebar */}
+                <BannerCarousel
+                  position="Sidebar Direita"
+                  local="eventos"
+                  interval={5000}
+                  autoRotate={true}
+                  maxBanners={3}
+                  className="rounded-xl"
+                />
+
+                {/* Mini Calendário ou Info */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-indigo-600" />
+                    Próximos Eventos
+                  </h3>
+                  <div className="space-y-3">
+                    {eventos.slice(0, 4).map(evento => {
+                      const { day, month } = getDateParts(evento.data_hora)
+                      return (
+                        <Link
+                          key={evento.id}
+                          href="/eventos"
+                          className="flex items-center gap-3 group"
+                        >
+                          <div className="flex-shrink-0 w-12 text-center">
+                            <span className="block text-lg font-bold text-indigo-600">{day}</span>
+                            <span className="block text-xs text-gray-500">{month}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                              {evento.titulo}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{evento.local}</p>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Empresas em Destaque */}
+                <EmpresasDestaque />
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        {/* Banner Final - Condicional */}
+        <div className="container mx-auto px-4 pb-8">
+          <BannerCarousel
+            position="Banner Grande - Final"
+            local="eventos"
+            interval={5000}
+            autoRotate={true}
+            maxBanners={5}
+            className="rounded-xl"
+          />
+        </div>
+
+      </main>
 
       <Footer />
     </>
   )
+}
+
+/**
+ * Card de Evento
+ */
+function EventCard({ evento }: { evento: Evento }) {
+  const [imageError, setImageError] = useState(false)
+
+  const getDateParts = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return {
+      day: date.getDate().toString().padStart(2, '0'),
+      month: date.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase().replace('.', ''),
+      fullDate: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    }
+  }
+
+  const { fullDate } = getDateParts(evento.data_hora)
+
+  return (
+    <Link
+      href="/eventos"
+      className="group block bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200"
+    >
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden rounded-t-3xl">
+        {!imageError && evento.imagem ? (
+          <Image
+            src={evento.imagem}
+            alt={evento.titulo}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <Calendar className="w-16 h-16 text-white/40" />
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
+        {/* Title */}
+        <h3 className="font-bold text-gray-900 text-lg leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors mb-2">
+          {evento.titulo}
+        </h3>
+
+        {/* Description */}
+        {evento.descricao && (
+          <p className="text-sm text-green-600 line-clamp-2 mb-3">
+            {evento.descricao}
+          </p>
+        )}
+
+        {/* Date */}
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+          <Calendar className="w-4 h-4" />
+          <span>{fullDate}</span>
+        </div>
+
+        {/* Read More Link */}
+        <span className="inline-flex items-center gap-1 text-indigo-600 font-semibold text-sm group-hover:gap-2 transition-all">
+          Ler mais
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+/**
+ * Empresas em Destaque - Carrossel na sidebar
+ */
+function EmpresasDestaque() {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [empresas, setEmpresas] = useState<any[]>([])
+
+  useEffect(() => {
+    // Buscar empresas em destaque
+    fetch('/api/empresas?featured=true&limit=5')
+      .then(res => res.json())
+      .then(data => setEmpresas(data.empresas || []))
+      .catch(() => setEmpresas([]))
+  }, [])
+
+  useEffect(() => {
+    if (empresas.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % empresas.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [empresas.length])
+
+  if (empresas.length === 0) return null
+
+  const currentEmpresa = empresas[currentIndex]
+
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <h3 className="font-bold text-gray-900 mb-4">
+        Empresas em Destaque
+      </h3>
+
+      <Link
+        href={`/guia/${currentEmpresa.id}`}
+        className="block group"
+      >
+        {/* Logo/Imagem */}
+        <div className="relative h-32 bg-gray-100 rounded-xl mb-3 overflow-hidden flex items-center justify-center">
+          {currentEmpresa.image ? (
+            <Image
+              src={currentEmpresa.image}
+              alt={currentEmpresa.name}
+              fill
+              className="object-contain p-4"
+            />
+          ) : (
+            <span className="text-gray-400 text-sm">Logo</span>
+          )}
+        </div>
+
+        {/* Info */}
+        <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+          {currentEmpresa.name}
+        </h4>
+        <p className="text-sm text-indigo-600">
+          {currentEmpresa.category}
+        </p>
+      </Link>
+
+      {/* Indicadores */}
+      {empresas.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-4">
+          {empresas.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${index === currentIndex
+                ? 'bg-indigo-600'
+                : 'bg-gray-300'
+                }`}
+              aria-label={`Empresa ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const supabase = createServerSupabaseClient()
+
+    const { data: eventos, error } = await supabase
+      .from('eventos')
+      .select('*')
+      .gte('data_hora', new Date().toISOString())
+      .order('data_hora', { ascending: true })
+      .limit(50)
+
+    if (error) throw error
+
+    // Extrair categorias únicas
+    const categorias = Array.from(new Set(eventos?.map(e => e.tipo).filter(Boolean))) as string[]
+
+    return {
+      props: {
+        eventos: eventos || [],
+        categorias
+      }
+    }
+  } catch (error) {
+    return {
+      props: {
+        eventos: [],
+        categorias: []
+      }
+    }
+  }
 }

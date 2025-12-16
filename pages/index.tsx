@@ -15,6 +15,7 @@ import WeatherSlider from '../components/WeatherSlider';
 import HeroBanner from '../components/HeroBanner';
 import BannerContainer from '../components/BannerContainer';
 import UpcomingEventsCarousel from '../components/UpcomingEventsCarousel';
+import EventsCarouselSection from '../components/EventsCarouselSection';
 import { createServerSupabaseClient, Noticia, Evento, Empresa, Classificado, Banner } from '../lib/supabase';
 
 interface HomePageProps {
@@ -179,41 +180,11 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
 
-
-        {/* CTA - Explore Maria Helena + Próximos Eventos */}
-        <section className="py-8 md:py-16 bg-[#0D1321]">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-10 items-start">
-              {/* Texto CTA - 2 colunas */}
-              <div className="lg:col-span-2">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  Descubra o melhor de Maria Helena
-                </h2>
-                <p className="text-gray-200 text-base md:text-lg mb-3 md:mb-6">
-                  Encontre negócios locais, eventos imperdíveis e tudo que sua cidade tem para oferecer.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Link href="/guia" className="inline-flex items-center px-5 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
-                    Explorar Negócios
-                  </Link>
-                  <Link href="/eventos" className="inline-flex items-center px-5 py-3 rounded-full border border-white text-white hover:bg-white hover:text-indigo-900 transition">
-                    Ver Eventos
-                  </Link>
-                </div>
-              </div>
-
-              {/* Carrossel de Eventos - 3 colunas (maior) */}
-              <div className="lg:col-span-3">
-                <UpcomingEventsCarousel
-                  eventos={eventos}
-                  interval={6000}
-                  autoRotate={true}
-                  maxEvents={5}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Seção de Próximos Eventos - Cards em Carrossel */}
+        <EventsCarouselSection
+          eventos={eventos}
+          title="Próximos Eventos"
+        />
 
         {/* Banner acima das Categorias - usando o mesmo carrossel do Hero */}
         <section className="py-4 bg-white">
