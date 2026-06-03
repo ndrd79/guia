@@ -869,7 +869,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   try {
     const { data: empresas, error } = await supabase
       .from('empresas')
-      .select('*')
+      .select('id, name, description, category, rating, reviews, location, phone, email, website, address, image, featured, is_new, ativo, exibir_em_empresas_locais, plan_type, premium_expires_at, created_at, updated_at')
       .order('created_at', { ascending: false })
 
     if (error) {
