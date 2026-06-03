@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { supabase } from '../../lib/supabase';
 import { 
   Upload, 
   X, 
@@ -61,7 +62,13 @@ export default function EnhancedImageUploader({
 
   const loadFolders = async () => {
     try {
-      const response = await fetch('/api/admin/media/folders');
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch('/api/admin/media/folders', { headers });
       const data = await response.json();
       if (response.ok) {
         setFolders(data.data);
@@ -136,6 +143,9 @@ export default function EnhancedImageUploader({
 
   // Upload de um arquivo
   const uploadSingleFile = async (uploadFile: UploadFile): Promise<any> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     return new Promise((resolve, reject) => {
       const formData = new FormData();
       formData.append('files', uploadFile.file);
@@ -195,6 +205,9 @@ export default function EnhancedImageUploader({
       };
 
       xhr.open('POST', '/api/admin/media');
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
       xhr.send(formData);
     });
   };

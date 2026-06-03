@@ -311,7 +311,7 @@ export default function EventoWizard({ isOpen, onClose, onSuccess, editingEvento
                                     Imagem do Evento (opcional)
                                 </label>
                                 <p className="text-sm text-gray-500 mb-4">
-                                    Adicione uma imagem ou cartaz para o evento. Tamanho recomendado: 800x400px
+                                    Adicione uma imagem ou cartaz para o evento. Tamanho recomendado: 600x750px (formato vertical)
                                 </p>
 
                                 <ImageUploader
@@ -319,7 +319,7 @@ export default function EventoWizard({ isOpen, onClose, onSuccess, editingEvento
                                     onChange={(url) => setFormData({ ...formData, imagem: url || '' })}
                                     bucket="eventos"
                                     folder="images"
-                                    aspectRatio={16 / 9}
+                                    aspectRatio={4 / 5}
                                     maxSize={5}
                                 />
                             </div>
@@ -331,7 +331,7 @@ export default function EventoWizard({ isOpen, onClose, onSuccess, editingEvento
                         <div className="space-y-6">
                             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border">
                                 {/* Imagem */}
-                                <div className="relative h-48 bg-gradient-to-br from-indigo-500 to-purple-600">
+                                <div className="relative h-72 bg-gradient-to-br from-indigo-500 to-purple-600">
                                     {formData.imagem ? (
                                         <Image
                                             src={formData.imagem}

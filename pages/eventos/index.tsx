@@ -378,7 +378,7 @@ function EventCard({ evento }: { evento: Evento }) {
       className="group block bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200"
     >
       {/* Image */}
-      <div className="relative h-48 overflow-hidden rounded-t-3xl">
+      <div className="relative h-72 overflow-hidden rounded-t-3xl">
         {!imageError && evento.imagem ? (
           <Image
             src={evento.imagem}

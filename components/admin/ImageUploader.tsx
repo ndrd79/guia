@@ -3,6 +3,7 @@ import { Upload, X, Image as ImageIcon, FolderOpen, Crop as CropIcon, Check } fr
 import Cropper from 'react-easy-crop'
 import MediaPicker from './MediaPicker'
 import getCroppedImg from '../../lib/images/cropImage'
+import { supabase } from '../../lib/supabase'
 
 interface ImageUploaderProps {
   value?: string
@@ -110,8 +111,16 @@ export default function ImageUploader({
         formData.append('folder_path', folder || '/')
         if (bucket) formData.append('bucket', bucket)
 
+        // Obter o token de acesso do Supabase
+        const { data: { session } } = await supabase.auth.getSession()
+        const headers: Record<string, string> = {}
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`
+        }
+
         const response = await fetch('/api/admin/media', {
           method: 'POST',
+          headers,
           body: formData
         })
 

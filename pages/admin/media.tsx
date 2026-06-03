@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { supabase } from '../../lib/supabase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import MediaLibrary from '../../components/admin/MediaLibrary';
 import EnhancedImageUploader from '../../components/admin/EnhancedImageUploader';
@@ -54,7 +55,13 @@ export default function MediaPage() {
   // Carregar estatísticas
   const loadStats = async () => {
     try {
-      const response = await fetch('/api/admin/media?limit=1000');
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch('/api/admin/media?limit=1000', { headers });
       const data = await response.json();
       
       if (response.ok) {
@@ -77,7 +84,13 @@ export default function MediaPage() {
   // Carregar pastas
   const loadFolders = async () => {
     try {
-      const response = await fetch('/api/admin/media/folders');
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch('/api/admin/media/folders', { headers });
       const data = await response.json();
       
       if (response.ok) {
@@ -97,9 +110,17 @@ export default function MediaPage() {
         ? `/${newFolderName.toLowerCase().replace(/\s+/g, '-')}`
         : `${selectedFolder}/${newFolderName.toLowerCase().replace(/\s+/g, '-')}`;
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch('/api/admin/media/folders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: newFolderName,
           path: folderPath,

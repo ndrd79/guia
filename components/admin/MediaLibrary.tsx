@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../../lib/supabase';
 import { 
   Grid, 
   List, 
@@ -109,7 +110,15 @@ export default function MediaLibrary({
         sortOrder
       });
 
-      const response = await fetch(`/api/admin/media?${params}`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(`/api/admin/media?${params}`, {
+        headers
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -128,7 +137,15 @@ export default function MediaLibrary({
   // Carregar pastas
   const loadFolders = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/media/folders');
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch('/api/admin/media/folders', {
+        headers
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -174,9 +191,17 @@ export default function MediaLibrary({
     if (!confirm(`Deletar ${selectedFiles.size} arquivo(s) selecionado(s)?`)) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch('/api/admin/media/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'delete',
           ids: Array.from(selectedFiles)
@@ -197,9 +222,17 @@ export default function MediaLibrary({
     if (selectedFiles.size === 0) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch('/api/admin/media/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'move',
           ids: Array.from(selectedFiles),

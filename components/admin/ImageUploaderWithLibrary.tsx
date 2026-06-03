@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, FolderOpen } from 'lucide-react';
 import MediaPicker from './MediaPicker';
+import { supabase } from '../../lib/supabase';
 
 interface ImageUploaderWithLibraryProps {
   value?: string;
@@ -56,8 +57,15 @@ export default function ImageUploaderWithLibrary({
       formData.append('files', file);
       formData.append('folder', folder);
       
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch('/api/admin/media', {
         method: 'POST',
+        headers,
         body: formData
       });
       

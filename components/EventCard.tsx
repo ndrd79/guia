@@ -52,7 +52,7 @@ const EventCard: React.FC<EventCardProps> = ({
             />
           </div>
         )}
-        
+
         {/* Conteúdo do evento de destaque */}
         <div className="relative z-10 p-4 h-full flex flex-col justify-between">
           <div>
@@ -61,16 +61,16 @@ const EventCard: React.FC<EventCardProps> = ({
                 ⭐ EVENTO DESTAQUE
               </span>
             </div>
-            
+
             <h2 className="text-xl md:text-2xl font-bold mb-3 leading-tight line-clamp-3">
               {titulo || 'Título não disponível'}
             </h2>
-            
+
             <p className="text-purple-100 mb-4 text-sm leading-relaxed line-clamp-3">
               {descricao || 'Descrição não disponível'}
             </p>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 text-purple-200 text-xs">
               <span className="flex items-center">
@@ -86,9 +86,9 @@ const EventCard: React.FC<EventCardProps> = ({
                 {local}
               </span>
             </div>
-            
-            <Link 
-              href={`/eventos/${id}`} 
+
+            <Link
+              href={`/eventos/${id}`}
               className="inline-flex items-center px-3 py-2 bg-white text-purple-600 rounded-lg text-sm font-semibold hover:bg-purple-50 transition-colors"
             >
               Ver detalhes
@@ -102,10 +102,10 @@ const EventCard: React.FC<EventCardProps> = ({
 
   // Card normal (não destacado)
   return (
-    <div className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden h-80 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${className}`}>
       {/* Imagem do evento normal */}
       {imagem && (
-        <div className="relative h-48 w-full">
+        <div className="relative h-72 w-full">
           <Image
             src={imagem}
             alt={titulo}
@@ -115,7 +115,7 @@ const EventCard: React.FC<EventCardProps> = ({
           />
         </div>
       )}
-      
+
       {/* Conteúdo do evento normal */}
       <div className="p-4 h-32 flex flex-col justify-between">
         <div>
@@ -128,27 +128,27 @@ const EventCard: React.FC<EventCardProps> = ({
               <div className="text-xs">{eventDate.month}</div>
             </div>
           </div>
-          
+
           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm">
             {titulo || 'Título não disponível'}
           </h3>
         </div>
-        
+
         <div>
           <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
             <span className="flex items-center">
               <i className="far fa-clock mr-1"></i>
               {eventDate.time}
             </span>
-            
+
             <span className="flex items-center">
               <i className="fas fa-map-marker-alt mr-1"></i>
               {local}
             </span>
           </div>
-          
-          <Link 
-            href={`/eventos/${id}`} 
+
+          <Link
+            href={`/eventos/${id}`}
             className="text-purple-600 hover:text-purple-800 text-xs font-medium hover:underline"
           >
             Ver detalhes →
