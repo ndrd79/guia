@@ -89,40 +89,9 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   const { banners } = useBanners()
 
   // Estado para controlar carregamento e erros
-  const [authChecked, setAuthChecked] = useState(false)
+  const [authChecked, setAuthChecked] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
-  const [authSuccess, setAuthSuccess] = useState(false)
-
-  // Guarda de autenticação client-side - apenas verificação leve, sem redirecionamento
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          setAuthError('Sessão não encontrada. Por favor, faça login novamente.')
-          setAuthChecked(true)
-          return
-        }
-        // Verificar perfil admin apenas para exibir mensagem se necessário
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single()
-        if (!profile || profile.role !== 'admin') {
-          setAuthError('Acesso restrito a administradores.')
-        } else {
-          setAuthSuccess(true)
-        }
-        setAuthChecked(true)
-      } catch (e) {
-        setAuthError('Erro ao verificar autenticação.')
-        console.error('Erro na verificação client-side:', e)
-        setAuthChecked(true)
-      }
-    }
-    checkAuth()
-  }, [])
+  const [authSuccess, setAuthSuccess] = useState(true)
 
   // Filter and paginate noticias
   const filteredAndPaginatedNoticias = useMemo(() => {
@@ -788,7 +757,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     // Buscar notícias (leitura pública permitida pelas políticas RLS)
     const { data: noticias } = await supabase
       .from('noticias')
-      .select('*')
+      .select('id, titulo, descricao, data, imagem, categoria, destaque, workflow_status, created_at, banner_id, credito_foto, fonte, conteudo, slug')
       .order('created_at', { ascending: false })
 
     return {

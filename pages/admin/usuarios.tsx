@@ -30,17 +30,8 @@ export default function UsuariosAdmin() {
   const router = useRouter()
 
   useEffect(() => {
-    checkAuth()
     loadUsuarios()
   }, [])
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      router.push('/admin/login')
-      return
-    }
-  }
 
   const loadUsuarios = async () => {
     try {

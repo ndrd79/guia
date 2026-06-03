@@ -3,6 +3,10 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { log } from './lib/logger'
 
+// Cookie que cacheia a verificação de role admin (evita query ao banco a cada navegação)
+const ADMIN_ROLE_COOKIE = 'admin-role-ok'
+const ADMIN_ROLE_COOKIE_MAX_AGE = 5 * 60 // 5 minutos em segundos
+
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
 
@@ -71,50 +75,68 @@ export async function middleware(request: NextRequest) {
     email: session.user.email
   })
 
-  // REMOVIDO: Bypass hardcoded para admin@portal.com (vulnerabilidade de segurança)
-  // Todos os usuários agora passam pela verificação normal de perfil
+  // Verificar cache de role no cookie para evitar query ao banco a cada navegação
+  // O cookie armazena o userId para invalidar automaticamente em troca de usuário
+  const cachedRoleCookie = request.cookies.get(ADMIN_ROLE_COOKIE)?.value
+  const isRoleCached = cachedRoleCookie === session.user.id
 
-  // Verificar perfil com role admin
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single()
+  if (!isRoleCached) {
+    // Cache expirou ou não existe — verificar role no banco
+    log.middleware('Cache de role ausente/expirado, verificando banco', pathname)
 
-  if (profileError) {
-    log.auth('Erro ao obter perfil', {
-      error: profileError.message,
-      userId: session.user.id,
-      pathname
-    })
-  }
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
 
-  if (!profile) {
-    log.middleware('Acesso negado: perfil não encontrado', pathname, {
-      userId: session.user.id,
-      profileError: profileError?.message
-    })
-    const loginUrl = new URL('/admin/login', request.url)
-    loginUrl.searchParams.set('error', 'unauthorized')
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
+    if (profileError) {
+      log.auth('Erro ao obter perfil', {
+        error: profileError.message,
+        userId: session.user.id,
+        pathname
+      })
+    }
 
-  if (profile.role !== 'admin') {
-    log.middleware('Acesso negado: usuário não é admin', pathname, {
+    if (!profile) {
+      log.middleware('Acesso negado: perfil não encontrado', pathname, {
+        userId: session.user.id,
+        profileError: profileError?.message
+      })
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('error', 'unauthorized')
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    if (profile.role !== 'admin') {
+      log.middleware('Acesso negado: usuário não é admin', pathname, {
+        userId: session.user.id,
+        role: profile.role
+      })
+      const loginUrl = new URL('/admin/login', request.url)
+      loginUrl.searchParams.set('error', 'unauthorized')
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Role verificado — salvar userId no cookie para as próximas navegações
+    log.middleware('Perfil verificado, salvando cache de role', pathname, {
       userId: session.user.id,
       role: profile.role
     })
-    const loginUrl = new URL('/admin/login', request.url)
-    loginUrl.searchParams.set('error', 'unauthorized')
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+    res.cookies.set({
+      name: ADMIN_ROLE_COOKIE,
+      value: session.user.id,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: ADMIN_ROLE_COOKIE_MAX_AGE,
+      path: '/admin'
+    })
+  } else {
+    log.middleware('Role admin verificado via cache (sem query ao banco)', pathname)
   }
-
-  log.middleware('Perfil verificado com sucesso', pathname, {
-    userId: session.user.id,
-    role: profile.role
-  })
 
   // Usuário autorizado
   log.middleware('Acesso concedido a rota admin', pathname, { userId: session.user.id })
