@@ -39,6 +39,8 @@ type NoticiaFormData = z.infer<typeof noticiaSchema>
 
 interface NoticiasPageProps {
   initialNoticias: Noticia[]
+  totalItems: number
+  currentPage: number
 }
 
 const categorias = [
@@ -68,21 +70,75 @@ const categorias = [
 
 const ITEMS_PER_PAGE = 10
 
-function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
+function NoticiasAdminContent({ initialNoticias, totalItems, currentPage }: NoticiasPageProps) {
   const { showToast } = useToastActions()
   const router = useRouter()
   const [noticias, setNoticias] = useState<Noticia[]>(initialNoticias)
   const [showForm, setShowForm] = useState(false)
   const [editingNoticia, setEditingNoticia] = useState<Noticia | null>(null)
   const [loading, setLoading] = useState(false)
-  
-  // Filter and search states
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('')
-  const [dateStart, setDateStart] = useState('')
-  const [dateEnd, setDateEnd] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+
+  // Sync com SSR
+  useEffect(() => {
+    setNoticias(initialNoticias)
+  }, [initialNoticias])
+
+  // Obter valores dos filtros da URL
+  const querySearch = (router.query.search as string) || ''
+  const queryCategory = (router.query.category as string) || ''
+  const queryStatus = (router.query.status as string) || ''
+  const queryDateStart = (router.query.dateStart as string) || ''
+  const queryDateEnd = (router.query.dateEnd as string) || ''
+
+  const [searchQuery, setSearchQuery] = useState(querySearch)
+
+  useEffect(() => {
+    setSearchQuery(querySearch)
+  }, [querySearch])
+
+  const updateFiltros = (novosFiltros: {
+    search?: string
+    category?: string
+    status?: string
+    dateStart?: string
+    dateEnd?: string
+    page?: number
+  }) => {
+    const query = { ...router.query }
+    
+    if (novosFiltros.search !== undefined) {
+      if (novosFiltros.search) query.search = novosFiltros.search
+      else delete query.search
+    }
+    if (novosFiltros.category !== undefined) {
+      if (novosFiltros.category) query.category = novosFiltros.category
+      else delete query.category
+    }
+    if (novosFiltros.status !== undefined) {
+      if (novosFiltros.status) query.status = novosFiltros.status
+      else delete query.status
+    }
+    if (novosFiltros.dateStart !== undefined) {
+      if (novosFiltros.dateStart) query.dateStart = novosFiltros.dateStart
+      else delete query.dateStart
+    }
+    if (novosFiltros.dateEnd !== undefined) {
+      if (novosFiltros.dateEnd) query.dateEnd = novosFiltros.dateEnd
+      else delete query.dateEnd
+    }
+    
+    if (novosFiltros.page !== undefined) {
+      query.page = String(novosFiltros.page)
+    } else {
+      delete query.page
+    }
+
+    router.push({
+      pathname: router.pathname,
+      query
+    })
+  }
+
   const [previewNoticia, setPreviewNoticia] = useState<Noticia | null>(null)
   const [showPreview, setShowPreview] = useState(false)
   
@@ -93,55 +149,14 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   const [authError, setAuthError] = useState<string | null>(null)
   const [authSuccess, setAuthSuccess] = useState(true)
 
-  // Filter and paginate noticias
   const filteredAndPaginatedNoticias = useMemo(() => {
-    let filtered = noticias.filter(noticia => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        if (!noticia.titulo.toLowerCase().includes(query) &&
-            !noticia.descricao.toLowerCase().includes(query) &&
-            !noticia.conteudo.toLowerCase().includes(query)) {
-          return false
-        }
-      }
-      
-      // Category filter
-      if (selectedCategory && noticia.categoria !== selectedCategory) {
-        return false
-      }
-      
-      // Status filter
-      if (selectedStatus === 'destaque' && !noticia.destaque) {
-        return false
-      }
-      if (selectedStatus === 'normal' && noticia.destaque) {
-        return false
-      }
-      
-      // Date range filter
-      if (dateStart && new Date(noticia.data) < new Date(dateStart)) {
-        return false
-      }
-      if (dateEnd && new Date(noticia.data) > new Date(dateEnd)) {
-        return false
-      }
-      
-      return true
-    })
-
-    const totalItems = filtered.length
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-    const endIndex = startIndex + ITEMS_PER_PAGE
-    const paginatedItems = filtered.slice(startIndex, endIndex)
-
     return {
-      items: paginatedItems,
+      items: noticias,
       totalItems,
       totalPages
     }
-  }, [noticias, searchQuery, selectedCategory, selectedStatus, dateStart, dateEnd, currentPage])
+  }, [noticias, totalItems])
 
   const {
     register,
@@ -171,16 +186,7 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   }
 
   const loadNoticias = async () => {
-    if (!supabase) return
-    
-    const { data } = await supabase
-      .from('noticias')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (data) {
-      setNoticias(data)
-    }
+    router.replace(router.asPath)
   }
 
   const onSubmit = async (data: NoticiaFormData) => {
@@ -371,19 +377,7 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
     })
   }
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1) // Reset to first page when searching
-  }, [])
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [selectedCategory, selectedStatus, dateStart, dateEnd])
+  // Os filtros e paginação agora são disparados via updateFiltros e refletem na URL
 
 
 
@@ -468,20 +462,20 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
             <div className="space-y-4">
               <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
                 <div className="flex-1">
-                  <SearchBar onSearch={handleSearch} />
+                  <SearchBar onSearch={(query) => updateFiltros({ search: query })} />
                 </div>
               </div>
               
               <FilterDropdowns
                 categories={categorias}
-                selectedCategory={selectedCategory}
-                selectedStatus={selectedStatus}
-                dateStart={dateStart}
-                dateEnd={dateEnd}
-                onCategoryChange={setSelectedCategory}
-                onStatusChange={setSelectedStatus}
-                onDateStartChange={setDateStart}
-                onDateEndChange={setDateEnd}
+                selectedCategory={queryCategory}
+                selectedStatus={queryStatus}
+                dateStart={queryDateStart}
+                dateEnd={queryDateEnd}
+                onCategoryChange={(cat) => updateFiltros({ category: cat })}
+                onStatusChange={(status) => updateFiltros({ status })}
+                onDateStartChange={(ds) => updateFiltros({ dateStart: ds })}
+                onDateEndChange={(de) => updateFiltros({ dateEnd: de })}
               />
             </div>
           </div>
@@ -724,7 +718,7 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
               totalPages={filteredAndPaginatedNoticias.totalPages}
               totalItems={filteredAndPaginatedNoticias.totalItems}
               itemsPerPage={ITEMS_PER_PAGE}
-              onPageChange={handlePageChange}
+              onPageChange={(page) => updateFiltros({ page })}
             />
           </>
         )}
@@ -740,37 +734,73 @@ function NoticiasAdminContent({ initialNoticias }: NoticiasPageProps) {
   )
 }
 
-export default function NoticiasAdmin({ initialNoticias }: NoticiasPageProps) {
+export default function NoticiasAdmin({ initialNoticias, totalItems, currentPage }: NoticiasPageProps) {
   return (
     <ToastProvider>
-      <NoticiasAdminContent initialNoticias={initialNoticias} />
+      <NoticiasAdminContent initialNoticias={initialNoticias} totalItems={totalItems} currentPage={currentPage} />
     </ToastProvider>
   )
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const page = Number(ctx.query.page) || 1
+  const limit = 10
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
+  const search = (ctx.query.search as string) || ''
+  const category = (ctx.query.category as string) || ''
+  const status = (ctx.query.status as string) || ''
+  const dateStart = (ctx.query.dateStart as string) || ''
+  const dateEnd = (ctx.query.dateEnd as string) || ''
+
   try {
     const supabase = createServerSupabaseClient(ctx)
-    // Nota: evitar redirecionamento SSR aqui para não causar "bounce" para login
-    // quando a sessão do Supabase não está disponível via cookies no servidor.
-    // A verificação de autenticação será feita no client-side ao montar a página.
-    // Buscar notícias (leitura pública permitida pelas políticas RLS)
-    const { data: noticias } = await supabase
+    let query = supabase
       .from('noticias')
-      .select('id, titulo, descricao, data, imagem, categoria, destaque, workflow_status, created_at, banner_id, credito_foto, fonte, conteudo, slug')
+      .select('id, titulo, descricao, data, imagem, categoria, destaque, workflow_status, created_at, banner_id, credito_foto, fonte, conteudo, slug', { count: 'exact' })
+
+    if (search) {
+      query = query.or(`titulo.ilike.%${search}%,descricao.ilike.%${search}%,conteudo.ilike.%${search}%`)
+    }
+
+    if (category) {
+      query = query.eq('categoria', category)
+    }
+
+    if (status === 'destaque') {
+      query = query.eq('destaque', true)
+    } else if (status === 'normal') {
+      query = query.eq('destaque', false)
+    }
+
+    if (dateStart) {
+      query = query.gte('data', dateStart)
+    }
+    if (dateEnd) {
+      query = query.lte('data', dateEnd)
+    }
+
+    const { data: noticias, count, error } = await query
       .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) throw error
 
     return {
       props: {
         initialNoticias: noticias || [],
+        totalItems: count || 0,
+        currentPage: page,
       },
     }
   } catch (error) {
-    // Durante o build, as variáveis de ambiente podem não estar disponíveis
-    console.warn('Supabase not configured during build time:', error)
+    console.warn('Error loading noticias in SSR:', error)
     return {
       props: {
         initialNoticias: [],
+        totalItems: 0,
+        currentPage: 1,
       },
     }
   }

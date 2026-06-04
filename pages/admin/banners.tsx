@@ -107,7 +107,7 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
 
             const { data, error } = await supabase
                 .from('banners')
-                .select('*')
+                .select('id, nome, posicao, imagem, link, largura, altura, ativo, data_inicio, data_fim, ordem, tempo_exibicao, local, clicks, views, impressions, created_at, updated_at')
                 .order('created_at', { ascending: false })
                 .order('ordem', { ascending: true })
 
@@ -128,12 +128,12 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
         log.info('[Admin] Carregando estatísticas...')
 
         try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session?.access_token) return
+            const token = accessToken
+            if (!token) return
 
             const response = await fetch('/api/analytics/stats/all', {
                 headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 signal
@@ -167,29 +167,22 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
         }
     }
 
-    // Initial load - only load stats, banners come from SSR
+    // Initial load - only load stats when we have a token, banners come from SSR
     useEffect(() => {
         if (loadedOnceRef.current) return
+        if (!accessToken) return
         loadedOnceRef.current = true
 
         const controller = new AbortController()
         loadBannerStats(controller.signal)
 
         return () => controller.abort()
-    }, [])
+    }, [accessToken])
 
-    // Listener de autenticação para obter token de forma confiável
+    // Listener de autenticação para manter token atualizado (sessões longas)
     useEffect(() => {
         if (!supabase) return
 
-        // Tentar obter sessão inicial
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.access_token) {
-                setAccessToken(session.access_token)
-            }
-        })
-
-        // Listener para mudanças de auth (mais confiável)
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (session?.access_token) {
                 setAccessToken(session.access_token)
@@ -607,7 +600,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const { data: banners } = await supabase
         .from('banners')
-        .select('*')
+        .select('id, nome, posicao, imagem, link, largura, altura, ativo, data_inicio, data_fim, ordem, tempo_exibicao, local, clicks, views, impressions, created_at, updated_at')
         .order('created_at', { ascending: false })
         .order('ordem', { ascending: true })
         .order('id', { ascending: true }) // Desempate final para ordem determinística

@@ -1,6 +1,15 @@
 import { NextApiRequest, NextApiResponse, NextApiHandler } from 'next'
 import { createClient } from '@supabase/supabase-js'
 
+interface CachedSession {
+  user: any
+  profile: { role: string }
+  expiresAt: number
+}
+
+const authCache = new Map<string, CachedSession>()
+const CACHE_TTL_MS = 60 * 1000 // 1 minuto de cache
+
 /**
  * Middleware centralizado para autenticação de APIs administrativas
  * 
@@ -89,13 +98,28 @@ export function withAdminAuth(
             })
         }
 
+        // Verificar se temos em cache
+        const cached = authCache.get(token)
+        const now = Date.now()
+        if (cached && cached.expiresAt > now) {
+            // Criar cliente administrativo (bypass RLS)
+            const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+                auth: { autoRefreshToken: false, persistSession: false }
+            })
+
+            // Chamar o handler com o contexto autenticado do cache
+            return await handler(req, res, {
+                userId: cached.user.id,
+                userEmail: cached.user.email || '',
+                adminClient
+            })
+        }
+
         try {
             // Criar cliente público para validar o token
             const publicClient = createClient(supabaseUrl, supabaseAnonKey)
 
             // IMPORTANTE: Usar getUser() em vez de getSession()
-            // getUser() valida o token no servidor Supabase
-            // getSession() pode retornar dados de cookie/localStorage adulterados
             const { data: { user }, error: userError } = await publicClient.auth.getUser(token)
 
             if (userError || !user) {
@@ -135,6 +159,14 @@ export function withAdminAuth(
                     code: 'FORBIDDEN'
                 })
             }
+
+            // Salvar no cache
+            authCache.set(token, {
+                user,
+                profile,
+                expiresAt: Date.now() + CACHE_TTL_MS
+            })
+
 
             // Verificação CSRF para métodos mutantes (opcional)
             if (requireCsrf && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method || '')) {

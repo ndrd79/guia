@@ -30,7 +30,7 @@ export function useBanners(posicao?: string) {
     try {
       let query = supabase
         .from('banners')
-        .select('*')
+        .select('id, nome, posicao, imagem, link, largura, altura, ativo, data_inicio, data_fim, ordem, tempo_exibicao, local, created_at, updated_at')
         .eq('ativo', true)
         .order('created_at', { ascending: false })
 

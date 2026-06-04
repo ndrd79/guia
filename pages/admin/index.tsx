@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { GetServerSideProps } from 'next'
 import AdminLayout from '../../components/admin/AdminLayout'
+import { supabase } from '../../lib/supabase'
 
 interface DashboardStats {
   noticias: number
@@ -18,26 +19,66 @@ interface TableStatus {
   empresas: boolean
 }
 
-interface DashboardProps {
-  stats: DashboardStats
-  tableStatus: TableStatus
-}
-
-const StatCard = ({ title, value }: {
+const StatCard = ({ title, value, loading }: {
   title: string
   value: number
+  loading: boolean
 }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="text-center">
         <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-        <p className="text-3xl font-bold text-blue-600 mt-2">{value}</p>
+        {loading ? (
+          <div className="h-9 w-16 bg-gray-200 animate-pulse mx-auto mt-2 rounded"></div>
+        ) : (
+          <p className="text-3xl font-bold text-blue-600 mt-2">{value}</p>
+        )}
       </div>
     </div>
   )
 }
 
-export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    noticias: 0,
+    classificados: 0,
+    eventos: 0,
+    banners: 0,
+    empresas: 0
+  })
+  const [tableStatus, setTableStatus] = useState<TableStatus>({
+    noticias: true,
+    classificados: true,
+    eventos: true,
+    banners: true,
+    empresas: true
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const headers: Record<string, string> = {}
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`
+        }
+
+        const res = await fetch('/api/admin/stats', { headers })
+        if (res.ok) {
+          const data = await res.json()
+          setStats(data.stats)
+          setTableStatus(data.tableStatus)
+        }
+      } catch (err) {
+        console.error('Erro ao carregar estatísticas:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadStats()
+  }, [])
+
   return (
     <AdminLayout title="Dashboard">
       <div className="max-w-6xl mx-auto">
@@ -92,29 +133,38 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
           <StatCard
             title="Notícias"
             value={stats.noticias}
+            loading={isLoading}
           />
           <StatCard
             title="Classificados"
             value={stats.classificados}
+            loading={isLoading}
           />
           <StatCard
             title="Eventos"
             value={stats.eventos}
+            loading={isLoading}
           />
           <StatCard
             title="Banners"
             value={stats.banners}
+            loading={isLoading}
           />
           <StatCard
             title="Empresas"
             value={stats.empresas}
+            loading={isLoading}
           />
         </div>
 
         {/* Simple Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Resumo</h2>
-          <p className="text-gray-600 mb-4">Total de conteúdos: {stats.noticias + stats.classificados + stats.eventos + stats.banners + stats.empresas}</p>
+          {isLoading ? (
+            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mb-4"></div>
+          ) : (
+            <p className="text-gray-600 mb-4">Total de conteúdos: {stats.noticias + stats.classificados + stats.eventos + stats.banners + stats.empresas}</p>
+          )}
           <div className="space-y-2">
             <p className="text-sm text-gray-500">✅ Sistema funcionando corretamente</p>
             <p className="text-sm text-gray-500">📊 Dados carregados com sucesso</p>
@@ -231,53 +281,7 @@ export default function AdminDashboard({ stats, tableStatus }: DashboardProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const { createServerSupabaseClient } = await import('../../lib/supabase')
-  const supabase = createServerSupabaseClient(ctx)
-
-  // Função para contar registros e verificar status da tabela
-  const checkTable = async (table: string) => {
-    try {
-      const { count, error } = await supabase
-        .from(table)
-        .select('*', { count: 'exact', head: true })
-      
-      if (error) {
-        console.warn(`Tabela ${table} não encontrada:`, error.message)
-        return { count: 0, exists: false }
-      }
-      
-      return { count: count || 0, exists: true }
-    } catch (err) {
-      console.warn(`Erro ao acessar tabela ${table}:`, err)
-      return { count: 0, exists: false }
-    }
-  }
-
-  // Verificar todas as tabelas
-  const [noticiasResult, classificadosResult, eventosResult, bannersResult, empresasResult] = await Promise.all([
-    checkTable('noticias'),
-    checkTable('classificados'), 
-    checkTable('eventos'),
-    checkTable('banners'),
-    checkTable('empresas')
-  ])
-
   return {
-    props: {
-      stats: {
-        noticias: noticiasResult.count,
-        classificados: classificadosResult.count,
-        eventos: eventosResult.count,
-        banners: bannersResult.count,
-        empresas: empresasResult.count,
-      },
-      tableStatus: {
-        noticias: noticiasResult.exists,
-        classificados: classificadosResult.exists,
-        eventos: eventosResult.exists,
-        banners: bannersResult.exists,
-        empresas: empresasResult.exists,
-      },
-    },
+    props: {}
   }
 }

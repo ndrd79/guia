@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { useForm } from 'react-hook-form'
@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { Settings } from 'lucide-react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import FormCard from '../../components/admin/FormCard'
+import Pagination from '../../components/admin/Pagination'
 import ImageUploader from '../../components/admin/ImageUploader'
 import PlanBadge from '../../components/PlanBadge'
 import PlanSelector from '../../components/PlanSelector'
@@ -15,7 +16,14 @@ import { supabase } from '../../lib/supabase'
 import { useToastActions } from '../../components/admin/ToastProvider'
 
 interface EmpresasPageProps {
-  empresas: Empresa[]
+  initialEmpresas: Empresa[]
+  totalItems: number
+  currentPage: number
+  planStats: {
+    basic: number
+    premium: number
+    expired: number
+  }
 }
 
 // Schema de validação
@@ -81,20 +89,70 @@ const categorias = [
   'Imóveis'
 ]
 
-export default function EmpresasPage({ empresas }: EmpresasPageProps) {
+export default function EmpresasPage({ initialEmpresas, totalItems, currentPage, planStats }: EmpresasPageProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null)
-  const [empresasList, setEmpresasList] = useState<Empresa[]>(empresas)
+  const [empresasList, setEmpresasList] = useState<Empresa[]>(initialEmpresas)
   const [imageUrl, setImageUrl] = useState<string>('')
   const [planTypeSelected, setPlanTypeSelected] = useState<'basic' | 'premium'>('basic')
   const [expirationDate, setExpirationDate] = useState<string>('')
-  const [filtros, setFiltros] = useState({
-    planType: 'all' as 'all' | 'basic' | 'premium' | 'expired',
-    categoria: 'all',
-    status: 'all' as 'all' | 'ativo' | 'inativo',
-    busca: ''
-  })
+
+  // Sincronizar dados com o SSR
+  useEffect(() => {
+    setEmpresasList(initialEmpresas)
+  }, [initialEmpresas])
+
+  const queryBusca = (router.query.busca as string) || ''
+  const queryPlanType = (router.query.planType as 'all' | 'basic' | 'premium' | 'expired') || 'all'
+  const queryCategoria = (router.query.categoria as string) || 'all'
+  const queryStatus = (router.query.status as 'all' | 'ativo' | 'inativo') || 'all'
+
+  const [buscaInput, setBuscaInput] = useState(queryBusca)
+
+  useEffect(() => {
+    setBuscaInput(queryBusca)
+  }, [queryBusca])
+
+  const updateFiltros = (novosFiltros: {
+    busca?: string
+    planType?: string
+    categoria?: string
+    status?: string
+    page?: number
+  }) => {
+    const query = { ...router.query }
+    
+    if (novosFiltros.busca !== undefined) {
+      if (novosFiltros.busca) query.busca = novosFiltros.busca
+      else delete query.busca
+    }
+    if (novosFiltros.planType !== undefined) {
+      if (novosFiltros.planType !== 'all') query.planType = novosFiltros.planType
+      else delete query.planType
+    }
+    if (novosFiltros.categoria !== undefined) {
+      if (novosFiltros.categoria !== 'all') query.categoria = novosFiltros.categoria
+      else delete query.categoria
+    }
+    if (novosFiltros.status !== undefined) {
+      if (novosFiltros.status !== 'all') query.status = novosFiltros.status
+      else delete query.status
+    }
+    
+    if (novosFiltros.page !== undefined) {
+      query.page = String(novosFiltros.page)
+    } else {
+      delete query.page
+    }
+
+    router.push({
+      pathname: router.pathname,
+      query
+    })
+  }
+
+  const ITEMS_PER_PAGE = 20
   const { success, error } = useToastActions()
 
   const {
@@ -204,6 +262,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
           emp.id === editingEmpresa.id ? updatedEmpresaData : emp
         ))
         success('Empresa atualizada com sucesso!')
+        router.replace(router.asPath)
       } else {
         // Criar nova empresa
         const { data: newData, error: insertError } = await supabase
@@ -216,6 +275,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
 
         setEmpresasList(prev => [...prev, newData])
         success('Empresa criada com sucesso!')
+        router.replace(router.asPath)
       }
 
       // Limpar formulário
@@ -262,6 +322,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
 
       setEmpresasList(prev => prev.filter(emp => emp.id !== id))
       success('Empresa excluída com sucesso!')
+      router.replace(router.asPath)
     } catch (err) {
       console.error('Erro ao excluir empresa:', err)
       error('Erro ao excluir empresa')
@@ -276,53 +337,8 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
     setExpirationDate('')
   }
 
-  // Filtrar empresas
-  const empresasFiltradas = empresasList.filter(empresa => {
-    // Filtro por tipo de plano
-    if (filtros.planType === 'basic') {
-      return empresa.plan_type === 'basic'
-    } else if (filtros.planType === 'premium') {
-      return empresa.plan_type === 'premium' && 
-             (!empresa.premium_expires_at || new Date(empresa.premium_expires_at) > new Date())
-    } else if (filtros.planType === 'expired') {
-      return empresa.plan_type === 'premium' && 
-             empresa.premium_expires_at && 
-             new Date(empresa.premium_expires_at) <= new Date()
-    }
-
-    // Filtro por categoria
-    if (filtros.categoria !== 'all' && empresa.category !== filtros.categoria) {
-      return false
-    }
-
-    // Filtro por status
-    if (filtros.status === 'ativo' && !empresa.ativo) return false
-    if (filtros.status === 'inativo' && empresa.ativo) return false
-
-    // Filtro por busca
-    if (filtros.busca) {
-      const busca = filtros.busca.toLowerCase()
-      return empresa.name.toLowerCase().includes(busca) ||
-             (empresa.description && empresa.description.toLowerCase().includes(busca)) ||
-             (empresa.category && empresa.category.toLowerCase().includes(busca))
-    }
-
-    return true
-  })
-
-  // Calcular estatísticas dos planos
-  const planStats = {
-    basic: empresasList.filter(e => e.plan_type === 'basic').length,
-    premium: empresasList.filter(e => 
-      e.plan_type === 'premium' && 
-      (!e.premium_expires_at || new Date(e.premium_expires_at) > new Date())
-    ).length,
-    expired: empresasList.filter(e => 
-      e.plan_type === 'premium' && 
-      e.premium_expires_at && 
-      new Date(e.premium_expires_at) <= new Date()
-    ).length
-  }
+  const empresasPaginadas = empresasList
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
 
   return (
     <AdminLayout>
@@ -632,7 +648,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Empresas Cadastradas</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Total: {empresasList.length} empresas | Exibindo: {empresasFiltradas.length} empresas
+                Total: {planStats.basic + planStats.premium + planStats.expired} empresas | Exibindo: {totalItems} empresas
               </p>
             </div>
             <button
@@ -655,8 +671,14 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
               </label>
               <input
                 type="text"
-                value={filtros.busca}
-                onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
+                value={buscaInput}
+                onChange={(e) => setBuscaInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    updateFiltros({ busca: buscaInput })
+                  }
+                }}
+                onBlur={() => updateFiltros({ busca: buscaInput })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Buscar por nome, descrição ou categoria..."
               />
@@ -669,8 +691,8 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
                   Tipo de Plano
                 </label>
                 <select
-                  value={filtros.planType}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, planType: e.target.value as any }))}
+                  value={queryPlanType}
+                  onChange={(e) => updateFiltros({ planType: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Todos os Planos</option>
@@ -685,13 +707,13 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
                   Categoria
                 </label>
                 <select
-                  value={filtros.categoria}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, categoria: e.target.value }))}
+                  value={queryCategoria}
+                  onChange={(e) => updateFiltros({ categoria: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Todas as Categorias</option>
                   {categorias.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
@@ -701,8 +723,8 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
                   Status
                 </label>
                 <select
-                  value={filtros.status}
-                  onChange={(e) => setFiltros(prev => ({ ...prev, status: e.target.value as any }))}
+                  value={queryStatus}
+                  onChange={(e) => updateFiltros({ status: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">Todos</option>
@@ -713,12 +735,12 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
 
               <div className="flex items-end">
                 <button
-                  onClick={() => setFiltros({
-                    planType: 'all',
-                    categoria: 'all',
-                    status: 'all',
-                    busca: ''
-                  })}
+                  onClick={() => {
+                    setBuscaInput('')
+                    router.push({
+                      pathname: router.pathname
+                    })
+                  }}
                   className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
                 >
                   Limpar Filtros
@@ -753,7 +775,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {empresasFiltradas.map((empresa) => (
+                {empresasPaginadas.map((empresa) => (
                   <tr key={empresa.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -846,7 +868,7 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
           </div>
 
           {/* Mensagem quando não há resultados */}
-          {empresasFiltradas.length === 0 && empresasList.length > 0 && (
+          {totalItems === 0 && (planStats.basic + planStats.premium + planStats.expired) > 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">Nenhuma empresa encontrada com os filtros aplicados.</p>
             </div>
@@ -857,6 +879,15 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
               <p className="text-gray-500">Nenhuma empresa cadastrada ainda.</p>
             </div>
           )}
+
+          {/* Paginação */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={(page) => updateFiltros({ page })}
+          />
         </div>
       </div>
     </AdminLayout>
@@ -865,32 +896,91 @@ export default function EmpresasPage({ empresas }: EmpresasPageProps) {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const supabase = createServerSupabaseClient(ctx)
+  const page = Number(ctx.query.page) || 1
+  const limit = 20
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
+  const busca = (ctx.query.busca as string) || ''
+  const planType = (ctx.query.planType as string) || 'all'
+  const categoria = (ctx.query.categoria as string) || 'all'
+  const status = (ctx.query.status as string) || 'all'
 
   try {
-    const { data: empresas, error } = await supabase
+    let query = supabase
       .from('empresas')
-      .select('id, name, description, category, rating, reviews, location, phone, email, website, address, image, featured, is_new, ativo, exibir_em_empresas_locais, plan_type, premium_expires_at, created_at, updated_at')
-      .order('created_at', { ascending: false })
+      .select('id, name, description, category, rating, reviews, location, phone, email, website, address, image, featured, is_new, ativo, exibir_em_empresas_locais, plan_type, premium_expires_at, created_at, updated_at', { count: 'exact' })
 
-    if (error) {
-      console.error('Erro ao carregar empresas:', error)
-      return {
-        props: {
-          empresas: []
-        }
-      }
+    if (busca) {
+      query = query.or(`name.ilike.%${busca}%,description.ilike.%${busca}%,category.ilike.%${busca}%`)
     }
+
+    if (categoria !== 'all') {
+      query = query.eq('category', categoria)
+    }
+
+    if (status === 'ativo') {
+      query = query.eq('ativo', true)
+    } else if (status === 'inativo') {
+      query = query.eq('ativo', false)
+    }
+
+    if (planType === 'basic') {
+      query = query.eq('plan_type', 'basic')
+    } else if (planType === 'premium') {
+      query = query.eq('plan_type', 'premium')
+      query = query.or(`premium_expires_at.is.null,premium_expires_at.gt.${new Date().toISOString()}`)
+    } else if (planType === 'expired') {
+      query = query.eq('plan_type', 'premium').lt('premium_expires_at', new Date().toISOString())
+    }
+
+    const { data: empresas, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) throw error
+
+    // Buscar estatísticas gerais dos planos para exibir no topo (sem paginação/filtros)
+    const getPlanCount = async (type: string) => {
+      let q = supabase.from('empresas').select('*', { count: 'exact', head: true })
+      if (type === 'basic') q = q.eq('plan_type', 'basic')
+      if (type === 'premium') {
+        q = q.eq('plan_type', 'premium')
+        q = q.or(`premium_expires_at.is.null,premium_expires_at.gt.${new Date().toISOString()}`)
+      }
+      if (type === 'expired') {
+        q = q.eq('plan_type', 'premium').lt('premium_expires_at', new Date().toISOString())
+      }
+      const { count } = await q
+      return count || 0
+    }
+
+    const [basicCount, premiumCount, expiredCount] = await Promise.all([
+      getPlanCount('basic'),
+      getPlanCount('premium'),
+      getPlanCount('expired')
+    ])
 
     return {
       props: {
-        empresas: empresas || []
+        initialEmpresas: empresas || [],
+        totalItems: count || 0,
+        currentPage: page,
+        planStats: {
+          basic: basicCount,
+          premium: premiumCount,
+          expired: expiredCount
+        }
       }
     }
   } catch (error) {
     console.error('Erro no getServerSideProps:', error)
     return {
       props: {
-        empresas: []
+        initialEmpresas: [],
+        totalItems: 0,
+        currentPage: 1,
+        planStats: { basic: 0, premium: 0, expired: 0 }
       }
     }
   }

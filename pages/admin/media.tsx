@@ -52,7 +52,7 @@ export default function MediaPage() {
   const [selectedFolder, setSelectedFolder] = useState('/');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Carregar estatísticas
+  // Carregar estatísticas usando count queries (sem baixar todos os arquivos)
   const loadStats = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -61,20 +61,31 @@ export default function MediaPage() {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
-      const response = await fetch('/api/admin/media?limit=1000', { headers });
+      // Buscar apenas 1 registro para obter o total via paginação
+      const response = await fetch('/api/admin/media?limit=1&page=1', { headers });
       const data = await response.json();
       
       if (response.ok) {
-        const files = data.data;
-        const stats: MediaStats = {
-          totalFiles: files.length,
-          totalSize: files.reduce((sum: number, file: any) => sum + file.file_size, 0),
-          imageCount: files.filter((f: any) => f.file_type === 'image').length,
-          videoCount: files.filter((f: any) => f.file_type === 'video').length,
-          documentCount: files.filter((f: any) => f.file_type === 'document').length,
-          audioCount: files.filter((f: any) => f.file_type === 'audio').length,
-        };
-        setStats(stats);
+        const totalFiles = data.pagination?.total || 0;
+
+        // Buscar contagem por tipo usando queries separadas com limit=1
+        const typeQueries = ['image', 'video', 'document', 'audio'].map(async (type) => {
+          const resp = await fetch(`/api/admin/media?limit=1&page=1&type=${type}&folder=`, { headers });
+          const typeData = await resp.json();
+          return { type, count: typeData.pagination?.total || 0 };
+        });
+
+        const typeCounts = await Promise.all(typeQueries);
+        const countMap = Object.fromEntries(typeCounts.map(t => [t.type, t.count]));
+
+        setStats({
+          totalFiles,
+          totalSize: 0, // Size requires full scan — show only on demand
+          imageCount: countMap.image || 0,
+          videoCount: countMap.video || 0,
+          documentCount: countMap.document || 0,
+          audioCount: countMap.audio || 0,
+        });
       }
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
@@ -211,20 +222,20 @@ export default function MediaPage() {
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Espaço Usado</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatFileSize(stats.totalSize)}</p>
+                  <p className="text-sm font-medium text-gray-600">Imagens</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.imageCount}</p>
                 </div>
-                <Settings className="w-8 h-8 text-green-600" />
+                <Image className="w-8 h-8 text-purple-600" />
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Imagens</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.imageCount}</p>
+                  <p className="text-sm font-medium text-gray-600">Vídeos</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.videoCount}</p>
                 </div>
-                <Image className="w-8 h-8 text-purple-600" />
+                <Video className="w-8 h-8 text-green-600" />
               </div>
             </div>
 

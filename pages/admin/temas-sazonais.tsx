@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { GetServerSideProps } from 'next'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { supabase } from '../../lib/supabase'
+import { createServerSupabaseClient, supabase } from '../../lib/supabase'
 import { Plus, Edit, Trash2, Save, X, Eye, Palette } from 'lucide-react'
 import { useToastActions } from '../../components/admin/ToastProvider'
 
@@ -118,19 +119,20 @@ const initialTheme: SeasonalTheme = {
   is_active: false
 }
 
-export default function TemasSeasonais() {
+interface TemasPageProps {
+  initialThemes: SeasonalTheme[]
+}
+
+export default function TemasSeasonais({ initialThemes }: TemasPageProps) {
   const { success, error: showError } = useToastActions()
-  const [themes, setThemes] = useState<SeasonalTheme[]>([])
-  const [loading, setLoading] = useState(true)
+  const [themes, setThemes] = useState<SeasonalTheme[]>(initialThemes)
+  const [loading, setLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [editingTheme, setEditingTheme] = useState<SeasonalTheme | null>(null)
   const [formData, setFormData] = useState<SeasonalTheme>(initialTheme)
   const [saving, setSaving] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
 
-  useEffect(() => {
-    fetchThemes()
-  }, [])
 
   const fetchThemes = async () => {
     try {
@@ -645,4 +647,29 @@ export default function TemasSeasonais() {
       </div>
     </AdminLayout>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  try {
+    const supabase = createServerSupabaseClient(ctx)
+
+    const { data: themes, error } = await supabase
+      .from('seasonal_themes')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Erro ao carregar temas:', error)
+      return { props: { initialThemes: [] } }
+    }
+
+    return {
+      props: {
+        initialThemes: themes || []
+      }
+    }
+  } catch (error) {
+    console.error('Erro no getServerSideProps:', error)
+    return { props: { initialThemes: [] } }
+  }
 }
