@@ -119,6 +119,7 @@ export default function ImageUploader({
           const { data: { session } } = await supabase.auth.getSession()
           token = session?.access_token || null
         }
+        console.log('[ImageUploader] token final para upload:', !!token)
         const headers: Record<string, string> = {}
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
