@@ -10,6 +10,13 @@ import BannerCarousel from '../../components/BannerCarousel'
 import { createServerSupabaseClient, Evento } from '../../lib/supabase'
 import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react'
 
+const getEventUrl = (evento: { id: string; titulo: string }) => {
+  if (evento.titulo.toLowerCase().includes('feira do produtor')) {
+    return '/eventos/feira-do-produtor'
+  }
+  return `/eventos/${evento.id}`
+}
+
 interface EventosPageProps {
   eventos: Evento[]
   categorias: string[]
@@ -136,7 +143,7 @@ export default function EventosPage({ eventos, categorias }: EventosPageProps) {
 
                 {/* CTA */}
                 <Link
-                  href={`/eventos`}
+                  href={getEventUrl(currentHeroEvent)}
                   className="inline-flex items-center px-6 py-3 bg-white text-indigo-600 font-semibold rounded-full hover:bg-indigo-50 transition-colors"
                 >
                   Ver Detalhes
@@ -310,7 +317,7 @@ export default function EventosPage({ eventos, categorias }: EventosPageProps) {
                       return (
                         <Link
                           key={evento.id}
-                          href="/eventos"
+                          href={getEventUrl(evento)}
                           className="flex items-center gap-3 group"
                         >
                           <div className="flex-shrink-0 w-12 text-center">
@@ -374,7 +381,7 @@ function EventCard({ evento }: { evento: Evento }) {
 
   return (
     <Link
-      href="/eventos"
+      href={getEventUrl(evento)}
       className="group block bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200"
     >
       {/* Image */}

@@ -12,6 +12,13 @@ interface UpcomingEventsCarouselProps {
     className?: string
 }
 
+const getEventUrl = (evento: { id: string; titulo: string }) => {
+    if (evento.titulo.toLowerCase().includes('feira do produtor')) {
+        return '/eventos/feira-do-produtor'
+    }
+    return `/eventos/${evento.id}`
+}
+
 export default function UpcomingEventsCarousel({
     eventos,
     interval = 5000,
@@ -196,7 +203,7 @@ export default function UpcomingEventsCarousel({
 
             {/* CTA Button */}
             <Link
-                href="/eventos"
+                href={getEventUrl(currentEvent)}
                 className="block mt-4 text-center py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
             >
                 Ver Detalhes do Evento

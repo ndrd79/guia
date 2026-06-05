@@ -182,6 +182,13 @@ export default function EventsCarouselSection({
     )
 }
 
+const getEventUrl = (evento: { id: string; titulo: string }) => {
+    if (evento.titulo.toLowerCase().includes('feira do produtor')) {
+        return '/eventos/feira-do-produtor'
+    }
+    return `/eventos/${evento.id}`
+}
+
 /**
  * Card individual de evento (estilo da referência)
  */
@@ -202,7 +209,7 @@ function EventCard({ evento }: { evento: Evento }) {
 
     return (
         <Link
-            href={`/eventos`}
+            href={getEventUrl(evento)}
             className="group block bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
         >
             {/* Image */}
