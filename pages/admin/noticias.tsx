@@ -70,7 +70,11 @@ const categorias = [
 
 const ITEMS_PER_PAGE = 10
 
-function NoticiasAdminContent({ initialNoticias, totalItems, currentPage }: NoticiasPageProps) {
+interface NoticiasAdminContentProps extends NoticiasPageProps {
+  accessToken: string | null
+}
+
+function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, accessToken }: NoticiasAdminContentProps) {
   const { showToast } = useToastActions()
   const router = useRouter()
   const [noticias, setNoticias] = useState<Noticia[]>(initialNoticias)
@@ -550,6 +554,7 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage }: Noti
                   folder="images"
                   showLibraryButton={true}
                   useNewMediaAPI={true}
+                  accessToken={accessToken}
                 />
               </div>
 
@@ -734,10 +739,35 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage }: Noti
   )
 }
 
-export default function NoticiasAdmin({ initialNoticias, totalItems, currentPage }: NoticiasPageProps) {
+interface NoticiasAdminProps extends NoticiasPageProps {
+  serverAccessToken?: string | null
+}
+
+export default function NoticiasAdmin({ initialNoticias, totalItems, currentPage, serverAccessToken }: NoticiasAdminProps) {
+  const [accessToken, setAccessToken] = useState<string | null>(serverAccessToken || null)
+
+  useEffect(() => {
+    if (!supabase) return
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token) {
+        setAccessToken(session.access_token)
+      } else {
+        setAccessToken(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <ToastProvider>
-      <NoticiasAdminContent initialNoticias={initialNoticias} totalItems={totalItems} currentPage={currentPage} />
+      <NoticiasAdminContent 
+        initialNoticias={initialNoticias} 
+        totalItems={totalItems} 
+        currentPage={currentPage} 
+        accessToken={accessToken}
+      />
     </ToastProvider>
   )
 }
@@ -756,6 +786,17 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   try {
     const supabase = createServerSupabaseClient(ctx)
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      return {
+        redirect: {
+          destination: '/admin/login',
+          permanent: false,
+        },
+      }
+    }
+
     let query = supabase
       .from('noticias')
       .select('id, titulo, descricao, data, imagem, categoria, destaque, workflow_status, created_at, banner_id, credito_foto, fonte, conteudo, slug', { count: 'exact' })
@@ -792,6 +833,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
         initialNoticias: noticias || [],
         totalItems: count || 0,
         currentPage: page,
+        serverAccessToken: session.access_token || null,
       },
     }
   } catch (error) {

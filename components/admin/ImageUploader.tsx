@@ -15,6 +15,7 @@ interface ImageUploaderProps {
   showLibraryButton?: boolean
   useNewMediaAPI?: boolean
   aspectRatio?: number // Proporção desejada (largura / altura)
+  accessToken?: string | null
 }
 
 export default function ImageUploader({
@@ -26,7 +27,8 @@ export default function ImageUploader({
   accept = 'image/*',
   showLibraryButton = false,
   useNewMediaAPI = false,
-  aspectRatio
+  aspectRatio,
+  accessToken
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -112,10 +114,14 @@ export default function ImageUploader({
         if (bucket) formData.append('bucket', bucket)
 
         // Obter o token de acesso do Supabase
-        const { data: { session } } = await supabase.auth.getSession()
+        let token = accessToken
+        if (!token) {
+          const { data: { session } } = await supabase.auth.getSession()
+          token = session?.access_token || null
+        }
         const headers: Record<string, string> = {}
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
         }
 
         const response = await fetch('/api/admin/media', {
