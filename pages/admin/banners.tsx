@@ -21,6 +21,7 @@ const BannerList = dynamic(
     { ssr: false, loading: () => <div className="p-8 text-center text-gray-500">Carregando banners...</div> }
 )
 import { createServerSupabaseClient, supabase, Banner } from '../../lib/supabase'
+import { getFreshAccessToken } from '../../lib/auth-helpers'
 import { bannerCatalog } from '../../lib/banners/catalog'
 import { useToastActions } from '../../components/admin/ToastProvider'
 import { log } from '../../lib/logger'
@@ -101,8 +102,9 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
             }
 
             // Armazenar token para usar no wizard
-            if (session.access_token) {
-                setAccessToken(session.access_token)
+            const freshToken = await getFreshAccessToken()
+            if (freshToken) {
+                setAccessToken(freshToken)
             }
 
             const { data, error } = await supabase
@@ -186,7 +188,7 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (session?.access_token) {
                 setAccessToken(session.access_token)
-            } else {
+            } else if (event === 'SIGNED_OUT') {
                 setAccessToken(null)
             }
         })
@@ -416,8 +418,7 @@ export default function BannersPage({ initialBanners, serverAccessToken }: Banne
                 if (error) throw error
                 showSuccess('Banner atualizado com sucesso!')
             } else {
-                const { data: { session } } = await supabase.auth.getSession()
-                const token = session?.access_token || ''
+                const token = accessToken || await getFreshAccessToken() || ''
 
                 const response = await fetch('/api/admin/banners', {
                     method: 'POST',

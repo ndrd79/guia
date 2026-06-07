@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -141,7 +142,7 @@ async function optimizeImage(filePath: string, filename: string, bucketName: str
 
 /**
  * Valida autenticação admin para esta API
- * Segue o mesmo padrão do withAdminAuth mas adaptado para bodyParser: false
+ * Tenta Bearer token primeiro, depois fallback para cookies da sessão SSR
  */
 async function validateAdminAuth(req: NextApiRequest): Promise<{
   success: boolean;
@@ -149,29 +150,58 @@ async function validateAdminAuth(req: NextApiRequest): Promise<{
   error?: string;
   adminClient?: any;
 }> {
-  const authHeader = req.headers.authorization;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { success: false, error: 'Token de autenticação não fornecido' };
+  let user: any = null;
+
+  // Tentar 1: Bearer token no header
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token && token.length >= 10) {
+      try {
+        const publicClient = createClient(supabaseUrl, supabaseAnonKey);
+        const { data, error: userError } = await publicClient.auth.getUser(token);
+        if (!userError && data?.user) {
+          user = data.user;
+        } else {
+          console.warn('[Media API] Bearer token inválido, tentando cookies...');
+        }
+      } catch (e) {
+        console.warn('[Media API] Erro ao validar Bearer token:', e);
+      }
+    }
   }
 
-  const token = authHeader.slice(7);
+  // Tentar 2: Fallback para cookies da sessão SSR
+  if (!user) {
+    try {
+      const serverClient = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          get(name: string) {
+            return req.cookies[name];
+          },
+          set() {},
+          remove() {},
+        },
+      });
 
-  if (!token || token.length < 10) {
-    return { success: false, error: 'Token de autenticação inválido' };
+      const { data, error: userError } = await serverClient.auth.getUser();
+      if (!userError && data?.user) {
+        user = data.user;
+        console.log('[Media API] Autenticado via cookies SSR');
+      }
+    } catch (e) {
+      console.warn('[Media API] Fallback cookies também falhou:', e);
+    }
+  }
+
+  if (!user) {
+    return { success: false, error: 'Token de autenticação não fornecido ou sessão expirada' };
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-    const publicClient = createClient(supabaseUrl, supabaseAnonKey);
-    const { data: { user }, error: userError } = await publicClient.auth.getUser(token);
-
-    if (userError || !user) {
-      return { success: false, error: 'Sessão expirada ou inválida' };
-    }
-
     const adminClient = getAdminClient();
 
     const { data: profile, error: profileError } = await adminClient

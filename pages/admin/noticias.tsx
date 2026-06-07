@@ -753,7 +753,9 @@ export default function NoticiasAdmin({ initialNoticias, totalItems, currentPage
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.access_token) {
         setAccessToken(session.access_token)
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        // Só zera o token em logout explícito, não quando o browser client
+        // não encontra sessão (o SSR token ainda pode estar válido)
         setAccessToken(null)
       }
     })

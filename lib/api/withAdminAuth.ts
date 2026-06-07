@@ -79,22 +79,74 @@ export function withAdminAuth(
 
         // Extrair token de autenticação
         const authHeader = req.headers.authorization
+        let token: string | null = null
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.slice(7)
+            if (!token || token.length < 10) {
+                token = null
+            }
+        }
+
+        // Fallback: Tentar extrair sessão dos cookies SSR
+        if (!token) {
+            try {
+                const { createServerClient } = await import('@supabase/ssr')
+                const serverClient = createServerClient(supabaseUrl, supabaseAnonKey, {
+                    cookies: {
+                        get(name: string) {
+                            return req.cookies[name]
+                        },
+                        set() {},
+                        remove() {},
+                    },
+                })
+
+                const { data, error: userError } = await serverClient.auth.getUser()
+                if (!userError && data?.user) {
+                    console.log('[withAdminAuth] Autenticado via cookies SSR')
+                    
+                    // Criar cliente administrativo (bypass RLS)
+                    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+                        auth: { autoRefreshToken: false, persistSession: false }
+                    })
+
+                    // Verificar se o usuário tem role admin
+                    const { data: profile, error: profileError } = await adminClient
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', data.user.id)
+                        .single()
+
+                    if (profileError) {
+                        return res.status(500).json({
+                            success: false,
+                            error: 'Erro ao verificar permissões'
+                        })
+                    }
+
+                    if (!profile || profile.role !== 'admin') {
+                        return res.status(403).json({
+                            success: false,
+                            error: 'Acesso negado. Apenas administradores.',
+                            code: 'FORBIDDEN'
+                        })
+                    }
+
+                    return await handler(req, res, {
+                        userId: data.user.id,
+                        userEmail: data.user.email || '',
+                        adminClient
+                    })
+                }
+            } catch (e) {
+                console.warn('[withAdminAuth] Fallback cookies falhou:', e)
+            }
+
             return res.status(401).json({
                 success: false,
                 error: 'Token de autenticação não fornecido',
                 code: 'MISSING_TOKEN'
-            })
-        }
-
-        const token = authHeader.slice(7)
-
-        if (!token || token.length < 10) {
-            return res.status(401).json({
-                success: false,
-                error: 'Token de autenticação inválido',
-                code: 'INVALID_TOKEN'
             })
         }
 
