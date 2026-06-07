@@ -197,13 +197,8 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
   const onSubmit = async (data: NoticiaFormData) => {
     setLoading(true)
     try {
-      // Obter token da sessão para autenticação da API admin
+      // Obter token da sessão para autenticação da API admin (opcional, fallback via cookies no backend)
       const token = await getFreshAccessToken()
-      if (!token) {
-        showToast('Sessão expirada. Faça login novamente.', 'error')
-        router.replace('/admin/login')
-        return
-      }
 
       const payload = {
         ...data,
@@ -216,16 +211,25 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
       const method = editingNoticia ? 'PUT' : 'POST'
       const body = editingNoticia ? { id: editingNoticia.id, ...payload } : payload
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
       const resp = await fetch(endpoint, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(body),
       })
 
       if (!resp.ok) {
+        if (resp.status === 401 || resp.status === 403) {
+          showToast('Sessão expirada. Faça login novamente.', 'error')
+          router.replace('/admin/login')
+          return
+        }
         const json = await resp.json().catch(() => ({ error: resp.statusText }))
         throw new Error(json.error || `Erro ${resp.status}`)
       }
@@ -263,20 +267,22 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
     if (!confirm('Tem certeza que deseja excluir esta notícia?')) return
     try {
       const token = await getFreshAccessToken()
-      if (!token) {
-        showToast('Sessão expirada. Faça login novamente.', 'error')
-        router.replace('/admin/login')
-        return
+      const headers: Record<string, string> = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
       }
 
       const resp = await fetch(`/api/admin/noticias?id=${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       })
 
       if (!resp.ok) {
+        if (resp.status === 401 || resp.status === 403) {
+          showToast('Sessão expirada. Faça login novamente.', 'error')
+          router.replace('/admin/login')
+          return
+        }
         const json = await resp.json().catch(() => ({ error: resp.statusText }))
         throw new Error(json.error || `Erro ${resp.status}`)
       }
