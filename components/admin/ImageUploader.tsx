@@ -4,6 +4,7 @@ import Cropper from 'react-easy-crop'
 import MediaPicker from './MediaPicker'
 import getCroppedImg from '../../lib/images/cropImage'
 import { supabase } from '../../lib/supabase'
+import { getFreshAccessToken } from '../../lib/auth-helpers'
 
 interface ImageUploaderProps {
   value?: string
@@ -113,11 +114,10 @@ export default function ImageUploader({
         formData.append('folder_path', folder || '/')
         if (bucket) formData.append('bucket', bucket)
 
-        // Obter o token de acesso do Supabase
+        // Obter o token de acesso (fresco) do Supabase
         let token = accessToken
         if (!token) {
-          const { data: { session } } = await supabase.auth.getSession()
-          token = session?.access_token || null
+          token = await getFreshAccessToken()
         }
         console.log('[ImageUploader] token final para upload:', !!token)
         const headers: Record<string, string> = {}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabase';
+import { getFreshAccessToken } from '../../lib/auth-helpers';
 import AdminLayout from '../../components/admin/AdminLayout';
 import MediaLibrary from '../../components/admin/MediaLibrary';
 import EnhancedImageUploader from '../../components/admin/EnhancedImageUploader';
@@ -55,10 +56,10 @@ export default function MediaPage() {
   // Carregar estatísticas usando count queries (sem baixar todos os arquivos)
   const loadStats = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       // Buscar apenas 1 registro para obter o total via paginação
@@ -95,10 +96,10 @@ export default function MediaPage() {
   // Carregar pastas
   const loadFolders = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/admin/media/folders', { headers });
@@ -121,12 +122,12 @@ export default function MediaPage() {
         ? `/${newFolderName.toLowerCase().replace(/\s+/g, '-')}`
         : `${selectedFolder}/${newFolderName.toLowerCase().replace(/\s+/g, '-')}`;
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/admin/media/folders', {

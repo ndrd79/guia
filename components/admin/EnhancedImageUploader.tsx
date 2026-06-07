@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import { getFreshAccessToken } from '../../lib/auth-helpers';
 import { 
   Upload, 
   X, 
@@ -62,10 +63,10 @@ export default function EnhancedImageUploader({
 
   const loadFolders = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/admin/media/folders', { headers });
@@ -143,8 +144,7 @@ export default function EnhancedImageUploader({
 
   // Upload de um arquivo
   const uploadSingleFile = async (uploadFile: UploadFile): Promise<any> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    const token = await getFreshAccessToken();
 
     return new Promise((resolve, reject) => {
       const formData = new FormData();

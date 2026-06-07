@@ -19,6 +19,7 @@ import ToastProvider, { useToastActions } from '../../components/admin/ToastProv
 import StatsPanel from '../../components/admin/StatsPanel'
 import PreviewModal from '../../components/admin/PreviewModal'
 import { createServerSupabaseClient, supabase, Noticia, Banner } from '../../lib/supabase'
+import { getFreshAccessToken } from '../../lib/auth-helpers'
 import { formatDateInput } from '../../lib/formatters'
 import { useBanners } from '../../hooks/useBanners'
 
@@ -197,8 +198,8 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
     setLoading(true)
     try {
       // Obter token da sessão para autenticação da API admin
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
+      const token = await getFreshAccessToken()
+      if (!token) {
         showToast('Sessão expirada. Faça login novamente.', 'error')
         router.replace('/admin/login')
         return
@@ -219,7 +220,7 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(body),
       })
@@ -261,8 +262,8 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta notícia?')) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
+      const token = await getFreshAccessToken()
+      if (!token) {
         showToast('Sessão expirada. Faça login novamente.', 'error')
         router.replace('/admin/login')
         return
@@ -271,7 +272,7 @@ function NoticiasAdminContent({ initialNoticias, totalItems, currentPage, access
       const resp = await fetch(`/api/admin/noticias?id=${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
         },
       })
 

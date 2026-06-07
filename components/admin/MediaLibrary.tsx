@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import { getFreshAccessToken } from '../../lib/auth-helpers';
 import { 
   Grid, 
   List, 
@@ -110,10 +111,10 @@ export default function MediaLibrary({
         sortOrder
       });
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch(`/api/admin/media?${params}`, {
@@ -137,10 +138,10 @@ export default function MediaLibrary({
   // Carregar pastas
   const loadFolders = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/admin/media/folders', {
@@ -191,12 +192,12 @@ export default function MediaLibrary({
     if (!confirm(`Deletar ${selectedFiles.size} arquivo(s) selecionado(s)?`)) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/admin/media/bulk', {
@@ -222,12 +223,12 @@ export default function MediaLibrary({
     if (selectedFiles.size === 0) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await getFreshAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch('/api/admin/media/bulk', {
